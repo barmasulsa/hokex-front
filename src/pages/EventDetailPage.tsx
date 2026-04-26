@@ -1,0 +1,263 @@
+import { useParams, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { fetchEventById, fetchEvents } from '../services/eventService';
+import type { EventRecord } from '../types/core';
+import { calculateStatusBadge } from '../utils/badgeCalculator';
+import { Calendar, MapPin, Clock, DollarSign, Phone, ExternalLink, Share2, Copy } from 'lucide-react';
+
+export function EventDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const [event, setEvent] = useState<EventRecord | null>(null);
+  const [relatedEvents, setRelatedEvents] = useState<EventRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadEvent() {
+      if (!id) return;
+      
+      setLoading(true);
+      const eventData = await fetchEventById(id);
+      setEvent(eventData);
+      
+      // 관련 행사 가져오기
+      if (eventData) {
+        const allEvents = await fetchEvents();
+        const related = allEvents
+          .filter(e => e.id !== eventData.id && e.category === eventData.category)
+          .slice(0, 3);
+        setRelatedEvents(related);
+      }
+      
+      setLoading(false);
+    }
+    
+    loadEvent();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="event-detail-page">
+        <div style={{ padding: '100px 20px', textAlign: 'center' }}>
+          <h2>로딩 중...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="event-detail-not-found">
+        <h2>행사를 찾을 수 없습니다</h2>
+        <Link to="/">홈으로 돌아가기</Link>
+      </div>
+    );
+  }
+
+  const badge = calculateStatusBadge(event);
+
+  const formatDateRange = () => {
+    const startStr = `${event.startDate.toISOString().slice(0, 10).replace(/-/g, '.')} ${event.dayString}`;
+    const generateDayString = (date: Date) => {
+      const days = ['(일)', '(월)', '(화)', '(수)', '(목)', '(금)', '(토)'];
+      return days[date.getDay()];
+    };
+    const endStr = `${event.endDate.toISOString().slice(0, 10).replace(/-/g, '.')} ${generateDayString(event.endDate)}`;
+    return `${startStr} ~ ${endStr}`;
+  };
+
+  const handleAddToCalendar = () => {
+    alert('캘린더 추가 기능 (Google/Apple/Outlook)');
+  };
+
+  const handleShare = () => {
+    alert('카카오톡 공유 기능');
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    alert('링크가 복사되었습니다');
+  };
+
+  return (
+    <div className="event-detail-page">
+      {/* Hero Section */}
+      <div className="event-hero" style={{ backgroundImage: `url(${event.poster})` }}>
+        <div className="event-hero-overlay"></div>
+        <div className="event-hero-content">
+          <div className="event-hero-badge">{event.category}</div>
+          <h1 className="event-hero-title">{event.title}</h1>
+          <div className="event-hero-meta">
+            <span><Calendar size={20} /> {formatDateRange()}</span>
+            <span><MapPin size={20} /> {event.venue}, {event.region}</span>
+          </div>
+          <button className="btn-add-calendar" onClick={handleAddToCalendar}>
+            <Calendar size={20} /> Add to Calendar
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="event-content">
+        <div className="event-main">
+          {/* Event Info Section */}
+          <section className="event-section">
+            <h2>행사 소개</h2>
+            <div className="event-theme">
+              {event.description ? (
+                <p>{event.description}</p>
+              ) : (
+                <>
+                  <p>
+                    {event.title}는 {event.industry} 분야의 최신 트렌드와 혁신 기술을 한자리에서 만나볼 수 있는 
+                    국내 최대 규모의 전문 전시회입니다. 국내외 주요 기업들이 참가하여 신제품과 서비스를 선보이며, 
+                    업계 전문가들과의 네트워킹 기회를 제공합니다.
+                  </p>
+                  <p>
+                    다양한 컨퍼런스, 세미나, 워크숍이 함께 진행되어 산업 전반의 인사이트를 얻을 수 있으며, 
+                    비즈니스 미팅 공간에서 실질적인 거래 상담도 가능합니다. 
+                    {event.venue}에서 개최되는 이번 행사에 여러분을 초대합니다.
+                  </p>
+                </>
+              )}
+            </div>
+
+            <div className="event-details-grid">
+              {event.operatingHours && (
+                <div className="detail-item">
+                  <Clock size={24} />
+                  <div>
+                    <h4>운영 시간</h4>
+                    <p style={{ whiteSpace: 'pre-line' }}>{event.operatingHours}</p>
+                  </div>
+                </div>
+              )}
+              {event.admissionFee && (
+                <div className="detail-item">
+                  <DollarSign size={24} />
+                  <div>
+                    <h4>입장료</h4>
+                    <p>{event.admissionFee}</p>
+                  </div>
+                </div>
+              )}
+              {event.contact && (
+                <div className="detail-item">
+                  <Phone size={24} />
+                  <div>
+                    <h4>문의</h4>
+                    <p>{event.contact}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {event.organizer && (
+              <div style={{ marginTop: '30px' }}>
+                <h3>주최</h3>
+                <p>{event.organizer}</p>
+              </div>
+            )}
+
+            {event.exhibitItems && (
+              <div style={{ marginTop: '20px' }}>
+                <h3>주관</h3>
+                <p>{event.exhibitItems}</p>
+              </div>
+            )}
+
+            {event.exhibitProducts && (
+              <div style={{ marginTop: '20px' }}>
+                <h3>전시품목</h3>
+                <p>{event.exhibitProducts}</p>
+              </div>
+            )}
+
+            <div style={{ marginTop: '30px' }}>
+              <h3>관람 장소</h3>
+              <p>{event.venue}{event.venueHall ? ` ${event.venueHall.replace(/([A-Z])(?=[A-Z]|$)/g, ' $1').trim()}` : ''}</p>
+            </div>
+
+            {/* Venue Details */}
+            <div style={{ marginTop: '30px' }}>
+              <h3>장소 정보</h3>
+              <p className="venue-address">서울특별시 강남구 영동대로 513</p>
+              <div style={{ marginTop: '15px' }}>
+                <h4>주차 정보</h4>
+                <p>지하 주차장 이용 가능 (유료)</p>
+              </div>
+              <div style={{ marginTop: '15px' }}>
+                <h4>대중교통</h4>
+                <p>지하철 2호선 삼성역 5, 6번 출구</p>
+              </div>
+              <div style={{ marginTop: '20px', background: '#e0e0e0', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <p>지도 위젯 (네이버 지도 / 카카오맵)</p>
+              </div>
+            </div>
+          </section>
+
+          {/* External Link */}
+          {event.targetLink && (
+            <section className="event-section">
+              <a href={event.targetLink} target="_blank" rel="noopener noreferrer" className="btn-official-website">
+                <ExternalLink size={20} /> 공식 웹사이트 방문
+              </a>
+            </section>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <aside className="event-sidebar">
+          {/* Share */}
+          <div className="sidebar-card">
+            <h3>공유하기</h3>
+            <div className="share-buttons">
+              <button onClick={handleShare} className="btn-share">
+                <Share2 size={20} /> 카카오톡
+              </button>
+              <button onClick={handleCopyLink} className="btn-share">
+                <Copy size={20} /> 링크 복사
+              </button>
+            </div>
+          </div>
+
+          {/* Status Badge */}
+          {badge && (
+            <div className="sidebar-card">
+              <div className={`status-badge-large badge-${badge.toLowerCase().replace(/[\s-]+/g, '')}`}>
+                {badge}
+              </div>
+            </div>
+          )}
+        </aside>
+      </div>
+
+      {/* Related Events */}
+      <section className="related-events">
+        <h2>관련 행사</h2>
+        <div className="related-events-grid">
+          {relatedEvents.map(relatedEvent => (
+            <Link key={relatedEvent.id} to={`/event/${relatedEvent.id}`} className="related-event-card">
+              <img src={relatedEvent.poster} alt={relatedEvent.title} />
+              <div className="related-event-info">
+                <span className="related-event-category">{relatedEvent.category}</span>
+                <h4>{relatedEvent.title}</h4>
+                <p>{relatedEvent.venue}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="event-footer">
+        <div className="footer-links">
+          <a href="#">개인정보 처리방침</a>
+          <a href="#">이용약관</a>
+          <a href="#">고객 지원</a>
+          <a href="#">글로벌 네트워크</a>
+        </div>
+        <p>© 2024 HOKEX MICE Architectural Curator. All rights reserved.</p>
+      </footer>
+    </div>
+  );
+}

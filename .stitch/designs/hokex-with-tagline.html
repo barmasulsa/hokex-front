@@ -1,0 +1,322 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>HOKEX - Premium MICE Platform</title>
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            hokex: {
+              primary: '#3B82F6',
+              secondary: '#8B5CF6',
+              dark: '#0F172A',
+              light: '#F8FAFC',
+            }
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-glassmorphism">
+    .glass-nav {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .status-badge {
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+  </style>
+</head>
+<body class="bg-[#F1F5F9] text-hokex-dark font-sans antialiased">
+<!-- BEGIN: MainHeader -->
+<header class="fixed top-0 w-full z-50 glass-nav" data-purpose="site-header">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-20">
+<!-- Logo -->
+<div class="flex-shrink-0 flex flex-col items-start justify-center">
+<span class="text-3xl font-extrabold tracking-tighter gradient-text leading-none" style="">HOKEX</span>
+<span class="text-[10px] font-medium text-slate-400 tracking-tight mt-0.5" style="">Hub of Korea Exhibition</span>
+</div>
+<!-- Navigation Actions -->
+<nav class="flex items-center space-x-8" data-purpose="header-navigation">
+<a class="text-sm font-semibold text-slate-600 hover:text-hokex-primary transition-colors" href="#" style="">My Calendar</a>
+<button aria-label="Saved Items" class="relative p-2 text-slate-600 hover:text-hokex-primary transition-colors" style="">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="absolute top-1 right-1 flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-hokex-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-hokex-secondary"></span>
+</span>
+</button>
+<div class="flex items-center space-x-3 cursor-pointer group" data-purpose="user-profile">
+<div class="h-10 w-10 rounded-full ring-2 ring-hokex-primary ring-offset-2 overflow-hidden bg-slate-200">
+<img alt="User Avatar" class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAk6Ed1q6EAQ_5HfttL9xxk-7-D8C1EzRXafhoy7MsQ9SfFO0Qjms-b15MxGwSpNnEeI8poDaxMEGG2wXJSWX54CvqJDvUdvNjRRTtNZk0V90Eb4uoWVYwp-oVs-0wUM_4bVwOIVLy5SiG3kBUjnqvNsxZJwttXMKXeN4Zqq6zlXNAGrPVTjdyIvl60XtHqF70td74qHZnk1nIpalMBDWs0c16sNhqZZYnzcio4IMoEQGUXADuHJbPmmZPycIkQPPsZKwqe3K3yQjsM" style="">
+</div>
+</div>
+</nav>
+</div>
+</div>
+</header>
+<!-- END: MainHeader -->
+<!-- BEGIN: MainContent -->
+<main class="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+<!-- BEGIN: FilterSection -->
+<section class="space-y-8 mb-12" data-purpose="discovery-filters">
+<!-- Primary Regions -->
+<div class="flex items-center space-x-2 overflow-x-auto hide-scrollbar pb-2" data-purpose="region-tabs">
+<button class="px-6 py-2.5 rounded-full text-sm font-bold bg-hokex-dark text-white whitespace-nowrap shadow-lg shadow-slate-200 transition-all" style="">전체</button>
+<button class="px-6 py-2.5 rounded-full text-sm font-bold bg-white text-slate-500 border border-slate-200 hover:border-hokex-primary hover:text-hokex-primary transition-all whitespace-nowrap" style="">서울</button>
+<button class="px-6 py-2.5 rounded-full text-sm font-medium bg-white text-slate-400 border border-transparent whitespace-nowrap" style="">수도권</button>
+<button class="px-6 py-2.5 rounded-full text-sm font-medium bg-white text-slate-400 border border-transparent whitespace-nowrap" style="">충청</button>
+<button class="px-6 py-2.5 rounded-full text-sm font-medium bg-white text-slate-400 border border-transparent whitespace-nowrap" style="">동남</button>
+<button class="px-6 py-2.5 rounded-full text-sm font-medium bg-white text-slate-400 border border-transparent whitespace-nowrap" style="">대경</button>
+<button class="px-6 py-2.5 rounded-full text-sm font-medium bg-white text-slate-400 border border-transparent whitespace-nowrap" style="">전남</button>
+<button class="px-6 py-2.5 rounded-full text-sm font-medium bg-white text-slate-400 border border-transparent whitespace-nowrap" style="">제주</button>
+</div>
+<!-- Secondary Venues -->
+<div class="flex items-center space-x-3 overflow-x-auto hide-scrollbar" data-purpose="venue-pills">
+<span class="text-xs font-bold text-slate-400 uppercase tracking-widest mr-2" style="">Venues</span>
+<button class="px-4 py-2 rounded-xl text-xs font-bold border-2 border-hokex-primary text-hokex-primary bg-blue-50 whitespace-nowrap" style="">전체</button>
+<button class="px-4 py-2 rounded-xl text-xs font-bold border-2 border-transparent bg-white text-slate-600 hover:border-slate-300 transition-all whitespace-nowrap" style="">코엑스(COEX)</button>
+<button class="px-4 py-2 rounded-xl text-xs font-bold border-2 border-transparent bg-white text-slate-600 hover:border-slate-300 transition-all whitespace-nowrap" style="">코엑스 마곡(COEX Magok)</button>
+<button class="px-4 py-2 rounded-xl text-xs font-bold border-2 border-transparent bg-white text-slate-600 hover:border-slate-300 transition-all whitespace-nowrap" style="">aT센터(aT Center)</button>
+<button class="px-4 py-2 rounded-xl text-xs font-bold border-2 border-transparent bg-white text-slate-600 hover:border-slate-300 transition-all whitespace-nowrap" style="">세텍(SETEC)</button>
+</div>
+<!-- Date Filter Section -->
+<div class="flex flex-col md:flex-row md:items-center gap-4" data-purpose="date-filter-group">
+<!-- Year Selector -->
+<div class="flex-shrink-0">
+<div class="relative inline-block text-left w-full md:w-auto">
+<select class="appearance-none w-full md:w-40 bg-white border border-slate-200 text-slate-700 py-3 px-4 pr-10 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-hokex-primary/20 focus:border-hokex-primary transition-all cursor-pointer shadow-sm">
+<option selected="">2026년</option>
+<option>2025년</option>
+<option>2024년</option>
+<option>지난 연도 전체</option>
+</select>
+</div>
+</div>
+<!-- Month Filter Slider -->
+<div class="bg-white/50 p-1.5 rounded-2xl flex items-center overflow-x-auto hide-scrollbar border border-white/50 flex-grow" data-purpose="month-slider">
+<div class="flex space-x-1">
+<button class="px-5 py-2 rounded-xl text-sm font-bold bg-white shadow-sm text-hokex-primary whitespace-nowrap" style="">전체</button>
+<button class="px-5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-white/80 transition-all whitespace-nowrap" style="">1월</button>
+<button class="px-5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-white/80 transition-all whitespace-nowrap" style="">2월</button>
+<button class="px-5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-white/80 transition-all whitespace-nowrap" style="">3월</button>
+<button class="px-5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-white/80 transition-all whitespace-nowrap" style="">4월</button>
+<button class="px-5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-white/80 transition-all whitespace-nowrap" style="">5월</button>
+<button class="px-5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-white/80 transition-all whitespace-nowrap" style="">6월</button>
+<button class="px-5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-white/80 transition-all whitespace-nowrap" style="">7월</button>
+<button class="px-5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-white/80 transition-all whitespace-nowrap" style="">8월</button>
+<button class="px-5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-white/80 transition-all whitespace-nowrap" style="">9월</button>
+<button class="px-5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-white/80 transition-all whitespace-nowrap" style="">10월</button>
+<button class="px-5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-white/80 transition-all whitespace-nowrap" style="">11월</button>
+<button class="px-5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-white/80 transition-all whitespace-nowrap" style="">12월</button>
+</div>
+</div>
+</div>
+<!-- Category Chips -->
+<div class="flex items-center justify-between border-t border-slate-200 pt-6">
+<div class="flex items-center space-x-3">
+<button class="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:shadow-md transition-shadow" style="">
+<span class="" style="">분류: 전체</span>
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+<button class="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:shadow-md transition-shadow" style="">
+<span class="" style="">산업군</span>
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+<div class="flex space-x-2">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700" style="">전시</span>
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700" style="">회의</span>
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700" style="">팝업</span>
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700" style="">공연</span>
+</div>
+</div>
+</section>
+<!-- END: FilterSection -->
+<!-- BEGIN: EventGrid -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" data-purpose="event-grid">
+<!-- Event Card 1 -->
+<div class="group relative bg-white rounded-[2rem] overflow-hidden shadow-xl shadow-slate-200/50 hover:-translate-y-2 transition-all duration-500" data-purpose="event-card">
+<div class="relative h-64 overflow-hidden">
+<img alt="Event" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAG2tTC-Hed4dOIf5l33rwfd9eInKOEQiCPlW-E0ZejV_xz1OR47Ndbg6EddWWrGyV1OdQ9jXzPDE4w7wCRngrSEbpV5MAKzVYD3FaUXc8lZ11-fAompSk_4iTj985KT4kLd7CB4hrn7-ryxQEyF3ZgGuDmFU4JCERXttYC9xeOQmOoyvwR3olZx28100UX4VY3quY1v8QnJun3ETuY1d4eKeRg6dDKN61zHnzZjMU-UA0_tgIo8Xn0nWdNkU7pWs9ISSyrbvTUW1yw" style="">
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60"></div>
+<!-- Status Badge -->
+<div class="absolute top-5 right-5 px-4 py-1.5 rounded-full status-badge bg-hokex-primary/90 text-white text-xs font-black tracking-widest shadow-lg" style="">D-12</div>
+<!-- Save Icon -->
+<button class="absolute top-5 left-5 p-2 rounded-full glass-card text-white hover:text-red-500 transition-colors" style="">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+<div class="p-8">
+<div class="mb-4 flex flex-wrap gap-2">
+<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500 uppercase tracking-tighter" style="">Technology</span>
+<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-hokex-primary uppercase tracking-tighter" style="">Conference</span>
+</div>
+<h3 class="text-2xl font-extrabold text-slate-900 leading-tight mb-3 group-hover:text-hokex-primary transition-colors" style="">Global Tech Expo 2026: Future of AI</h3>
+<p class="text-sm font-semibold text-slate-500 flex items-center mb-6" style="">
+<svg class="w-4 h-4 mr-1.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            2026.10.12 (월) ~ 2026.10.15 (목)
+          </p>
+<div class="flex items-center justify-between pt-6 border-t border-slate-100">
+<span class="text-xs font-bold text-slate-400" style="">COEX Hall A, B</span>
+<button class="text-xs font-black text-hokex-primary tracking-widest hover:underline" style="">VIEW DETAILS →</button>
+</div>
+</div>
+</div>
+<!-- Event Card 2 -->
+<div class="group relative bg-white rounded-[2rem] overflow-hidden shadow-xl shadow-slate-200/50 hover:-translate-y-2 transition-all duration-500" data-purpose="event-card">
+<div class="relative h-64 overflow-hidden">
+<img alt="Event" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAv1JeTa9Eg8uVm_KvP9iy87Fgib4rtvnKZ6pAxP-hiVWf0YF6BZSq0P8d4sJIefmg9N_KbFIPfGaPaf1pxaeUgxZa_94zgWeFY2wETVubP7alLhCBaPZ0xuiAHu0w0V7qR528q5pQykL952DkEyYJpBuIDAAwdnmmuPhR3xyF1WEfqSpTj3BVmUujBhyYKk78RtXB73CxjXiye6hQvlRD-HMEtNe8ZYLCEd-oCXdUlu7xHuKeCvK23lyEzus6-r17csMheyzNzZTR3" style="">
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60"></div>
+<div class="absolute top-5 right-5 px-4 py-1.5 rounded-full status-badge bg-rose-500/90 text-white text-xs font-black tracking-widest shadow-lg" style="">D-DAY</div>
+<button class="absolute top-5 left-5 p-2 rounded-full glass-card text-white hover:text-red-500 transition-colors" style="">
+<svg class="h-5 w-5 fill-red-500" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+<div class="p-8">
+<div class="mb-4 flex flex-wrap gap-2">
+<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500 uppercase tracking-tighter" style="">Art &amp; Design</span>
+<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-50 text-hokex-secondary uppercase tracking-tighter" style="">Exhibition</span>
+</div>
+<h3 class="text-2xl font-extrabold text-slate-900 leading-tight mb-3 group-hover:text-hokex-primary transition-colors" style="">Seoul Modern Art Fair: Digital Canvas</h3>
+<p class="text-sm font-semibold text-slate-500 flex items-center mb-6" style="">
+<svg class="w-4 h-4 mr-1.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            2026.10.15 (목) ~ 2026.10.20 (화)
+          </p>
+<div class="flex items-center justify-between pt-6 border-t border-slate-100">
+<span class="text-xs font-bold text-slate-400" style="">SETEC Exhibition Hall 1</span>
+<button class="text-xs font-black text-hokex-primary tracking-widest hover:underline" style="">VIEW DETAILS →</button>
+</div>
+</div>
+</div>
+<!-- Event Card 3 -->
+<div class="group relative bg-white rounded-[2rem] overflow-hidden shadow-xl shadow-slate-200/50 hover:-translate-y-2 transition-all duration-500" data-purpose="event-card">
+<div class="relative h-64 overflow-hidden">
+<img alt="Event" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAoZYcj1oimO5PIVSm88HW8G4ZQN5LyKzza3WHrYYxx8xjpqrlnv3sxWGV7qneoMGbMzrsD9BVqPYKJoTHgIW7EZR7-RF5f7pP6SmyN5Ar5BTvRPbIl3xLNXyvh3eBhsELZIjXNBjZ8SSWYxfjYvjRNivEVPQ36cWEK8oQx4fzG0q9Lpuyz-_kwXwByszMb0C1cSzvkbBVnqSMK_tWr0xERZ3RlxJtaZQsgcDVCjZRW6sOLB7AW5Vxwp65O_jeoccVmVOb9llAT6PDu" style="">
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60"></div>
+<div class="absolute top-5 right-5 px-4 py-1.5 rounded-full status-badge bg-emerald-500/90 text-white text-xs font-black tracking-widest shadow-lg uppercase" style="">On-going</div>
+<button class="absolute top-5 left-5 p-2 rounded-full glass-card text-white hover:text-red-500 transition-colors" style="">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+<div class="p-8">
+<div class="mb-4 flex flex-wrap gap-2">
+<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500 uppercase tracking-tighter" style="">Lifestyle</span>
+<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 uppercase tracking-tighter" style="">Pop-up</span>
+</div>
+<h3 class="text-2xl font-extrabold text-slate-900 leading-tight mb-3 group-hover:text-hokex-primary transition-colors" style="">Sustainable Living Brand Pop-up</h3>
+<p class="text-sm font-semibold text-slate-500 flex items-center mb-6" style="">
+<svg class="w-4 h-4 mr-1.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            2026.09.28 (월) ~ 2026.10.25 (일)
+          </p>
+<div class="flex items-center justify-between pt-6 border-t border-slate-100">
+<span class="text-xs font-bold text-slate-400" style="">COEX Magok B1</span>
+<button class="text-xs font-black text-hokex-primary tracking-widest hover:underline" style="">VIEW DETAILS →</button>
+</div>
+</div>
+</div>
+<!-- Event Card 4 -->
+<div class="group relative bg-white rounded-[2rem] overflow-hidden shadow-xl shadow-slate-200/50 hover:-translate-y-2 transition-all duration-500" data-purpose="event-card">
+<div class="relative h-64 overflow-hidden">
+<img alt="Event" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQTAMFKKPP6TmFTTqJP5AENEzMm8y804-pJWXIiolKuhla04a6LmitdYB8-y-DfxzpOwX1bVb7rhGbTqImmUE7btLacGZ7huXZiGIfDAvgITZqLaNURI2d_42I9XOT0VoW21NqgxBpWYh7Mj6kPfrpwwoc7wtn20jvoF5Dg5MEO5lvOCG9jRXTFDaq5FtGohF6COVzGOuQlRH6uxEFq_d2lPe6eBd8KrJDOR-WCLbxur6KRfslK5F7w8mFMNKWIBrwtbjAmDr6nNNW" style="">
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60"></div>
+<div class="absolute top-5 right-5 px-4 py-1.5 rounded-full status-badge bg-amber-500/90 text-white text-[10px] font-black tracking-widest shadow-lg uppercase" style="">Coming Soon</div>
+<button class="absolute top-5 left-5 p-2 rounded-full glass-card text-white hover:text-red-500 transition-colors" style="">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+<div class="p-8">
+<div class="mb-4 flex flex-wrap gap-2">
+<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500 uppercase tracking-tighter" style="">Automotive</span>
+<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-orange-50 text-orange-600 uppercase tracking-tighter" style="">Convention</span>
+</div>
+<h3 class="text-2xl font-extrabold text-slate-900 leading-tight mb-3 group-hover:text-hokex-primary transition-colors" style="">2026 Smart Mobility &amp; EV Show</h3>
+<p class="text-sm font-semibold text-slate-500 flex items-center mb-6" style="">
+<svg class="w-4 h-4 mr-1.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            2026.11.02 (월) ~ 2026.11.05 (목)
+          </p>
+<div class="flex items-center justify-between pt-6 border-t border-slate-100">
+<span class="text-xs font-bold text-slate-400" style="">aT Center Hall 2</span>
+<button class="text-xs font-black text-hokex-primary tracking-widest hover:underline" style="">VIEW DETAILS →</button>
+</div>
+</div>
+</div>
+</section>
+<!-- END: EventGrid -->
+<!-- BEGIN: LoadMore -->
+<div class="mt-16 text-center" data-purpose="pagination">
+<button class="px-10 py-4 bg-white rounded-full text-sm font-extrabold text-slate-700 shadow-xl shadow-slate-200/50 hover:bg-hokex-primary hover:text-white transition-all duration-300" style="">
+        EXPLORE MORE EVENTS
+      </button>
+</div>
+<!-- END: LoadMore -->
+</main>
+<!-- END: MainContent -->
+<!-- BEGIN: Footer -->
+<footer class="bg-slate-900 text-white py-16 px-4" data-purpose="site-footer">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+<div>
+<div class="flex flex-col items-start">
+<span class="text-2xl font-extrabold tracking-tighter text-white leading-none" style="">HOKEX</span>
+<span class="text-[10px] font-medium text-slate-500 tracking-tight mt-1" style="">Hub of Korea Exhibition</span>
+</div>
+<p class="mt-4 text-slate-400 text-sm font-medium" style="">Elevating your MICE experience.</p>
+</div>
+<div class="flex space-x-12">
+<div class="space-y-4">
+<h4 class="text-xs font-black uppercase tracking-widest text-slate-500" style="">Platform</h4>
+<ul class="text-sm space-y-2 text-slate-300 font-medium">
+<li class="" style=""><a class="hover:text-hokex-primary transition-colors" href="#" style="">Discover</a></li>
+<li class="" style=""><a class="hover:text-hokex-primary transition-colors" href="#" style="">Venues</a></li>
+<li class="" style=""><a class="hover:text-hokex-primary transition-colors" href="#" style="">Pricing</a></li>
+</ul>
+</div>
+<div class="space-y-4">
+<h4 class="text-xs font-black uppercase tracking-widest text-slate-500" style="">Legal</h4>
+<ul class="text-sm space-y-2 text-slate-300 font-medium">
+<li class="" style=""><a class="hover:text-hokex-primary transition-colors" href="#" style="">Privacy</a></li>
+<li class="" style=""><a class="hover:text-hokex-primary transition-colors" href="#" style="">Terms</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="max-w-7xl mx-auto mt-16 pt-8 border-t border-slate-800 text-center">
+<p class="text-xs text-slate-500 font-bold" style="">© 2026 HOKEX. ALL RIGHTS RESERVED.</p>
+</div>
+</footer>
+<!-- END: Footer -->
+</body></html>
