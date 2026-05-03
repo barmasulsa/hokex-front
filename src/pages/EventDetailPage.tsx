@@ -147,17 +147,17 @@ export function EventDetailPage() {
               </div>
             )}
 
-            {event.exhibitItems && (
+            {event.supervisor && (
               <div style={{ marginTop: '20px' }}>
                 <h3>주관</h3>
-                <p>{event.exhibitItems}</p>
+                <p>{event.supervisor}</p>
               </div>
             )}
 
-            {event.exhibitProducts && (
+            {event.exhibitItems && (
               <div style={{ marginTop: '20px' }}>
                 <h3>전시품목</h3>
-                <p>{event.exhibitProducts}</p>
+                <p>{event.exhibitItems}</p>
               </div>
             )}
 
