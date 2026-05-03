@@ -62,9 +62,10 @@ export interface EventRecord {
   targetLink: string;
   description?: string;
   admissionFee?: string;
-  exhibitItems?: string; // 주관 (행사를 주관하는 기관/단체)
-  exhibitProducts?: string; // 전시품목 (전시되는 품목/내용)
+  exhibitItems?: string; // 전시품목 (전시되는 품목/내용)
+  exhibitProducts?: string; // 전시제품 (전시되는 제품)
   organizer?: string;
+  supervisor?: string; // 주관 (행사를 주관하는 기관/단체)
   contact?: string;
   operatingHours?: string;
   venueHall?: string;
