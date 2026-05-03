@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { fetchEventById, fetchEvents } from '../services/eventService';
+import { fetchEventById } from '../services/eventService';
 import type { EventRecord } from '../types/core';
 import { calculateStatusBadge } from '../utils/badgeCalculator';
 import { Calendar, MapPin, Clock, DollarSign, Phone, ExternalLink, Share2, Copy } from 'lucide-react';
@@ -8,7 +8,6 @@ import { Calendar, MapPin, Clock, DollarSign, Phone, ExternalLink, Share2, Copy 
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [event, setEvent] = useState<EventRecord | null>(null);
-  const [relatedEvents, setRelatedEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,16 +17,6 @@ export function EventDetailPage() {
       setLoading(true);
       const eventData = await fetchEventById(id);
       setEvent(eventData);
-      
-      // 관련 행사 가져오기
-      if (eventData) {
-        const allEvents = await fetchEvents();
-        const related = allEvents
-          .filter(e => e.id !== eventData.id && e.category === eventData.category)
-          .slice(0, 3);
-        setRelatedEvents(related);
-      }
-      
       setLoading(false);
     }
     
@@ -189,9 +178,6 @@ export function EventDetailPage() {
                 <h4>대중교통</h4>
                 <p>지하철 2호선 삼성역 5, 6번 출구</p>
               </div>
-              <div style={{ marginTop: '20px', background: '#e0e0e0', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <p>지도 위젯 (네이버 지도 / 카카오맵)</p>
-              </div>
             </div>
           </section>
 
@@ -230,23 +216,6 @@ export function EventDetailPage() {
           )}
         </aside>
       </div>
-
-      {/* Related Events */}
-      <section className="related-events">
-        <h2>관련 행사</h2>
-        <div className="related-events-grid">
-          {relatedEvents.map(relatedEvent => (
-            <Link key={relatedEvent.id} to={`/event/${relatedEvent.id}`} className="related-event-card">
-              <img src={relatedEvent.poster} alt={relatedEvent.title} />
-              <div className="related-event-info">
-                <span className="related-event-category">{relatedEvent.category}</span>
-                <h4>{relatedEvent.title}</h4>
-                <p>{relatedEvent.venue}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
 
       {/* Footer */}
       <footer className="event-footer">
