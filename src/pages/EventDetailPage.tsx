@@ -165,20 +165,6 @@ export function EventDetailPage() {
               <h3>관람 장소</h3>
               <p>{event.venue}{event.venueHall ? ` ${event.venueHall.replace(/([A-Z])(?=[A-Z]|$)/g, ' $1').trim()}` : ''}</p>
             </div>
-
-            {/* Venue Details */}
-            <div style={{ marginTop: '30px' }}>
-              <h3>장소 정보</h3>
-              <p className="venue-address">서울특별시 강남구 영동대로 513</p>
-              <div style={{ marginTop: '15px' }}>
-                <h4>주차 정보</h4>
-                <p>지하 주차장 이용 가능 (유료)</p>
-              </div>
-              <div style={{ marginTop: '15px' }}>
-                <h4>대중교통</h4>
-                <p>지하철 2호선 삼성역 5, 6번 출구</p>
-              </div>
-            </div>
           </section>
 
           {/* External Link */}
