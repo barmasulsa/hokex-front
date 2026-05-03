@@ -23,8 +23,10 @@ export class FilterEngine {
     // 월 필터
     if (criteria.month && criteria.month !== '전체') {
       filtered = filtered.filter(event => {
-        const eventMonth = event.startDate.toISOString().slice(0, 7);
-        return eventMonth === criteria.month;
+        // 시작일 또는 종료일이 선택한 월에 포함되면 표시
+        const eventStartMonth = event.startDate.toISOString().slice(0, 7);
+        const eventEndMonth = event.endDate.toISOString().slice(0, 7);
+        return eventStartMonth === criteria.month || eventEndMonth === criteria.month;
       });
     }
 
@@ -74,7 +76,14 @@ export class FilterEngine {
     criteria: FilterCriteria,
     currentDate: Date = new Date()
   ): EventRecord[] {
-    let processed = this.filterPastEvents(events, currentDate);
+    let processed = events;
+    
+    // 월 필터가 "전체"일 때만 과거 행사 필터링
+    // 특정 월을 선택하면 그 달의 모든 행사(과거 포함)를 표시
+    if (!criteria.month || criteria.month === '전체') {
+      processed = this.filterPastEvents(events, currentDate);
+    }
+    
     processed = this.applyFilters(processed, criteria);
     processed = this.sortByStartDate(processed);
     return processed;
