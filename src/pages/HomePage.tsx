@@ -302,6 +302,21 @@ export function HomePage({ isAdmin }: HomePageProps) {
           <div className="sidebar-section">
             <h3 className="sidebar-title">지역</h3>
             <div className="region-accordion">
+              {/* 전체 버튼 */}
+              <div className="accordion-item">
+                <button
+                  className={`accordion-header ${selectedRegion === '전체' && selectedVenue === '전체' ? 'expanded' : ''}`}
+                  onClick={() => {
+                    setSelectedRegion('전체');
+                    setSelectedVenue('전체');
+                    setExpandedRegion(null);
+                  }}
+                >
+                  <span>전체</span>
+                </button>
+              </div>
+              
+              {/* 지역별 아코디언 */}
               {Object.values(Region).map((region) => {
                 const venues = REGION_VENUE_MAP[region];
                 const isExpanded = expandedRegion === region;
