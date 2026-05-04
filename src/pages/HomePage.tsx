@@ -79,14 +79,11 @@ export function HomePage({ isAdmin }: HomePageProps) {
       processed = FilterEngine.sortByStartDate(processed);
     }
     
-    // 검색어 필터링
+    // 검색어 필터링 (행사명만)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       processed = processed.filter(event => 
-        event.title.toLowerCase().includes(query) ||
-        event.venue.toLowerCase().includes(query) ||
-        event.industry.toLowerCase().includes(query) ||
-        event.description?.toLowerCase().includes(query)
+        event.title.toLowerCase().includes(query)
       );
     }
     
@@ -124,7 +121,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
         <div className="search-container">
           <input
             type="text"
-            placeholder="행사명, 장소, 산업 분야로 검색..."
+            placeholder="행사명으로 검색..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="search-input"
