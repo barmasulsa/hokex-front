@@ -36,15 +36,30 @@ export function HomePage({ isAdmin }: HomePageProps) {
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
   
+  // sessionStorage에서 필터 상태 복원
+  const getInitialFilterState = () => {
+    const saved = sessionStorage.getItem('homeFilterState');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const initialState = getInitialFilterState();
+  
   // 필터 상태
-  const [selectedRegion, setSelectedRegion] = useState<Region | '전체'>('전체');
-  const [selectedVenue, setSelectedVenue] = useState<Venue | '전체'>('전체');
-  const [selectedMonth, setSelectedMonth] = useState<string | '전체'>('전체');
-  const [selectedCategory, setSelectedCategory] = useState<Category | '전체'>('전체');
-  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
-  const [expandedRegion, setExpandedRegion] = useState<Region | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<Region | '전체'>(initialState?.selectedRegion || '전체');
+  const [selectedVenue, setSelectedVenue] = useState<Venue | '전체'>(initialState?.selectedVenue || '전체');
+  const [selectedMonth, setSelectedMonth] = useState<string | '전체'>(initialState?.selectedMonth || '전체');
+  const [selectedCategory, setSelectedCategory] = useState<Category | '전체'>(initialState?.selectedCategory || '전체');
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>(initialState?.selectedIndustries || []);
+  const [searchQuery, setSearchQuery] = useState<string>(initialState?.searchQuery || '');
+  const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(initialState?.dateRange || null);
+  const [expandedRegion, setExpandedRegion] = useState<Region | null>(initialState?.expandedRegion || null);
   const [showIndustries, setShowIndustries] = useState(false);
 
   // 필터링된 이벤트
@@ -79,6 +94,21 @@ export function HomePage({ isAdmin }: HomePageProps) {
       }
     }
   }, [loading, events.length]);
+
+  // 필터 상태 저장
+  useEffect(() => {
+    const filterState = {
+      selectedRegion,
+      selectedVenue,
+      selectedMonth,
+      selectedCategory,
+      selectedIndustries,
+      searchQuery,
+      dateRange,
+      expandedRegion
+    };
+    sessionStorage.setItem('homeFilterState', JSON.stringify(filterState));
+  }, [selectedRegion, selectedVenue, selectedMonth, selectedCategory, selectedIndustries, searchQuery, dateRange, expandedRegion]);
 
   useEffect(() => {
     const criteria: FilterCriteria = {
