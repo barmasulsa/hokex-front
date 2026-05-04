@@ -198,6 +198,37 @@ body {
   gap: 0.5rem;
 }
 
+.period-buttons-grid-sidebar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.month-select-sidebar {
+  grid-column: 1 / -1;
+  padding: 0.6rem;
+  border: 2px solid #e0e0e0;
+  background: white;
+  color: #666;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  text-align: left;
+  outline: none;
+}
+
+.month-select-sidebar:hover {
+  border-color: #4A90E2;
+  color: #4A90E2;
+}
+
+.month-select-sidebar:focus {
+  border-color: #4A90E2;
+  color: #4A90E2;
+}
+
 .filter-btn-sidebar {
   padding: 0.6rem 1rem;
   border: 2px solid #e0e0e0;

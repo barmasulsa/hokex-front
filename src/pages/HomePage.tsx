@@ -40,6 +40,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
   const [selectedRegion, setSelectedRegion] = useState<Region | '전체'>('전체');
   const [selectedVenue, setSelectedVenue] = useState<Venue | '전체'>('전체');
   const [selectedMonth, setSelectedMonth] = useState<string | '전체'>('전체');
+  const [selectedPeriodType, setSelectedPeriodType] = useState<'range' | 'month'>('range'); // 'range' or 'month'
   const [selectedCategory, setSelectedCategory] = useState<Category | '전체'>('전체');
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -161,10 +162,14 @@ export function HomePage({ isAdmin }: HomePageProps) {
           <div className="sidebar-section">
             <div className="sidebar-title-row">
               <h3 className="sidebar-title">기간</h3>
-              {dateRange && (
+              {(dateRange || selectedMonth !== '전체') && (
                 <button 
                   className="reset-btn-sidebar"
-                  onClick={() => setDateRange(null)}
+                  onClick={() => {
+                    setDateRange(null);
+                    setSelectedMonth('전체');
+                    setSelectedPeriodType('range');
+                  }}
                   title="초기화"
                 >
                   ✕
@@ -172,10 +177,15 @@ export function HomePage({ isAdmin }: HomePageProps) {
               )}
             </div>
             <div className="date-range-filter-sidebar">
-              <div className="period-buttons-sidebar">
+              {/* 기간 선택 버튼 (2줄) */}
+              <div className="period-buttons-grid-sidebar">
                 <button
-                  className={`filter-btn-sidebar ${!dateRange ? 'active' : ''}`}
-                  onClick={() => setDateRange(null)}
+                  className={`filter-btn-sidebar ${!dateRange && selectedMonth === '전체' ? 'active' : ''}`}
+                  onClick={() => {
+                    setDateRange(null);
+                    setSelectedMonth('전체');
+                    setSelectedPeriodType('range');
+                  }}
                 >
                   전체
                 </button>
@@ -189,6 +199,8 @@ export function HomePage({ isAdmin }: HomePageProps) {
                       start: today.toISOString().split('T')[0],
                       end: endDate.toISOString().split('T')[0]
                     });
+                    setSelectedMonth('전체');
+                    setSelectedPeriodType('range');
                   }}
                 >
                   1개월
@@ -203,6 +215,8 @@ export function HomePage({ isAdmin }: HomePageProps) {
                       start: today.toISOString().split('T')[0],
                       end: endDate.toISOString().split('T')[0]
                     });
+                    setSelectedMonth('전체');
+                    setSelectedPeriodType('range');
                   }}
                 >
                   3개월
@@ -217,6 +231,8 @@ export function HomePage({ isAdmin }: HomePageProps) {
                       start: today.toISOString().split('T')[0],
                       end: endDate.toISOString().split('T')[0]
                     });
+                    setSelectedMonth('전체');
+                    setSelectedPeriodType('range');
                   }}
                 >
                   6개월
@@ -231,11 +247,43 @@ export function HomePage({ isAdmin }: HomePageProps) {
                       start: today.toISOString().split('T')[0],
                       end: endDate.toISOString().split('T')[0]
                     });
+                    setSelectedMonth('전체');
+                    setSelectedPeriodType('range');
                   }}
                 >
                   1년
                 </button>
+                <select
+                  className="month-select-sidebar"
+                  value={selectedMonth}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSelectedMonth(value);
+                    if (value !== '전체') {
+                      setDateRange(null);
+                      setSelectedPeriodType('month');
+                    } else {
+                      setSelectedPeriodType('range');
+                    }
+                  }}
+                >
+                  <option value="전체">월 선택</option>
+                  <option value="2026-01">2026년 1월</option>
+                  <option value="2026-02">2026년 2월</option>
+                  <option value="2026-03">2026년 3월</option>
+                  <option value="2026-04">2026년 4월</option>
+                  <option value="2026-05">2026년 5월</option>
+                  <option value="2026-06">2026년 6월</option>
+                  <option value="2026-07">2026년 7월</option>
+                  <option value="2026-08">2026년 8월</option>
+                  <option value="2026-09">2026년 9월</option>
+                  <option value="2026-10">2026년 10월</option>
+                  <option value="2026-11">2026년 11월</option>
+                  <option value="2026-12">2026년 12월</option>
+                </select>
               </div>
+              
+              {/* 날짜 직접 입력 */}
               <div className="date-inputs-sidebar">
                 <input
                   type="date"
@@ -252,6 +300,8 @@ export function HomePage({ isAdmin }: HomePageProps) {
                         endDate.setMonth(today.getMonth() + 1);
                         setDateRange({ start: value, end: endDate.toISOString().split('T')[0] });
                       }
+                      setSelectedMonth('전체');
+                      setSelectedPeriodType('range');
                     }
                   }}
                 />
@@ -269,6 +319,8 @@ export function HomePage({ isAdmin }: HomePageProps) {
                         const today = new Date();
                         setDateRange({ start: today.toISOString().split('T')[0], end: value });
                       }
+                      setSelectedMonth('전체');
+                      setSelectedPeriodType('range');
                     }
                   }}
                 />
