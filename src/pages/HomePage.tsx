@@ -47,9 +47,9 @@ export function HomePage({ isAdmin }: HomePageProps) {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             setTimeout(() => {
-              window.scrollTo(0, scrollPos);
+              window.scrollTo({ top: scrollPos, behavior: 'instant' });
               sessionStorage.removeItem('homeScrollPosition');
-            }, 100);
+            }, 150);
           });
         });
       }
