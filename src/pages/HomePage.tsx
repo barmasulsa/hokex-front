@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { EventCard } from '../components/EventCard';
 import { FilterBar } from '../components/FilterBar';
-import { CustomDateInput } from '../components/CustomDateInput';
 import { fetchEvents } from '../services/eventService';
 import type { EventRecord, Venue, FilterCriteria } from '../types/core';
-import { Region, Category } from '../types/core';
+import { Region, Category, REGION_VENUE_MAP } from '../types/core';
 import { FilterEngine } from '../utils/filterEngine';
 
 interface HomePageProps {
@@ -23,6 +22,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
+  const [expandedRegion, setExpandedRegion] = useState<Region | null>(null);
 
   // 필터링된 이벤트
   const [filteredEvents, setFilteredEvents] = useState<EventRecord[]>(events);
@@ -206,9 +206,12 @@ export function HomePage({ isAdmin }: HomePageProps) {
                 </button>
               </div>
               <div className="date-inputs-sidebar">
-                <CustomDateInput
+                <input
+                  type="date"
+                  className="date-input-sidebar"
                   value={dateRange?.start || ''}
-                  onChange={(value) => {
+                  onChange={(e) => {
+                    const value = e.target.value;
                     if (value) {
                       if (dateRange) {
                         setDateRange({ ...dateRange, start: value });
@@ -222,9 +225,12 @@ export function HomePage({ isAdmin }: HomePageProps) {
                   }}
                 />
                 <span className="date-separator-sidebar">-</span>
-                <CustomDateInput
+                <input
+                  type="date"
+                  className="date-input-sidebar"
                   value={dateRange?.end || ''}
-                  onChange={(value) => {
+                  onChange={(e) => {
+                    const value = e.target.value;
                     if (value) {
                       if (dateRange) {
                         setDateRange({ ...dateRange, end: value });
@@ -258,6 +264,53 @@ export function HomePage({ isAdmin }: HomePageProps) {
                   ✕
                 </button>
               )}
+            </div>
+          </div>
+
+          {/* 지역 섹션 (아코디언) */}
+          <div className="sidebar-section">
+            <h3 className="sidebar-title">지역</h3>
+            <div className="region-accordion">
+              {Object.values(Region).map((region) => {
+                const venues = REGION_VENUE_MAP[region];
+                const isExpanded = expandedRegion === region;
+                const hasVenues = venues.length > 0;
+                
+                return (
+                  <div key={region} className="accordion-item">
+                    <button
+                      className={`accordion-header ${isExpanded ? 'expanded' : ''} ${!hasVenues ? 'disabled' : ''}`}
+                      onClick={() => {
+                        if (hasVenues) {
+                          setExpandedRegion(isExpanded ? null : region);
+                        }
+                      }}
+                      disabled={!hasVenues}
+                    >
+                      <span>{region}</span>
+                      {hasVenues && (
+                        <span className="accordion-icon">{isExpanded ? '▼' : '▶'}</span>
+                      )}
+                    </button>
+                    {isExpanded && hasVenues && (
+                      <div className="accordion-content">
+                        {venues.map((venue) => (
+                          <button
+                            key={venue}
+                            className={`venue-btn ${selectedVenue === venue ? 'active' : ''}`}
+                            onClick={() => {
+                              setSelectedVenue(venue);
+                              setSelectedRegion(region);
+                            }}
+                          >
+                            {venue}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </aside>
