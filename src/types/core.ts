@@ -5,6 +5,7 @@ export const Region = {
   Metropolitan: "수도권",
   Chungcheong: "충청도",
   Jeolla: "전라도",
+  Gangwon: "강원도",
   Gyeongsang: "경상도",
   Jeju: "제주도"
 } as const;
@@ -84,6 +85,7 @@ export const REGION_VENUE_MAP: Record<Region, Venue[]> = {
   [Region.Metropolitan]: ["킨텍스", "수원컨벤션센터", "수원메쎄", "송도컨벤시아"],
   [Region.Chungcheong]: ["대전컨벤션센터", "세종컨벤션센터", "청주오스코"],
   [Region.Jeolla]: ["김대중컨벤션센터", "군산새만금컨벤션센터"],
+  [Region.Gangwon]: [],
   [Region.Gyeongsang]: ["벡스코", "엑스코", "창원컨벤션센터", "유에코", "경주화백컨벤션센터", "구미코"],
   [Region.Jeju]: ["제주국제컨벤션센터"]
 };
