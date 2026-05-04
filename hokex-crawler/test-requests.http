@@ -1,0 +1,203 @@
+### HOKEX Crawler Test Server - API Test Requests
+### Use REST Client extension in VS Code to run these requests
+
+### Health Check
+GET http://localhost:3001/health
+
+### Get Component Status
+GET http://localhost:3001/api/test/status
+
+### Get Sample Data
+GET http://localhost:3001/api/test/sample
+
+### Test Data Validation - Valid Event
+POST http://localhost:3001/api/test/validate
+Content-Type: application/json
+
+{
+  "title": "서울 모터쇼 2026",
+  "posterUrl": "https://example.com/poster.jpg",
+  "region": "서울",
+  "venue": "코엑스",
+  "startDate": "2026-04-15",
+  "endDate": "2026-04-25",
+  "dayString": "(화)",
+  "category": "전시",
+  "industry": "자동차"
+}
+
+### Test Data Validation - Invalid Event (title too short)
+POST http://localhost:3001/api/test/validate
+Content-Type: application/json
+
+{
+  "title": "짧음",
+  "posterUrl": null,
+  "region": "서울",
+  "venue": "코엑스",
+  "startDate": "2026-04-15",
+  "endDate": "2026-04-25",
+  "dayString": "(화)",
+  "category": "전시",
+  "industry": "자동차"
+}
+
+### Test Data Validation - Invalid Event (wrong date order)
+POST http://localhost:3001/api/test/validate
+Content-Type: application/json
+
+{
+  "title": "테스트 행사",
+  "posterUrl": null,
+  "region": "서울",
+  "venue": "코엑스",
+  "startDate": "2026-04-25",
+  "endDate": "2026-04-15",
+  "dayString": "(화)",
+  "category": "전시",
+  "industry": "자동차"
+}
+
+### Test Data Normalization
+POST http://localhost:3001/api/test/normalize
+Content-Type: application/json
+
+{
+  "rawData": {
+    "title": "서울 모터쇼 2026",
+    "startDate": "2026.04.15",
+    "endDate": "2026.04.25",
+    "category": "전시회",
+    "industry": "자동차",
+    "organizer": "한국자동차산업협회",
+    "description": "국내 최대 자동차 전시회",
+    "posterUrl": "https://example.com/poster.jpg"
+  },
+  "venueCode": "COEX"
+}
+
+### Test Duplicate Detection - No Duplicate
+POST http://localhost:3001/api/test/duplicate
+Content-Type: application/json
+
+{
+  "event": {
+    "title": "서울 모터쇼 2026",
+    "posterUrl": "https://example.com/poster.jpg",
+    "region": "서울",
+    "venue": "코엑스",
+    "startDate": "2026-04-15",
+    "endDate": "2026-04-25",
+    "dayString": "(화)",
+    "category": "전시",
+    "industry": "자동차"
+  },
+  "existingEvents": [
+    {
+      "id": "existing-1",
+      "title": "부산 모터쇼 2026",
+      "posterUrl": null,
+      "region": "경상도",
+      "venue": "벡스코",
+      "startDate": "2026-05-01",
+      "endDate": "2026-05-10",
+      "dayString": "(금)",
+      "category": "전시",
+      "industry": "자동차"
+    }
+  ]
+}
+
+### Test Duplicate Detection - Found Duplicate
+POST http://localhost:3001/api/test/duplicate
+Content-Type: application/json
+
+{
+  "event": {
+    "title": "서울 모터쇼 2026",
+    "posterUrl": "https://example.com/new-poster.jpg",
+    "region": "서울",
+    "venue": "코엑스",
+    "startDate": "2026-04-15",
+    "endDate": "2026-04-25",
+    "dayString": "(화)",
+    "category": "전시",
+    "industry": "자동차",
+    "description": "새로운 설명"
+  },
+  "existingEvents": [
+    {
+      "id": "existing-1",
+      "title": "서울 모터쇼 2026",
+      "posterUrl": null,
+      "region": "서울",
+      "venue": "코엑스",
+      "startDate": "2026-04-15",
+      "endDate": "2026-04-25",
+      "dayString": "(화)",
+      "category": "전시",
+      "industry": "자동차"
+    }
+  ]
+}
+
+### Test Data Merge
+POST http://localhost:3001/api/test/merge
+Content-Type: application/json
+
+{
+  "existingEvent": {
+    "title": "서울 모터쇼 2026",
+    "posterUrl": null,
+    "region": "서울",
+    "venue": "코엑스",
+    "startDate": "2026-04-15",
+    "endDate": "2026-04-25",
+    "dayString": "(화)",
+    "category": "전시",
+    "industry": "자동차"
+  },
+  "newEvent": {
+    "title": "서울 모터쇼 2026",
+    "posterUrl": "https://example.com/poster.jpg",
+    "region": "서울",
+    "venue": "코엑스",
+    "startDate": "2026-04-15",
+    "endDate": "2026-04-25",
+    "dayString": "(화)",
+    "category": "전시",
+    "industry": "자동차",
+    "description": "새로운 설명 추가"
+  }
+}
+
+### Test Complete Workflow
+POST http://localhost:3001/api/test/workflow
+Content-Type: application/json
+
+{
+  "rawData": {
+    "title": "K-뷰티 엑스포 2026",
+    "startDate": "2026년 6월 10일",
+    "endDate": "2026년 6월 13일",
+    "category": "전시회",
+    "industry": "화장품",
+    "organizer": "한국화장품산업협회",
+    "description": "아시아 최대 뷰티 전시회"
+  },
+  "venueCode": "COEX",
+  "existingEvents": [
+    {
+      "id": "existing-1",
+      "title": "서울 모터쇼 2026",
+      "posterUrl": null,
+      "region": "서울",
+      "venue": "코엑스",
+      "startDate": "2026-04-15",
+      "endDate": "2026-04-25",
+      "dayString": "(화)",
+      "category": "전시",
+      "industry": "자동차"
+    }
+  ]
+}

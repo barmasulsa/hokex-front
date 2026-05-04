@@ -1,0 +1,481 @@
+
+
+
+
+
+
+
+
+
+<!DOCTYPE HTML>
+<html lang="KO">
+<head>
+	<!-- head_top -->
+		<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+	<meta name="keywords" content="">
+	<meta name="description" content=""> 
+	<link rel="canonical" href="">
+    <meta property="og:type" content="website"> 
+	<meta property="og:title" content="">
+	<meta property="og:description" content="">
+	<meta property="og:image" content="">
+	<meta property="og:url" content="">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="">
+	<meta name="twitter:description" content="">
+	<meta name="twitter:image" content="">
+	<meta name="twitter:domain" content="">
+    <link rel="icon" href="/resources/front/img/favicon.ico">
+	<link rel="stylesheet" href="/resources/front/css/reset.css">
+	<link rel="stylesheet" href="/resources/front/css/style.css?v=20230223">
+	<link rel="stylesheet" href="/resources/front/css/swiper.css">
+	<link rel="stylesheet" href="/resources/front/css/fullpage.css">
+	<link rel="stylesheet" href="/resources/front/css/jquery-ui.css">
+	<script src="/resources/front/js/jquery-1.9.1.min.js"></script>
+	<script src="/resources/front/js/jquery.easing.1.3.js"></script>
+	<script src="/resources/front/js/jquery.bxslider.js"></script>
+	<script src="/resources/front/js/jquery.rwdImageMaps.min.js"></script>
+	<script src="/resources/front/js/swiper.js"></script>
+	<script src="/resources/front/js/fullpage.js"></script>
+	<script src="/resources/front/js/jquery-ui.js"></script>
+	<script src="/resources/front/js/script.js?v=20230223"></script>
+	<script src="/resources/front/js/respond.src.js"></script>
+	<script src="/resources/front/js/mCmmFunction.js"></script>
+	<script>
+		var host = location.host.toLowerCase();
+		var currentAddress = location.href;
+		if (host.indexOf("www")== -1){
+			currentAddress = currentAddress.replace("//","//www.");
+		}
+		if (document.location.protocol == 'http:') {
+			document.location.href = currentAddress.replace('http:', 'https:');
+		}
+	</script>
+	<title>전시일정 &lt; SETEC</title>
+	<!-- //head_top -->
+	<script type="text/javascript">
+		function fn_list(){
+			$('#baseForm').attr('action', '/front/schedule/list.do');
+			$('#baseForm').submit();
+		}
+		
+		function fn_like(){ 
+			$('#baseForm').attr('action', '/front/schedule/like.do');
+			$('#baseForm').submit();
+		}
+	</script>
+</head>
+<body>
+	<div id="wrap" class="sub">
+		<!-- header -->
+		
+
+
+
+
+
+
+<div id="header">
+	<div class="inner">
+		<h1><a href="/"><img src="/resources/front/img/img_logo_setec.png" alt="SETEC"></a></h1>
+		<div class="gnb">
+			<ul>
+				<li>
+					<a href="/front/schedule/list.do">전시일정</a>
+					<div class="gnb_sub">
+						<ul>
+							<li><a href="/front/schedule/calendar.do">이달의 전시일정</a></li>
+							<li><a href="/front/schedule/list.do">전시회 세부일정</a></li>
+							<li><a href="/front/schedule/exhibition.do">전시동영상</a></li>
+						</ul>
+					</div>
+				</li>
+				<li>
+					<a href="/front/facility/facility01.do">시설안내</a>
+					<div class="gnb_sub">
+						<ul>
+							<li><a href="/front/facility/facility01.do">전시실안내</a></li>
+							<li><a href="/front/facility/equipment.do">장치물 현황</a></li>
+							<li><a href="/front/facility/facility02.do">컨벤션센터안내</a></li>
+							<li><a href="/front/facility/facility03.do">부대시설안내</a></li>
+							<li><a href="/front/facility/facility04.do">편의시설안내</a></li>
+							<li><a href="/front/facility/facility05.do">주요동선안내</a></li>
+						</ul>
+					</div>
+				</li>
+				<li>
+					<a href="/front/rent/rent01.do">시설임대</a>
+					<div class="gnb_sub">
+						<ul>
+							<li><a href="/front/rent/rent01.do">전시임대</a>
+								
+								<ul>
+									<li><a href="/front/rent/rent01.do">임대절차</a></li>
+									<li><a href="/front/rent/rent02.do">임대료</a></li>
+									<li><a href="/front/rent/form.do">임대서식</a></li>
+									<li><a href="/front/rent/useInfo.do">이용안내</a></li>
+								</ul>
+							</li>
+							<li><a href="/front/rent/rent05.do">컨벤션센터대관</a></li>
+							<li><a href="/front/rent/partners.do">지정협력업체</a></li>
+						</ul>
+					</div>
+				</li>
+				<li>
+					<a href="/front/traffic/trafficInfo.do">교통/숙박/관광</a>
+					<div class="gnb_sub">
+						<ul>
+							<li><a href="/front/traffic/trafficInfo.do">교통안내</a></li>
+							<li><a href="/front/traffic/accommodation.do">숙박시설</a></li>
+							<li><a href="/front/traffic/tour.do">주변볼거리</a></li>
+						</ul>
+					</div>
+				</li>
+				<li>
+					<a href="/front/introduce/setecInfo.do">SETEC 소개</a>
+					<div class="gnb_sub">
+						<ul>
+							<li><a href="/front/introduce/setecInfo.do">SETEC안내</a></li>
+							<li><a href="/front/introduce/history.do">SETEC 히스토리</a></li>
+							<li><a href="/front/introduce/notice_list.do">공지사항</a></li>
+							<li><a href="/front/introduce/press.do">뉴스</a></li>
+							<li><a href="/front/introduce/faq.do">FAQ</a></li>
+							<!--li><a href="https://www.sba.seoul.kr/Pages/CustomerCenter/CustomerInquiry.aspx" target="_blank" title="고객문의 새창열림">고객문의</a></li-->
+							<!--li><a href="http://ebook.sba.kr/Viewer/E20D6BP41BNV" target="_blank" title="브로슈어 새창열림">브로슈어</a></li-->
+						</ul>
+					</div>
+				</li>
+			</ul>
+		</div>
+		<div class="lang">
+			<ul>
+				<li><a href="/" class="on">KOR</a></li>
+				<li><a href="/eng/introduce/setecInfo.do">ENG</a></li>
+			</ul>
+		</div>
+		<div class="sns">
+			<ul>
+				<!--li><a href="https://www.instagram.com/setec_official/" target="_blank" title="새창열림"><img src="/resources/front/img/ico_insta02.png" alt="instagram"/></a></li-->
+				<li><a href="#" onclick="zoomcontrol.zoomin();"><img src="/resources/front/img/btn_font_plus.png" alt="화면 크게"/></a></li>
+				<li><a href="#" onclick="zoomcontrol.zoomreset();"><img src="/resources/front/img/btn_font_reset.png" alt="화면 리셋"/></a></li>
+				<li><a href="#" onclick="zoomcontrol.zoomout();"><img src="/resources/front/img/btn_font_minus.png" alt="화면 작게"/></a></li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+<div class="mobile_header">
+	<h1><a href="/"><img src="/resources/front/img/img_logo_setec.png" alt="SETEC"></a></h1>
+	<a href="#" class="open_fullmenu"><img src="/resources/front/img/btn_fullmenu.png" alt="전체메뉴"></a>
+	<div class="gnb">
+		<ul>
+			<li>
+				<a href="/front/eventSchedule/schedule.do">전시일정</a>
+				<div class="gnb_sub">
+					<ul>
+							<li><a href="/front/schedule/calendar.do">이달의 전시일정</a></li>
+							<li><a href="/front/schedule/list.do">전시회 세부일정</a></li>
+					</ul>
+				</div>
+			</li>
+			<li>
+				<a href="/front/facility/facility01.do">시설안내</a>
+				<div class="gnb_sub">
+					<ul>
+						<li><a href="/front/facility/facility01.do">전시실안내</a></li>
+						<li><a href="/front/facility/equipment.do">장치물 현황</a></li>
+						<li><a href="/front/facility/facility02.do">컨벤션센터안내</a></li>
+						<li><a href="/front/facility/facility03.do">부대시설안내</a></li>
+						<li><a href="/front/facility/facility04.do">편의시설안내</a></li>
+						<li><a href="/front/facility/facility05.do">주요동선안내</a></li>
+					</ul>
+				</div>
+			</li>
+			<li>
+				<a href="/front/rent/rent01.do">시설임대</a>
+				<div class="gnb_sub">
+					<ul>
+						<li><a href="/front/rent/rent01.do">전시임대</a>
+							
+							<ul>
+								<li><a href="/front/rent/rent01.do">임대절차</a></li>
+								<li><a href="/front/rent/rent02.do">임대료</a></li>
+								<li><a href="/front/rent/form.do">임대서식</a></li>
+								<li><a href="/front/rent/useInfo.do">이용안내</a></li>
+							</ul>
+						</li>
+						<li><a href="/front/rent/rent05.do">컨벤션센터대관</a></li>
+						<li><a href="/front/rent/partners.do">지정협력업체</a></li>
+					</ul>
+				</div>
+			</li>
+			<li>
+				<a href="/front/traffic/trafficInfo.do">교통/숙박/관광</a>
+				<div class="gnb_sub">
+					<ul>
+						<li><a href="/front/traffic/trafficInfo.do">교통안내</a></li>
+						<li><a href="/front/traffic/accommodation.do">숙박시설</a></li>
+						<li><a href="/front/traffic/tour.do">주변볼거리</a></li>
+					</ul>
+				</div>
+			</li>
+			<li>
+				<a href="/front/introduce/setecInfo.do">SETEC 소개</a>
+				<div class="gnb_sub">
+					<ul>
+						<li><a href="/front/introduce/setecInfo.do">SETEC안내</a></li>
+						<li><a href="/front/introduce/history.do">SETEC 히스토리</a></li>
+						<li><a href="/front/introduce/notice_list.do">공지사항</a></li>
+						<li><a href="/front/introduce/faq.do">FAQ</a></li>
+						<!--li><a href="https://www.sba.seoul.kr/Pages/CustomerCenter/CustomerInquiry.aspx" target="_blank" title="고객문의 새창열림">고객문의</a></li-->
+						<!--li><a href="http://ebook.sba.kr/Viewer/E20D6BP41BNV" target="_blank" title="브로슈어 새창열림">브로슈어</a></li-->
+					</ul>
+				</div>
+			</li>
+		</ul>
+		<div class="lang">
+			<ul>
+				<li><a href="/" class="on">KOR</a></li>
+				<li><a href="/eng/introduce/setecInfo.do">ENG</a></li>
+			</ul>
+		</div>
+	</div>
+</div>
+		<!-- //header -->
+		
+		<!-- path -->
+		<div class="path">
+			<ul>
+				<li class="home">
+					<a href="/"><img src="/resources/front/img/ico_home.png" alt="HOME"/></a>
+				</li>
+				<li>
+					<a href="#">행사일정</a>
+					
+<div class="path_list">
+	<ul>
+		<li><a href="#">행사일정</a></li>
+		<li><a href="/front/facility/facility01.do">시설안내</a></li>
+		<li><a href="/front/rent/rent01.do">시설임대</a></li>
+		<li><a href="/front/traffic/trafficInfo.do">교통/숙박/관광</a></li>
+		<li><a href="/front/introduce/setecInfo.do">SETEC 소개</a></li>
+	</ul>
+</div>
+				</li>
+				<li>
+					<a href="#">전시일정</a>
+					
+<div class="path_list">
+	<ul>
+		<li><a href="#">현재 행사일정</a></li>
+		<li><a href="#">전시일정</a></li>
+	</ul>
+</div>
+				</li>
+			</ul>
+		</div>
+		<!-- //path -->
+		
+		<div class="sub_top">
+			<h2>전시일정</h2>
+			<a href="#" class="btn_print"><img src="/resources/front/img/btn_print.png" alt="프린트"/></a>
+		</div>
+		
+		<!-- container -->
+		<div id="container">
+			<form name="baseForm" id="baseForm" method="get" action="/front/schedule/view.do"  >
+			<input type="hidden" name="sIdx" id="sIdx" value="2280" />
+			<input type="hidden" name="pageIndex" value=""/>
+			<input type="hidden" name="searchKeyword" id="searchKeyword" value="" />
+			<input type="hidden" name="searchCondition" id="searchCondition" value="" />
+			<input type="hidden" name="searchSDate" id="searchSDate" value="" />
+			<input type="hidden" name="searchEDate" id="searchEDate" value="" />
+			<!-- 본문내용 -->
+			<div class="exhibit_view">
+			
+				<!-- <h3 class="h3_tit">전시일정</h3> -->
+				
+				<div class="info_wrap">
+					<div class="img_area">
+						<div class="big">
+							<ul>
+								
+									<li><img src="/upload/schedule/20260211/B7B4D356705047509F057024ABDB6846.png" alt="제3회 2026 관상어 파충류 박람회" onerror="this.src='/resources/front/img/no_img.gif'"></li>
+								
+								
+									
+							</ul>
+						</div>
+						<div class="like">438</div>
+						<div class="thumb" id="thumb">
+							<ul>
+								
+									<li><a href="#" data-slide-index="0"><img src="/upload/schedule/20260211/B7B4D356705047509F057024ABDB6846.png" alt="제3회 2026 관상어 파충류 박람회" onerror="this.src='/resources/front/img/no_img.gif'"></a></li>
+								
+								
+							</ul>
+						</div>
+					</div>
+					
+					<div class="txt_area">
+						<h4>제3회 2026 관상어 파충류 박람회</h4>
+						<ul>
+							<li>
+								<strong class="tit">기간</strong>
+								<p>2026-05-09 ~ 2026-05-10</p>
+							</li>
+							<li>
+								<strong class="tit">시간</strong>
+								<p>10:00 ~ 18:00 (입장 마감 17:30)​</p>
+							</li>
+							<li>
+								<strong class="tit">장소</strong>
+								<p>제1전시실, 제2전시실, 제3전시실</p>
+							</li>
+							<li>
+								<strong class="tit">주최</strong>
+								<p>파충류 동반자, 남홍렙타일, 에스아쿠아, 슬기로운물생활TV</p>
+							</li>
+							<li>
+								<strong class="tit">전화번호</strong>
+								<p></p>
+							</li>
+							<li>
+								<strong class="tit">팩스번호</strong>
+								<p></p>
+							</li>
+							<!--li>
+								<strong class="tit">담당자</strong>
+								<p></p>
+							</li>
+							<li>
+								<strong class="tit">이메일</strong>
+								<p><a href="mailto:"></a></p>
+							</li-->
+							<li>
+								<strong class="tit">홈페이지</strong>
+								<p><a href="" target="_blank" title="새창열림"></a></p>
+							</li>
+							
+						</ul>
+						<div class="btn">
+							<a href="#" onclick="fn_like(); return false;" class="btn_like">좋아요</a>
+							<a href="#" onclick="fn_list(); return false;" class="btn_list">목록으로</a>
+						</div>
+					</div>
+				</div>
+				
+				<div class="detail">
+					<h4>행사상세정보</h4>
+					<p>
+						[전시시간 정보]<br />
+운영기간 : 2026년 05월 09일(토) ~ 2026년 05월 10일(일)<br />
+운영시간 : 10:00 ~ 18:00 (입장 마감 17:30)​<br />
+<br />
+[할인정보]<br />
+사전 예매 성인 입장권 9,000원 <br />
+사전 예매 청소년 입장권 7,000원 <br />
+사전 예매 어린이,시니어 입장권 5,000원 ​<br />
+ <br />
+[무료입장]<br />
+장애인 및 동반 1인 : 복지카드 또는 관련 증명서 지참<br />
+국가유공자 : 국가 유공자증 또는 관련 증명서 지참<br />
+48개월 미만 영유아 : 관련 증명서 지참​​
+					</p>
+				</div>
+				
+			</div>
+			</form>
+			<!-- //본문내용 -->
+
+		</div>
+		<!-- //container -->
+		
+		<!-- footer -->
+		
+
+
+
+
+
+					
+<div id="footer">
+	<div class="inner">
+		<div class="logo">
+			<a href="#"><img src="/resources/front/img/img_foot_logo.png" alt="SBA"></a>
+			<a href="#"><img src="/resources/front/img/img_foot_logo_2023.png" alt="동행매력 특별시서울 로고"></a>
+		</div>
+		<div class="txt">
+			<div class="foot_menu">
+				<ul>
+					<!--li><a href="http://www.sba.seoul.kr/kr/p04" target="_blank">개인정보처리방침</a></li-->
+				</ul>
+			</div>
+			<div class="address">
+				서울특별시 강남구 남부순환로 3104     대표번호 : 02-2187-4600     팩스 : 02-2187-4620<br>
+				Copyright (c) 2014 SETEC. All Rights Reserved
+			</div>
+		</div>
+		<div class="family_site">
+			<div class="item">
+				<a href="#">관련사이트</a>
+				<div class="family_site_list">
+					<ul>
+						<li><a href="http://atcenter.at.or.kr/" target="_blank">AT CENTER</a></li>
+						<li><a href="http://www.bexco.co.kr/kor/Main.do" target="_blank">BEXCO</a></li>
+						<li><a href="http://ceco.co.kr/" target="_blank">CECO</a></li>
+						<li><a href="http://www.coex.co.kr/" target="_blank">COEX</a></li>
+						<li><a href="https://www.exco.co.kr/" target="_blank">EXCO</a></li>
+						<li><a href="http://www.kintex.com/" target="_blank">KINTEX</a></li>
+						<li><a href="http://www.iccjeju.co.kr/" target="_blank">ICC JEJU</a></li>
+						<li><a href="https://kdjcenter.gjto.or.kr/" target="_blank">김대중컨벤션센터</a></li>
+						<li><a href="http://www.keoa.org/" target="_blank">한국전시산업진흥회</a></li>
+					</ul>
+				</div>
+			</div>
+			<div class="item">
+				<a href="#">패밀리사이트</a>
+				<div class="family_site_list">
+					<ul>
+                        <li><a href="https://www.sba.seoul.kr" target="_blank">서울경제진흥원</a></li>
+                        <li><a href="https://seoul.rnbd.kr" target="_blank">서울R&D지원센터</a></li>
+                        <li><a href="https://www.startup-plus.kr" target="_blank">스타트업플러스</a></li>
+                        <li><a href="https://smc.sba.kr" target="_blank">국제유통센터</a></li>
+                        <li><a href="https://sesac.seoul.kr/" target="_blank">청년취업사관학교 새싹</a></li>
+                        <li><a href="http://www.ipseoul.kr" target="_blank">서울지식재산센터</a></li>
+                        <li><a href="https://sbsc.sba.kr" target="_blank">서울기업지원센터</a></li>
+                        <li><a href="http://investseoul.org" target="_blank">인베스트서울</a></li>
+                        <li><a href="http://btheb.sba.kr" target="_blank">B the B</a></li>
+                        <li><a href="https://smbiz.sba.kr/" target="_blank">서울도시제조허브</a></li>
+                        <li><a href="https://hiseoul.sba.kr" target="_blank">하이서울기업</a></li>
+                        <li><a href="https://tradeon.sba.kr" target="_blank">트레이드온</a></li>
+                        <li><a href="https://www.spp.kr" target="_blank">SPP</a></li>                
+                        <li><a href="https://creativeforce.sba.kr" target="_blank">크리에이티브포스</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- LOGGER(TM) TRACKING SCRIPT V.40 FOR logger.co.kr / 15583 : COMBINE TYPE / DO NOT ALTER THIS SCRIPT. -->
+<script type="text/javascript">var _TRK_LID = "15583";var _L_TD = "ssl.logger.co.kr";var _TRK_CDMN = ".setec.or.kr";</script>
+<script type="text/javascript">var _CDN_DOMAIN = location.protocol == "https:" ? "https://fs.bizspring.net" : "http://fs.bizspring.net";
+(function (b, s) { var f = b.getElementsByTagName(s)[0], j = b.createElement(s); j.async = true; j.src = '//fs.bizspring.net/fs4/bstrk.1.js'; f.parentNode.insertBefore(j, f); })(document, 'script');
+</script>
+<noscript><img alt="Logger Script" width="1" height="1" src="http://ssl.logger.co.kr/tracker.1.tsp?u=15583&amp;js=N"/></noscript>
+<!-- END OF LOGGER TRACKING SCRIPT -->
+
+<!-- 리포트2.0 로그분석코드 시작 -->
+<script type="text/javascript">
+var sTime = new Date().getTime();
+(function(i,s,o,g,r,a,m){i['webObject']=g;i['webUid']=r;a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})
+(window,document,'script','//setec2021.weblog.cafe24.com/weblog.js?v='+sTime,'setec2021');
+</script>
+<!-- 리포트2.0 로그분석코드 완료 -->
+		<!-- //footer -->
+	</div>
+	
+</body>
+</html>
