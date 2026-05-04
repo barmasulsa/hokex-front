@@ -177,18 +177,8 @@ export function HomePage({ isAdmin }: HomePageProps) {
               )}
             </div>
             <div className="date-range-filter-sidebar">
-              {/* 기간 선택 버튼 (2줄) */}
-              <div className="period-buttons-grid-sidebar">
-                <button
-                  className={`filter-btn-sidebar ${!dateRange && selectedMonth === '전체' ? 'active' : ''}`}
-                  onClick={() => {
-                    setDateRange(null);
-                    setSelectedMonth('전체');
-                    setSelectedPeriodType('range');
-                  }}
-                >
-                  전체
-                </button>
+              {/* 기간 선택 버튼 (1줄에 4개) */}
+              <div className="period-buttons-row-sidebar">
                 <button
                   className="filter-btn-sidebar"
                   onClick={() => {
@@ -253,35 +243,37 @@ export function HomePage({ isAdmin }: HomePageProps) {
                 >
                   1년
                 </button>
-                <select
-                  className="month-select-sidebar"
-                  value={selectedMonth}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSelectedMonth(value);
-                    if (value !== '전체') {
-                      setDateRange(null);
-                      setSelectedPeriodType('month');
-                    } else {
-                      setSelectedPeriodType('range');
-                    }
-                  }}
-                >
-                  <option value="전체">월 선택</option>
-                  <option value="2026-01">2026년 1월</option>
-                  <option value="2026-02">2026년 2월</option>
-                  <option value="2026-03">2026년 3월</option>
-                  <option value="2026-04">2026년 4월</option>
-                  <option value="2026-05">2026년 5월</option>
-                  <option value="2026-06">2026년 6월</option>
-                  <option value="2026-07">2026년 7월</option>
-                  <option value="2026-08">2026년 8월</option>
-                  <option value="2026-09">2026년 9월</option>
-                  <option value="2026-10">2026년 10월</option>
-                  <option value="2026-11">2026년 11월</option>
-                  <option value="2026-12">2026년 12월</option>
-                </select>
               </div>
+              
+              {/* 월 선택 드롭다운 */}
+              <select
+                className="month-select-sidebar"
+                value={selectedMonth}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSelectedMonth(value);
+                  if (value !== '전체') {
+                    setDateRange(null);
+                    setSelectedPeriodType('month');
+                  } else {
+                    setSelectedPeriodType('range');
+                  }
+                }}
+              >
+                <option value="전체">월 선택</option>
+                <option value="2026-01">2026년 1월</option>
+                <option value="2026-02">2026년 2월</option>
+                <option value="2026-03">2026년 3월</option>
+                <option value="2026-04">2026년 4월</option>
+                <option value="2026-05">2026년 5월</option>
+                <option value="2026-06">2026년 6월</option>
+                <option value="2026-07">2026년 7월</option>
+                <option value="2026-08">2026년 8월</option>
+                <option value="2026-09">2026년 9월</option>
+                <option value="2026-10">2026년 10월</option>
+                <option value="2026-11">2026년 11월</option>
+                <option value="2026-12">2026년 12월</option>
+              </select>
               
               {/* 날짜 직접 입력 */}
               <div className="date-inputs-sidebar">

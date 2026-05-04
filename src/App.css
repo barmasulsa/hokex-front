@@ -198,14 +198,14 @@ body {
   gap: 0.5rem;
 }
 
-.period-buttons-grid-sidebar {
+.period-buttons-row-sidebar {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.4rem;
 }
 
 .month-select-sidebar {
-  grid-column: 1 / -1;
+  width: 100%;
   padding: 0.6rem;
   border: 2px solid #e0e0e0;
   background: white;
