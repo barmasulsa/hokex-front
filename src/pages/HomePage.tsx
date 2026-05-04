@@ -257,13 +257,11 @@ export function HomePage({ isAdmin }: HomePageProps) {
             selectedMonth={selectedMonth}
             selectedCategory={selectedCategory}
             selectedIndustries={selectedIndustries}
-            dateRange={dateRange}
             onRegionChange={setSelectedRegion}
             onVenueChange={setSelectedVenue}
             onMonthChange={setSelectedMonth}
             onCategoryChange={setSelectedCategory}
             onIndustriesChange={setSelectedIndustries}
-            onDateRangeChange={setDateRange}
           />
 
           {/* 결과 카운트 */}
