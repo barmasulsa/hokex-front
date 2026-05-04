@@ -121,7 +121,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
         <div className="search-container">
           <input
             type="text"
-            placeholder="행사명으로 검색..."
+            placeholder="행사명 검색"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="search-input"
@@ -147,7 +147,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
               <div className="period-buttons-sidebar">
                 <button
                   className={`filter-btn-sidebar ${!dateRange ? 'active' : ''}`}
-                  onClick={() => onDateRangeChange(null)}
+                  onClick={() => setDateRange(null)}
                 >
                   전체
                 </button>
