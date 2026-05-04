@@ -134,60 +134,6 @@ export function FilterBar({
 
   return (
     <div className="filter-bar">
-      {/* 기간 필터 */}
-      <div className="filter-section">
-        <h3 className="filter-title">기간</h3>
-        <div className="date-range-filter">
-          <div className="period-buttons">
-            <button
-              className={`filter-btn ${!dateRange ? 'active' : ''}`}
-              onClick={() => onDateRangeChange(null)}
-            >
-              전체
-            </button>
-            <button
-              className="filter-btn"
-              onClick={() => setDateRangeByPeriod(1)}
-            >
-              1개월
-            </button>
-            <button
-              className="filter-btn"
-              onClick={() => setDateRangeByPeriod(3)}
-            >
-              3개월
-            </button>
-            <button
-              className="filter-btn"
-              onClick={() => setDateRangeByPeriod(6)}
-            >
-              6개월
-            </button>
-            <button
-              className="filter-btn"
-              onClick={() => setDateRangeByPeriod(12)}
-            >
-              1년
-            </button>
-          </div>
-          <div className="date-inputs">
-            <input
-              type="date"
-              value={dateRange?.start || ''}
-              onChange={(e) => handleStartDateChange(e.target.value)}
-              className="date-input"
-            />
-            <span className="date-separator">-</span>
-            <input
-              type="date"
-              value={dateRange?.end || ''}
-              onChange={(e) => handleEndDateChange(e.target.value)}
-              className="date-input"
-            />
-          </div>
-        </div>
-      </div>
-
       {/* 지역 필터 */}
       <div className="filter-section">
         <h3 className="filter-title">지역</h3>

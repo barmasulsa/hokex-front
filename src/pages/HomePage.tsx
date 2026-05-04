@@ -60,7 +60,10 @@ export function HomePage({ isAdmin }: HomePageProps) {
       industries: selectedIndustries.length > 0 ? selectedIndustries : undefined,
     };
 
-    let processed = FilterEngine.process(events, criteria);
+    // 날짜 범위가 설정되지 않았을 때만 과거 행사 필터링
+    let processed = dateRange 
+      ? FilterEngine.applyFilters(events, criteria)
+      : FilterEngine.process(events, criteria);
     
     // 날짜 범위 필터링
     if (dateRange) {
@@ -72,6 +75,8 @@ export function HomePage({ isAdmin }: HomePageProps) {
         // 행사 기간이 선택한 날짜 범위와 겹치는지 확인
         return eventStart <= endDate && eventEnd >= startDate;
       });
+      // 날짜 범위 설정 시 정렬
+      processed = FilterEngine.sortByStartDate(processed);
     }
     
     // 검색어 필터링
@@ -135,48 +140,158 @@ export function HomePage({ isAdmin }: HomePageProps) {
         </div>
       </div>
 
-      {/* 필터 바 */}
-      <FilterBar
-        selectedRegion={selectedRegion}
-        selectedVenue={selectedVenue}
-        selectedMonth={selectedMonth}
-        selectedCategory={selectedCategory}
-        selectedIndustries={selectedIndustries}
-        dateRange={dateRange}
-        onRegionChange={setSelectedRegion}
-        onVenueChange={setSelectedVenue}
-        onMonthChange={setSelectedMonth}
-        onCategoryChange={setSelectedCategory}
-        onIndustriesChange={setSelectedIndustries}
-        onDateRangeChange={setDateRange}
-      />
-
-      {/* 결과 카운트 */}
-      <div className="results-info">
-        <p>{loading ? '로딩 중...' : `${filteredEvents.length}개의 행사`}</p>
-      </div>
-
-      {/* 행사 그리드 */}
-      <div className="events-grid">
-        {loading ? (
-          <div className="no-results">
-            <p>행사 정보를 불러오는 중...</p>
+      {/* 메인 컨텐츠 영역 (사이드바 + 행사 그리드) */}
+      <div className="main-content-wrapper">
+        {/* 왼쪽 사이드바 - 기간 필터 */}
+        <aside className="filter-sidebar">
+          <div className="sidebar-section">
+            <h3 className="sidebar-title">기간</h3>
+            <div className="date-range-filter-sidebar">
+              <div className="period-buttons-sidebar">
+                <button
+                  className={`filter-btn-sidebar ${!dateRange ? 'active' : ''}`}
+                  onClick={() => onDateRangeChange(null)}
+                >
+                  전체
+                </button>
+                <button
+                  className="filter-btn-sidebar"
+                  onClick={() => {
+                    const today = new Date();
+                    const endDate = new Date(today);
+                    endDate.setMonth(today.getMonth() + 1);
+                    setDateRange({
+                      start: today.toISOString().split('T')[0],
+                      end: endDate.toISOString().split('T')[0]
+                    });
+                  }}
+                >
+                  1개월
+                </button>
+                <button
+                  className="filter-btn-sidebar"
+                  onClick={() => {
+                    const today = new Date();
+                    const endDate = new Date(today);
+                    endDate.setMonth(today.getMonth() + 3);
+                    setDateRange({
+                      start: today.toISOString().split('T')[0],
+                      end: endDate.toISOString().split('T')[0]
+                    });
+                  }}
+                >
+                  3개월
+                </button>
+                <button
+                  className="filter-btn-sidebar"
+                  onClick={() => {
+                    const today = new Date();
+                    const endDate = new Date(today);
+                    endDate.setMonth(today.getMonth() + 6);
+                    setDateRange({
+                      start: today.toISOString().split('T')[0],
+                      end: endDate.toISOString().split('T')[0]
+                    });
+                  }}
+                >
+                  6개월
+                </button>
+                <button
+                  className="filter-btn-sidebar"
+                  onClick={() => {
+                    const today = new Date();
+                    const endDate = new Date(today);
+                    endDate.setFullYear(today.getFullYear() + 1);
+                    setDateRange({
+                      start: today.toISOString().split('T')[0],
+                      end: endDate.toISOString().split('T')[0]
+                    });
+                  }}
+                >
+                  1년
+                </button>
+              </div>
+              <div className="date-inputs-sidebar">
+                <input
+                  type="date"
+                  value={dateRange?.start || ''}
+                  onChange={(e) => {
+                    if (dateRange) {
+                      setDateRange({ ...dateRange, start: e.target.value });
+                    } else {
+                      const today = new Date();
+                      const endDate = new Date(today);
+                      endDate.setMonth(today.getMonth() + 1);
+                      setDateRange({ start: e.target.value, end: endDate.toISOString().split('T')[0] });
+                    }
+                  }}
+                  className="date-input-sidebar"
+                />
+                <span className="date-separator-sidebar">-</span>
+                <input
+                  type="date"
+                  value={dateRange?.end || ''}
+                  onChange={(e) => {
+                    if (dateRange) {
+                      setDateRange({ ...dateRange, end: e.target.value });
+                    } else {
+                      const today = new Date();
+                      setDateRange({ start: today.toISOString().split('T')[0], end: e.target.value });
+                    }
+                  }}
+                  className="date-input-sidebar"
+                />
+              </div>
+            </div>
           </div>
-        ) : filteredEvents.length === 0 ? (
-          <div className="no-results">
-            <p>조건에 맞는 행사가 없습니다.</p>
+        </aside>
+
+        {/* 오른쪽 메인 영역 */}
+        <div className="main-content-area">
+          {/* 필터 바 */}
+          <FilterBar
+            selectedRegion={selectedRegion}
+            selectedVenue={selectedVenue}
+            selectedMonth={selectedMonth}
+            selectedCategory={selectedCategory}
+            selectedIndustries={selectedIndustries}
+            dateRange={dateRange}
+            onRegionChange={setSelectedRegion}
+            onVenueChange={setSelectedVenue}
+            onMonthChange={setSelectedMonth}
+            onCategoryChange={setSelectedCategory}
+            onIndustriesChange={setSelectedIndustries}
+            onDateRangeChange={setDateRange}
+          />
+
+          {/* 결과 카운트 */}
+          <div className="results-info">
+            <p>{loading ? '로딩 중...' : `${filteredEvents.length}개의 행사`}</p>
           </div>
-        ) : (
-          filteredEvents.map(event => (
-            <EventCard
-              key={event.id}
-              event={event}
-              isAdmin={isAdmin}
-              onSave={handleSave}
-              onEdit={handleEdit}
-            />
-          ))
-        )}
+
+          {/* 행사 그리드 */}
+          <div className="events-grid">
+            {loading ? (
+              <div className="no-results">
+                <p>행사 정보를 불러오는 중...</p>
+              </div>
+            ) : filteredEvents.length === 0 ? (
+              <div className="no-results">
+                <p>조건에 맞는 행사가 없습니다.</p>
+              </div>
+            ) : (
+              filteredEvents.map(event => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  isAdmin={isAdmin}
+                  onSave={handleSave}
+                  onEdit={handleEdit}
+                />
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </>
   );
