@@ -219,6 +219,8 @@ export function HomePage({ isAdmin }: HomePageProps) {
                 <input
                   type="date"
                   value={dateRange?.start || ''}
+                  min="2020-01-01"
+                  max="2030-12-31"
                   onChange={(e) => {
                     if (dateRange) {
                       setDateRange({ ...dateRange, start: e.target.value });
@@ -235,6 +237,8 @@ export function HomePage({ isAdmin }: HomePageProps) {
                 <input
                   type="date"
                   value={dateRange?.end || ''}
+                  min="2020-01-01"
+                  max="2030-12-31"
                   onChange={(e) => {
                     if (dateRange) {
                       setDateRange({ ...dateRange, end: e.target.value });
