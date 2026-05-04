@@ -444,6 +444,20 @@ body {
   border-bottom: 1px solid #e0e0e0;
 }
 
+/* 필터 바 결과 카운트 */
+.filter-results-count {
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 1.5rem;
+}
+
+.filter-results-count p {
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
 .filter-section {
   margin-bottom: 1.5rem;
 }
@@ -595,6 +609,7 @@ body {
   gap: 1.5rem;
   max-width: 1600px;
   margin: 0 auto;
+  background: white;
 }
 
 .no-results {

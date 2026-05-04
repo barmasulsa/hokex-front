@@ -9,6 +9,7 @@ interface FilterBarProps {
   selectedMonth: string | '전체';
   selectedCategory: Category | '전체';
   selectedIndustries: string[];
+  filteredCount: number;
   onRegionChange: (region: Region | '전체') => void;
   onVenueChange: (venue: Venue | '전체') => void;
   onMonthChange: (month: string | '전체') => void;
@@ -44,6 +45,7 @@ export function FilterBar({
   selectedMonth,
   selectedCategory,
   selectedIndustries,
+  filteredCount,
   onRegionChange,
   onVenueChange,
   onMonthChange,
@@ -98,6 +100,11 @@ export function FilterBar({
 
   return (
     <div className="filter-bar">
+      {/* 결과 카운트 (상단) */}
+      <div className="filter-results-count">
+        <p>{filteredCount}개의 행사</p>
+      </div>
+
       {/* 지역 필터 */}
       <div className="filter-section">
         <h3 className="filter-title">지역</h3>

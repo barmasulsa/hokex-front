@@ -529,17 +529,13 @@ export function HomePage({ isAdmin }: HomePageProps) {
             selectedMonth={selectedMonth}
             selectedCategory={selectedCategory}
             selectedIndustries={selectedIndustries}
+            filteredCount={filteredEvents.length}
             onRegionChange={setSelectedRegion}
             onVenueChange={setSelectedVenue}
             onMonthChange={setSelectedMonth}
             onCategoryChange={setSelectedCategory}
             onIndustriesChange={setSelectedIndustries}
           />
-
-          {/* 결과 카운트 */}
-          <div className="results-info">
-            <p>{loading ? '로딩 중...' : `${filteredEvents.length}개의 행사`}</p>
-          </div>
 
           {/* 행사 그리드 */}
           <div className="events-grid">
