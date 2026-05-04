@@ -201,7 +201,15 @@ body {
 .period-buttons-row-sidebar {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 0.4rem;
+  gap: 0.3rem;
+}
+
+.period-buttons-row-sidebar .filter-btn-sidebar {
+  padding: 0.5rem 0.3rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .month-select-sidebar {
