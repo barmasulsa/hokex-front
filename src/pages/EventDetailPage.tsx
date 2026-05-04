@@ -47,6 +47,7 @@ export function EventDetailPage() {
 
   // D-Day 배지 텍스트 생성
   const getBadgeText = () => {
+    console.log('Badge:', badge, 'Days:', daysUntilStart); // 디버그 로그
     // 디버깅: 항상 일수 표시
     if (badge === 'D-Day') {
       return `D-${daysUntilStart}`;
@@ -204,6 +205,8 @@ export function EventDetailPage() {
                   <ExternalLink size={20} /> 전시장 행사 페이지
                 </a>
               )}
+              {/* 디버그: venueEventPageUrl 값 확인 */}
+              {console.log('venueEventPageUrl:', event.venueEventPageUrl)}
             </div>
           </section>
         </div>

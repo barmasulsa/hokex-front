@@ -59,6 +59,7 @@ export interface EventRecord {
   category: Category;
   industry: Industry;
   targetLink: string;
+  venueEventPageUrl?: string; // 전시장 행사 소개 페이지 URL (예: COEX 행사 페이지)
   description?: string;
   admissionFee?: string;
   exhibitItems?: string; // 전시품목 (전시되는 품목/내용)

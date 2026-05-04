@@ -1228,6 +1228,24 @@ body {
   transform: translateY(-2px);
 }
 
+.btn-venue-page {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  background: #4A90E2;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-venue-page:hover {
+  background: #357ABD;
+  transform: translateY(-2px);
+}
+
 .event-sidebar {
   display: flex;
   flex-direction: column;
