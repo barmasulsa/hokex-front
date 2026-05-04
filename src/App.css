@@ -287,14 +287,16 @@ body {
   flex-direction: row;
   gap: 0.5rem;
   align-items: center;
+  width: 100%;
 }
 
 .date-input-sidebar {
   flex: 1;
-  padding: 0.6rem;
+  min-width: 0;
+  padding: 0.6rem 0.4rem;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   outline: none;
   transition: all 0.3s;
   background: #f8f9fa;
@@ -311,8 +313,9 @@ body {
 .date-separator-sidebar {
   color: #666;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   flex-shrink: 0;
+  padding: 0 0.2rem;
 }
 
 /* 지역 아코디언 */
