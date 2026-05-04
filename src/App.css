@@ -230,6 +230,7 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: center;
 }
 
 .month-select-sidebar {
@@ -267,7 +268,7 @@ body {
   font-size: 0.9rem;
   font-weight: 600;
   transition: all 0.2s;
-  text-align: left;
+  text-align: center;
 }
 
 .filter-btn-sidebar:hover {
