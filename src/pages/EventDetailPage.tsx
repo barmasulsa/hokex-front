@@ -186,7 +186,7 @@ export function EventDetailPage() {
 
             <div style={{ marginTop: '30px' }}>
               <h3>관람 장소</h3>
-              <p>{event.venue}{event.venueHall ? ` ${event.venueHall.replace(/([A-Z])(?=[A-Z]|$)/g, ' $1').trim()}` : ''}</p>
+              <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
             </div>
           </section>
 
