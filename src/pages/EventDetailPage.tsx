@@ -16,6 +16,8 @@ export function EventDetailPage() {
       
       setLoading(true);
       const eventData = await fetchEventById(id);
+      console.log('Event data loaded:', eventData); // 디버그: 전체 이벤트 데이터
+      console.log('venueEventPageUrl:', eventData?.venueEventPageUrl); // 디버그: URL 확인
       setEvent(eventData);
       setLoading(false);
     }
@@ -47,9 +49,9 @@ export function EventDetailPage() {
 
   // D-Day 배지 텍스트 생성
   const getBadgeText = () => {
-    console.log('Badge:', badge, 'Days:', daysUntilStart); // 디버그 로그
-    // 디버깅: 항상 일수 표시
-    if (badge === 'D-Day') {
+    console.log('Badge:', badge, 'Days until start:', daysUntilStart); // 디버그 로그
+    // COMING SOON이나 D-Day일 때 일수 표시
+    if (badge === 'D-Day' || badge === 'COMING SOON') {
       return `D-${daysUntilStart}`;
     }
     return badge;
@@ -205,8 +207,6 @@ export function EventDetailPage() {
                   <ExternalLink size={20} /> 전시장 행사 페이지
                 </a>
               )}
-              {/* 디버그: venueEventPageUrl 값 확인 */}
-              {console.log('venueEventPageUrl:', event.venueEventPageUrl)}
             </div>
           </section>
         </div>
