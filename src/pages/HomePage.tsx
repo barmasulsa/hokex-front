@@ -35,17 +35,19 @@ export function HomePage({ isAdmin }: HomePageProps) {
     loadEvents();
   }, []);
 
-  // 스크롤 위치 복원 (컴포넌트 마운트 시 한 번만)
+  // 스크롤 위치 복원 (데이터 로딩 완료 후)
   useEffect(() => {
-    const savedScrollPosition = sessionStorage.getItem('homeScrollPosition');
-    if (savedScrollPosition) {
-      // 약간의 지연을 주어 DOM이 완전히 렌더링된 후 스크롤
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(savedScrollPosition, 10));
-        sessionStorage.removeItem('homeScrollPosition');
-      }, 100);
+    if (!loading && events.length > 0) {
+      const savedScrollPosition = sessionStorage.getItem('homeScrollPosition');
+      if (savedScrollPosition) {
+        // requestAnimationFrame을 사용하여 렌더링 완료 후 스크롤
+        requestAnimationFrame(() => {
+          window.scrollTo(0, parseInt(savedScrollPosition, 10));
+          sessionStorage.removeItem('homeScrollPosition');
+        });
+      }
     }
-  }, []);
+  }, [loading, events.length]);
 
   useEffect(() => {
     const criteria: FilterCriteria = {
