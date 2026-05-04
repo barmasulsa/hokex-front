@@ -58,7 +58,7 @@ export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
   return (
     <div className="event-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
       <div className="card-image-wrap" style={{ position: 'relative', width: '100%', height: '200px', overflow: 'hidden' }}>
-        <img src={event.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <img src={event.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
         <div style={{
           position: 'absolute',
           top: 0,
