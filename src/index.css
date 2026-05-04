@@ -365,7 +365,8 @@ input, select { font-family: inherit; outline: none; }
 }
 .badge-ongoing { background: rgba(16, 185, 129, 0.9); }
 .badge-dday { background: rgba(239, 68, 68, 0.9); }
-.badge-comingsoon { background: rgba(245, 158, 11, 0.9); }
+.badge-comingsoon { background: rgba(0, 123, 255, 0.9); }
+.badge-end { background: rgba(108, 117, 125, 0.9); }
 .badge-closed { background: rgba(100, 116, 139, 0.9); }
 
 .save-btn {

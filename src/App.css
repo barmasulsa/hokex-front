@@ -365,7 +365,7 @@ body {
 
 .status-badge.coming-soon,
 .status-badge.badge-comingsoon {
-  background: #6C757D;
+  background: #007BFF;
 }
 
 .status-badge.d-day,
@@ -381,6 +381,11 @@ body {
 .status-badge.registering,
 .status-badge.badge-registering {
   background: #17A2B8;
+}
+
+.status-badge.end,
+.status-badge.badge-end {
+  background: #6C757D;
 }
 
 /* 찜 버튼 */

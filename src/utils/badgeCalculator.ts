@@ -26,6 +26,11 @@ export class BadgeCalculator {
       (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
     );
 
+    // 행사가 이미 종료됨 (종료일이 오늘보다 이전)
+    if (today > endDate) {
+      return StatusBadge.End;
+    }
+
     // 현재 날짜가 시작 날짜와 종료 날짜 사이 (오늘 시작하는 행사 포함)
     if (today >= startDate && today <= endDate) {
       return StatusBadge.OnGoing;

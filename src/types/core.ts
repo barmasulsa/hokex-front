@@ -43,7 +43,8 @@ export const StatusBadge = {
   ComingSoon: "COMING SOON",
   DDay: "D-Day",
   OnGoing: "ON-GOING",
-  Registering: "REGISTERING"
+  Registering: "REGISTERING",
+  End: "END"
 } as const;
 
 export type StatusBadge = typeof StatusBadge[keyof typeof StatusBadge];
