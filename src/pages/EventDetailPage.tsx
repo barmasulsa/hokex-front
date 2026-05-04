@@ -69,11 +69,11 @@ export function EventDetailPage() {
     if (contact.includes('\n')) {
       return contact;
     }
-    // Email:, Tel:, Fax: 앞에 줄바꿈 추가
+    // Email:, Tel:, Fax: 앞에 줄바꿈 추가 (공백 1개 이상)
     return contact
-      .replace(/\s+(Email:)/g, '\n$1')
-      .replace(/\s+(Tel:)/g, '\n$1')
-      .replace(/\s+(Fax:)/g, '\n$1')
+      .replace(/\s+(Email:)/gi, '\n$1')
+      .replace(/\s+(Tel:)/gi, '\n$1')
+      .replace(/\s+(Fax:)/gi, '\n$1')
       .trim();
   };
 
