@@ -47,7 +47,8 @@ export function EventDetailPage() {
 
   // D-Day 배지 텍스트 생성
   const getBadgeText = () => {
-    if (badge === 'D-Day' && daysUntilStart > 0 && daysUntilStart < 60) {
+    // 디버깅: 항상 일수 표시
+    if (badge === 'D-Day') {
       return `D-${daysUntilStart}`;
     }
     return badge;
