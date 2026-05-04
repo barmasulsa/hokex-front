@@ -121,31 +121,33 @@ export function HomePage({ isAdmin }: HomePageProps) {
         </div>
       )}
 
-      {/* 검색바 (Sticky) */}
-      <div className="search-bar-sticky">
-        <div className="search-container">
-          <input
-            type="text"
-            placeholder="행사명 검색"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
-          />
-          {searchQuery && (
-            <button 
-              className="search-clear"
-              onClick={() => setSearchQuery('')}
-            >
-              ✕
-            </button>
-          )}
-        </div>
-      </div>
-
       {/* 메인 컨텐츠 영역 (사이드바 + 행사 그리드) */}
       <div className="main-content-wrapper">
-        {/* 왼쪽 사이드바 - 기간 필터 */}
+        {/* 왼쪽 사이드바 - 검색 + 기간 필터 */}
         <aside className="filter-sidebar">
+          {/* 검색 섹션 */}
+          <div className="sidebar-section">
+            <h3 className="sidebar-title">검색</h3>
+            <div className="search-container-sidebar">
+              <input
+                type="text"
+                placeholder="행사명 검색"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input-sidebar"
+              />
+              {searchQuery && (
+                <button 
+                  className="search-clear-sidebar"
+                  onClick={() => setSearchQuery('')}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 기간 섹션 */}
           <div className="sidebar-section">
             <h3 className="sidebar-title">기간</h3>
             <div className="date-range-filter-sidebar">

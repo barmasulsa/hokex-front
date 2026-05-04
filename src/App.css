@@ -59,66 +59,6 @@ body {
   font-weight: 500;
 }
 
-/* 검색바 (Sticky) */
-.search-bar-sticky {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: white;
-  padding: 1rem 2rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
-}
-
-.search-container {
-  max-width: 600px;
-  margin: 0 auto;
-  position: relative;
-}
-
-.search-input {
-  width: 100%;
-  padding: 0.75rem 2.5rem 0.75rem 1rem;
-  font-size: 1rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 24px;
-  outline: none;
-  transition: all 0.3s;
-}
-
-.search-input:focus {
-  border-color: #4A90E2;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-}
-
-.search-input::placeholder {
-  color: #999;
-}
-
-.search-clear {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #e0e0e0;
-  border: none;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #666;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.search-clear:hover {
-  background: #d0d0d0;
-  color: #333;
-}
-
 /* 메인 컨텐츠 래퍼 (사이드바 + 메인) */
 .main-content-wrapper {
   display: flex;
@@ -138,7 +78,7 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   height: fit-content;
   position: sticky;
-  top: 100px;
+  top: 20px;
 }
 
 .sidebar-section {
@@ -154,6 +94,56 @@ body {
   font-weight: 700;
   color: #333;
   margin-bottom: 1rem;
+}
+
+.search-container-sidebar {
+  position: relative;
+  margin-bottom: 0;
+}
+
+.search-input-sidebar {
+  width: 100%;
+  padding: 0.6rem 2rem 0.6rem 0.75rem;
+  font-size: 0.9rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.3s;
+  background: #f8f9fa;
+}
+
+.search-input-sidebar:focus {
+  border-color: #4A90E2;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.search-input-sidebar::placeholder {
+  color: #999;
+}
+
+.search-clear-sidebar {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #e0e0e0;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #666;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.search-clear-sidebar:hover {
+  background: #d0d0d0;
+  color: #333;
 }
 
 .date-range-filter-sidebar {
