@@ -45,7 +45,6 @@ export function FilterBar({
   selectedMonth,
   selectedCategory,
   selectedIndustries,
-  filteredCount,
   onRegionChange,
   onVenueChange,
   onMonthChange,
