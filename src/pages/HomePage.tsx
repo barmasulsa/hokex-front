@@ -20,6 +20,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
   const [selectedMonth, setSelectedMonth] = useState<string | '전체'>('전체');
   const [selectedCategory, setSelectedCategory] = useState<Category | '전체'>('전체');
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   // 필터링된 이벤트
   const [filteredEvents, setFilteredEvents] = useState<EventRecord[]>(events);
@@ -58,9 +59,21 @@ export function HomePage({ isAdmin }: HomePageProps) {
       industries: selectedIndustries.length > 0 ? selectedIndustries : undefined,
     };
 
-    const processed = FilterEngine.process(events, criteria);
+    let processed = FilterEngine.process(events, criteria);
+    
+    // 검색어 필터링
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      processed = processed.filter(event => 
+        event.title.toLowerCase().includes(query) ||
+        event.venue.toLowerCase().includes(query) ||
+        event.industry.toLowerCase().includes(query) ||
+        event.description?.toLowerCase().includes(query)
+      );
+    }
+    
     setFilteredEvents(processed);
-  }, [events, selectedRegion, selectedVenue, selectedMonth, selectedCategory, selectedIndustries]);
+  }, [events, selectedRegion, selectedVenue, selectedMonth, selectedCategory, selectedIndustries, searchQuery]);
 
   const handleSave = (eventId: string) => {
     setEvents(prev => prev.map(event => 
@@ -87,6 +100,27 @@ export function HomePage({ isAdmin }: HomePageProps) {
           ✏️ 관리자 모드: 행사 정보를 클릭하여 수정할 수 있습니다
         </div>
       )}
+
+      {/* 검색바 (Sticky) */}
+      <div className="search-bar-sticky">
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="행사명, 장소, 산업 분야로 검색..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-input"
+          />
+          {searchQuery && (
+            <button 
+              className="search-clear"
+              onClick={() => setSearchQuery('')}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* 필터 바 */}
       <FilterBar
