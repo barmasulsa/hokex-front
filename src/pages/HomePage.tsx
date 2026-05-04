@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { EventCard } from '../components/EventCard';
+import { FilterBar } from '../components/FilterBar';
 import { fetchEvents } from '../services/eventService';
 import type { EventRecord, Venue, FilterCriteria } from '../types/core';
 import { Region, Category, REGION_VENUE_MAP } from '../types/core';
@@ -521,8 +522,22 @@ export function HomePage({ isAdmin }: HomePageProps) {
 
         {/* 오른쪽 메인 영역 */}
         <div className="main-content-area">
+          {/* 필터 바 */}
+          <FilterBar
+            selectedRegion={selectedRegion}
+            selectedVenue={selectedVenue}
+            selectedMonth={selectedMonth}
+            selectedCategory={selectedCategory}
+            selectedIndustries={selectedIndustries}
+            onRegionChange={setSelectedRegion}
+            onVenueChange={setSelectedVenue}
+            onMonthChange={setSelectedMonth}
+            onCategoryChange={setSelectedCategory}
+            onIndustriesChange={setSelectedIndustries}
+          />
+
           {/* 결과 카운트 */}
-          <div className="results-info-top">
+          <div className="results-info">
             <p>{loading ? '로딩 중...' : `${filteredEvents.length}개의 행사`}</p>
           </div>
 

@@ -587,25 +587,9 @@ body {
   font-size: 0.9rem;
 }
 
-/* 결과 정보 (상단, FilterBar 제거 버전) */
-.results-info-top {
-  padding: 1.5rem 2rem;
-  background: white;
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.results-info-top p {
-  color: #333;
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0;
-}
-
 /* 행사 그리드 */
 .events-grid {
-  padding: 0 2rem 2rem 2rem;
+  padding: 2rem;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
