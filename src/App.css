@@ -70,7 +70,7 @@ body {
 
 /* 왼쪽 사이드바 */
 .filter-sidebar {
-  width: 250px;
+  width: 280px;
   flex-shrink: 0;
   background: white;
   padding: 1.5rem;
@@ -225,8 +225,8 @@ body {
 }
 
 .period-buttons-row-sidebar .filter-btn-sidebar {
-  padding: 0.5rem 0.3rem;
-  font-size: 0.8rem;
+  padding: 0.5rem 0.4rem;
+  font-size: 0.85rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -283,12 +283,13 @@ body {
 
 .date-inputs-sidebar {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 0.5rem;
+  align-items: center;
 }
 
 .date-input-sidebar {
-  width: 100%;
+  flex: 1;
   padding: 0.6rem;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
@@ -307,10 +308,10 @@ body {
 }
 
 .date-separator-sidebar {
-  text-align: center;
   color: #666;
   font-weight: 600;
   font-size: 0.9rem;
+  flex-shrink: 0;
 }
 
 /* 지역 아코디언 */
