@@ -134,7 +134,7 @@ export function EventDetailPage() {
                   <Phone size={24} />
                   <div>
                     <h4>문의</h4>
-                    <p>{event.contact}</p>
+                    <p style={{ whiteSpace: 'pre-line' }}>{event.contact}</p>
                   </div>
                 </div>
               )}
