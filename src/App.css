@@ -97,6 +97,39 @@ body {
   margin-bottom: 1rem;
 }
 
+.sidebar-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.sidebar-title-row .sidebar-title {
+  margin-bottom: 0;
+}
+
+.reset-btn-sidebar {
+  background: #e0e0e0;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #666;
+  font-size: 14px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.reset-btn-sidebar:hover {
+  background: #d0d0d0;
+  color: #333;
+  transform: scale(1.1);
+}
+
 .search-container-sidebar {
   position: relative;
   margin-bottom: 0;

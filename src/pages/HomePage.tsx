@@ -127,7 +127,18 @@ export function HomePage({ isAdmin }: HomePageProps) {
         <aside className="filter-sidebar">
           {/* 기간 섹션 */}
           <div className="sidebar-section">
-            <h3 className="sidebar-title">기간</h3>
+            <div className="sidebar-title-row">
+              <h3 className="sidebar-title">기간</h3>
+              {dateRange && (
+                <button 
+                  className="reset-btn-sidebar"
+                  onClick={() => setDateRange(null)}
+                  title="초기화"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
             <div className="date-range-filter-sidebar">
               <div className="period-buttons-sidebar">
                 <button
@@ -297,7 +308,18 @@ export function HomePage({ isAdmin }: HomePageProps) {
 
           {/* 검색 섹션 */}
           <div className="sidebar-section">
-            <h3 className="sidebar-title">검색</h3>
+            <div className="sidebar-title-row">
+              <h3 className="sidebar-title">검색</h3>
+              {searchQuery && (
+                <button 
+                  className="reset-btn-sidebar"
+                  onClick={() => setSearchQuery('')}
+                  title="초기화"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
             <div className="search-container-sidebar">
               <input
                 type="text"
