@@ -563,6 +563,11 @@ export function HomePage({ isAdmin }: HomePageProps) {
             onIndustriesChange={setSelectedIndustries}
           />
 
+          {/* 결과 카운트 배너 */}
+          <div className="results-count-banner">
+            <p>{filteredEvents.length}개의 행사</p>
+          </div>
+
           {/* 행사 그리드 */}
           <div className="events-grid">
             {loading ? (

@@ -100,11 +100,6 @@ export function FilterBar({
 
   return (
     <div className="filter-bar">
-      {/* 결과 카운트 (상단) */}
-      <div className="filter-results-count">
-        <p>{filteredCount}개의 행사</p>
-      </div>
-
       {/* 지역 필터 */}
       <div className="filter-section">
         <h3 className="filter-title">지역</h3>

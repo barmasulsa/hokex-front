@@ -589,6 +589,21 @@ body {
   margin-top: 0.5rem;
 }
 
+/* 결과 카운트 배너 (행사 그리드 위) */
+.results-count-banner {
+  background: white;
+  padding: 1.5rem 2rem;
+  margin-bottom: 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.results-count-banner p {
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
 /* 결과 정보 */
 .results-info {
   padding: 1rem 2rem;
