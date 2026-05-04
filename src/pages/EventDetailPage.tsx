@@ -2,7 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { fetchEventById } from '../services/eventService';
 import type { EventRecord } from '../types/core';
-import { calculateStatusBadge } from '../utils/badgeCalculator';
+import { calculateStatusBadge, calculateDaysUntilStart } from '../utils/badgeCalculator';
 import { Calendar, MapPin, Clock, DollarSign, Phone, ExternalLink, Share2, Copy } from 'lucide-react';
 
 export function EventDetailPage() {
@@ -43,15 +43,38 @@ export function EventDetailPage() {
   }
 
   const badge = calculateStatusBadge(event);
+  const daysUntilStart = calculateDaysUntilStart(event);
+
+  // D-Day 배지 텍스트 생성
+  const getBadgeText = () => {
+    if (badge === 'D-Day' && daysUntilStart > 0 && daysUntilStart < 60) {
+      return `D-${daysUntilStart}`;
+    }
+    return badge;
+  };
 
   const formatDateRange = () => {
     const startStr = `${event.startDate.toISOString().slice(0, 10).replace(/-/g, '.')} ${event.dayString}`;
     const generateDayString = (date: Date) => {
-      const days = ['(일)', '(월)', '(화)', '(수)', '(목)', '(금)', '(토)'];
+      const days = ['(일)', '(월)', '(화)', '(수)', '(금)', '(토)'];
       return days[date.getDay()];
     };
     const endStr = `${event.endDate.toISOString().slice(0, 10).replace(/-/g, '.')} ${generateDayString(event.endDate)}`;
     return `${startStr} ~ ${endStr}`;
+  };
+
+  // Contact 필드 포맷팅 (줄바꿈이 없는 경우 추가)
+  const formatContact = (contact: string) => {
+    // 이미 줄바꿈이 있으면 그대로 반환
+    if (contact.includes('\n')) {
+      return contact;
+    }
+    // Email:, Tel:, Fax: 앞에 줄바꿈 추가
+    return contact
+      .replace(/\s+(Email:)/g, '\n$1')
+      .replace(/\s+(Tel:)/g, '\n$1')
+      .replace(/\s+(Fax:)/g, '\n$1')
+      .trim();
   };
 
   const handleAddToCalendar = () => {
@@ -134,7 +157,7 @@ export function EventDetailPage() {
                   <Phone size={24} />
                   <div>
                     <h4>문의</h4>
-                    <p style={{ whiteSpace: 'pre-line' }}>{event.contact}</p>
+                    <p style={{ whiteSpace: 'pre-line' }}>{formatContact(event.contact)}</p>
                   </div>
                 </div>
               )}
@@ -167,14 +190,21 @@ export function EventDetailPage() {
             </div>
           </section>
 
-          {/* External Link */}
-          {event.targetLink && (
-            <section className="event-section">
-              <a href={event.targetLink} target="_blank" rel="noopener noreferrer" className="btn-official-website">
-                <ExternalLink size={20} /> 공식 웹사이트 방문
-              </a>
-            </section>
-          )}
+          {/* External Links */}
+          <section className="event-section">
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              {event.targetLink && (
+                <a href={event.targetLink} target="_blank" rel="noopener noreferrer" className="btn-official-website">
+                  <ExternalLink size={20} /> 공식 웹사이트 방문
+                </a>
+              )}
+              {event.venueEventPageUrl && (
+                <a href={event.venueEventPageUrl} target="_blank" rel="noopener noreferrer" className="btn-venue-page">
+                  <ExternalLink size={20} /> 전시장 행사 페이지
+                </a>
+              )}
+            </div>
+          </section>
         </div>
 
         {/* Sidebar */}
@@ -196,7 +226,7 @@ export function EventDetailPage() {
           {badge && (
             <div className="sidebar-card">
               <div className={`status-badge-large badge-${badge.toLowerCase().replace(/[\s-]+/g, '')}`}>
-                {badge}
+                {getBadgeText()}
               </div>
             </div>
           )}
