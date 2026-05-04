@@ -58,11 +58,12 @@ export function EventDetailPage() {
   };
 
   const formatDateRange = () => {
-    const startStr = `${event.startDate.toISOString().slice(0, 10).replace(/-/g, '.')} ${event.dayString}`;
     const generateDayString = (date: Date) => {
-      const days = ['(일)', '(월)', '(화)', '(수)', '(금)', '(토)'];
+      const days = ['(일)', '(월)', '(화)', '(수)', '(목)', '(금)', '(토)'];
       return days[date.getDay()];
     };
+    
+    const startStr = `${event.startDate.toISOString().slice(0, 10).replace(/-/g, '.')} ${generateDayString(event.startDate)}`;
     const endStr = `${event.endDate.toISOString().slice(0, 10).replace(/-/g, '.')} ${generateDayString(event.endDate)}`;
     return `${startStr} ~ ${endStr}`;
   };
