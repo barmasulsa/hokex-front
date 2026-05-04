@@ -49,13 +49,16 @@ export const VENUE_CONFIGS: VenueConfig[] = [
     region: '서울',
     columnMapping: {
       title: '행사명',
-      startDate: '시작일',
-      endDate: '종료일',
-      category: '구분',
-      industry: '산업',
-      organizer: '주최'
+      startDate: '행사 시작일자',
+      endDate: '행사 종료일자',
+      category: '행사구분',
+      industry: '행사분야',
+      organizer: '주최',
+      admissionFee: '입장료',
+      contact: '담당자/공연문의 정보',
+      targetLink: '관련 사이트'
     },
-    fileFormat: 'xlsx'
+    fileFormat: 'xls'
   },
   {
     code: 'AT_CENTER',

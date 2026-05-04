@@ -1,103 +1,149 @@
 /**
  * COEX Magok 자동 크롤링 스크립트
- * 기본 정보 크롤링 → Supabase 저장
+ * 엑셀 파일 파싱 → 데이터 처리 → Supabase 저장
  */
 
-import { createClient } from '@supabase/supabase-js';
-import * as dotenv from 'dotenv';
-import { CoexMagokScraper } from '../services/coex-magok-scraper';
+import * as fs from 'fs';
+import { ExcelParser } from '../core/excel-parser';
+import { DataNormalizer } from '../core/normalizer';
+import { DataValidator } from '../core/validator';
+import { SupabaseService } from '../services/supabase';
+import { PosterScraper } from '../services/poster-scraper';
+import { NormalizedEventData } from '../types/event';
 
-dotenv.config();
-
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-async function saveToDatabase(events: any[]): Promise<number> {
-  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('  데이터베이스 저장');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
-  let successCount = 0;
-  let skipCount = 0;
-  let errorCount = 0;
-
-  for (const event of events) {
-    try {
-      // 중복 체크
-      const { data: existing } = await supabase
-        .from('events')
-        .select('id')
-        .eq('title', event.title)
-        .eq('venue', '코엑스 마곡')
-        .eq('start_date', event.startDate)
-        .maybeSingle();
-
-      if (existing) {
-        console.log(`⏭️  중복: ${event.title}`);
-        skipCount++;
-        continue;
-      }
-
-      // 새 행사 저장
-      const { error } = await supabase
-        .from('events')
-        .insert({
-          title: event.title,
-          start_date: event.startDate,
-          end_date: event.endDate,
-          venue: '코엑스 마곡',
-          region: '서울',
-          venue_hall: event.venueHall || null,
-          poster_url: 'https://via.placeholder.com/400x300?text=No+Image',
-          category: event.category || '전시',
-          industry: '기타',
-          day_string: `${event.startDate} ~ ${event.endDate}`
-        });
-
-      if (error) {
-        console.error(`❌ 저장 실패: ${event.title}`, error.message);
-        errorCount++;
-      } else {
-        console.log(`✅ 저장: ${event.title}`);
-        successCount++;
-      }
-
-    } catch (error: any) {
-      console.error(`❌ 에러: ${event.title}`, error.message);
-      errorCount++;
-    }
-  }
-
-  console.log(`\n📊 저장 완료:`);
-  console.log(`   ✅ 성공: ${successCount}개`);
-  console.log(`   ⏭️  중복: ${skipCount}개`);
-  console.log(`   ❌ 실패: ${errorCount}개\n`);
-
-  return successCount;
-}
+const excelParser = new ExcelParser();
+const normalizer = new DataNormalizer();
+const validator = new DataValidator();
+const supabase = new SupabaseService();
+const posterScraper = new PosterScraper();
 
 async function autoCrawlMagok() {
   try {
     console.log(`\n🚀 COEX Magok 자동 크롤링 시작...\n`);
     console.log(`📅 ${new Date().toLocaleString('ko-KR')}\n`);
 
-    // 1단계: 기본 정보 크롤링
-    const scraper = new CoexMagokScraper();
-    const events = await scraper.scrapeEventList();
+    // 1단계: 엑셀 파일 읽기
+    console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+    console.log(`  1단계: 엑셀 파일 읽기`);
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
 
-    // 2단계: 데이터베이스 저장
-    if (events.length > 0) {
-      const savedCount = await saveToDatabase(events);
+    const filePath = 'Coex_Magok_Schedule_20260505010854.xls';
+    const fileBuffer = fs.readFileSync(filePath);
+    console.log(`✅ 파일 읽기 완료: ${filePath}\n`);
+
+    // 2단계: 엑셀 파일 파싱
+    console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+    console.log(`  2단계: 엑셀 파일 파싱`);
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
+
+    const parseOptions = {
+      columnMapping: {
+        title: '행사명',
+        startDate: '행사 시작일자',
+        endDate: '행사 종료일자',
+        category: '행사구분',
+        industry: '행사분야',
+        organizer: '주최',
+        admissionFee: '입장료',
+        contact: '담당자/공연문의 정보',
+        targetLink: '관련 사이트'
+      },
+      fileFormat: 'xls' as const
+    };
+
+    const rawEvents = excelParser.parseExcelFile(fileBuffer, parseOptions);
+    console.log(`✅ ${rawEvents.length}개 행사 데이터 추출 완료\n`);
+
+    // 3단계: 데이터 정규화 및 검증
+    console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+    console.log(`  3단계: 데이터 정규화 및 검증`);
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
+
+    const validEvents: NormalizedEventData[] = [];
+    let validCount = 0;
+    let invalidCount = 0;
+
+    for (const rawEvent of rawEvents) {
+      try {
+        const normalized = normalizer.normalize(rawEvent, 'COEX_MAGOK');
+        const validationResult = validator.validate(normalized);
+        
+        if (validationResult.isValid) {
+          validCount++;
+          validEvents.push(normalized);
+          console.log(`✅ ${normalized.title}`);
+        } else {
+          invalidCount++;
+          console.log(`❌ ${rawEvent.title}`);
+          validationResult.errors.forEach(err => {
+            console.log(`   - ${err.message}`);
+          });
+        }
+      } catch (error) {
+        invalidCount++;
+        console.log(`❌ ${rawEvent.title}`);
+        console.log(`   - 에러: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    console.log(`\n📈 검증 결과:`);
+    console.log(`   유효: ${validCount}개`);
+    console.log(`   무효: ${invalidCount}개`);
+    console.log(`   전체: ${rawEvents.length}개\n`);
+
+    // 4단계: 포스터 이미지 크롤링
+    if (validEvents.length > 0) {
+      console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      console.log(`  4단계: 포스터 이미지 크롤링`);
+      console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
       
+      for (let i = 0; i < validEvents.length; i++) {
+        const event = validEvents[i];
+        
+        if (event.targetLink) {
+          console.log(`${i + 1}/${validEvents.length} ${event.title}`);
+          const result = await posterScraper.scrapePostUrl(event.targetLink, event.title, 'COEX_MAGOK');
+          
+          if (result.posterUrl) {
+            event.posterUrl = result.posterUrl;
+            console.log(`   ✅ 포스터: ${result.posterUrl.substring(0, 60)}...`);
+          }
+          if (result.description) event.description = result.description;
+          if (result.admissionFee) event.admissionFee = result.admissionFee;
+          if (result.exhibitItems) event.exhibitItems = result.exhibitItems;
+          if (result.exhibitProducts) event.exhibitProducts = result.exhibitProducts;
+          if (result.organizer) event.organizer = result.organizer;
+          if (result.contact) event.contact = result.contact;
+          if (result.operatingHours) event.operatingHours = result.operatingHours;
+          if (result.venueHall) event.venueHall = result.venueHall;
+          
+          if (!result.posterUrl) {
+            console.log(`   ⚠️  포스터 없음`);
+          }
+        } else {
+          console.log(`${i + 1}/${validEvents.length} ${event.title} - 관련 사이트 없음`);
+        }
+      }
+      
+      console.log(`\n✅ 포스터 크롤링 완료\n`);
+    }
+
+    // 5단계: Supabase에 저장
+    if (validEvents.length > 0) {
+      console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      console.log(`  5단계: Supabase에 저장`);
+      console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
+
+      const savedCount = await supabase.saveEvents(validEvents, 'COEX_MAGOK');
+      
+      console.log(`\n✅ ${savedCount}개 행사 저장 완료!\n`);
       console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
       console.log(`  완료!`);
       console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
-      console.log(`✅ ${savedCount}개 행사 저장 완료!\n`);
       console.log(`🌐 웹사이트에서 확인: https://hokex-front.vercel.app/`);
       console.log(`🌐 로컬에서 확인: http://localhost:5173\n`);
     } else {
-      console.log(`\n⚠️  저장할 데이터가 없습니다.\n`);
+      console.log(`\n⚠️  저장할 유효한 데이터가 없습니다.\n`);
     }
 
   } catch (error) {
