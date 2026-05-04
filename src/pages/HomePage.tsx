@@ -175,8 +175,17 @@ export function HomePage({ isAdmin }: HomePageProps) {
               )}
             </div>
             <div className="date-range-filter-sidebar">
-              {/* 기간 선택 버튼 (1줄에 4개) */}
+              {/* 기간 선택 버튼 (1줄에 5개) */}
               <div className="period-buttons-row-sidebar">
+                <button
+                  className={`filter-btn-sidebar ${!dateRange && selectedMonth === '전체' ? 'active' : ''}`}
+                  onClick={() => {
+                    setDateRange(null);
+                    setSelectedMonth('전체');
+                  }}
+                >
+                  전체
+                </button>
                 <button
                   className="filter-btn-sidebar"
                   onClick={() => {
