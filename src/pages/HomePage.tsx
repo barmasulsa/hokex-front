@@ -308,18 +308,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
 
           {/* 검색 섹션 */}
           <div className="sidebar-section">
-            <div className="sidebar-title-row">
-              <h3 className="sidebar-title">검색</h3>
-              {searchQuery && (
-                <button 
-                  className="reset-btn-sidebar"
-                  onClick={() => setSearchQuery('')}
-                  title="초기화"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
+            <h3 className="sidebar-title">검색</h3>
             <div className="search-container-sidebar">
               <input
                 type="text"
