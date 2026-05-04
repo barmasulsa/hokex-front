@@ -42,10 +42,15 @@ export function HomePage({ isAdmin }: HomePageProps) {
     if (!loading && events.length > 0) {
       const savedScrollPosition = sessionStorage.getItem('homeScrollPosition');
       if (savedScrollPosition) {
-        // requestAnimationFrame을 사용하여 렌더링 완료 후 스크롤
+        // 여러 프레임을 기다려서 DOM이 완전히 렌더링된 후 스크롤
+        const scrollPos = parseInt(savedScrollPosition, 10);
         requestAnimationFrame(() => {
-          window.scrollTo(0, parseInt(savedScrollPosition, 10));
-          sessionStorage.removeItem('homeScrollPosition');
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              window.scrollTo(0, scrollPos);
+              sessionStorage.removeItem('homeScrollPosition');
+            }, 100);
+          });
         });
       }
     }
