@@ -10,6 +10,25 @@ import mappings from '../../config/mappings.json';
 
 export class DataNormalizer {
   /**
+   * Decode HTML entities in text
+   */
+  private decodeHtmlEntities(text: string): string {
+    const entities: Record<string, string> = {
+      '&amp;': '&',
+      '&lt;': '<',
+      '&gt;': '>',
+      '&quot;': '"',
+      '&#39;': "'",
+      '&apos;': "'",
+      '&nbsp;': ' '
+    };
+
+    return text.replace(/&[a-z]+;|&#\d+;/gi, (match) => {
+      return entities[match] || match;
+    });
+  }
+
+  /**
    * Normalize raw event data to HOKEX standard format
    */
   normalize(rawData: RawEventData, venueCode: string): NormalizedEventData {
@@ -36,7 +55,7 @@ export class DataNormalizer {
     const posterUrl = rawData.posterUrl || null;
 
     return {
-      title: rawData.title.trim(),
+      title: this.decodeHtmlEntities(rawData.title.trim()),
       posterUrl,
       region,
       venue,
