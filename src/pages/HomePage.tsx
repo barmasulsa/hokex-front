@@ -407,37 +407,42 @@ export function HomePage({ isAdmin }: HomePageProps) {
           {/* 카테고리 섹션 */}
           <div className="sidebar-section">
             <h3 className="sidebar-title">카테고리</h3>
-            <div className="category-buttons">
+            <div className="category-container">
+              {/* 전체 버튼 (첫 번째 줄) */}
               <button
                 className={`filter-btn-sidebar ${selectedCategory === '전체' ? 'active' : ''}`}
                 onClick={() => setSelectedCategory('전체')}
               >
                 전체
               </button>
-              <button
-                className={`filter-btn-sidebar ${selectedCategory === '전시' ? 'active' : ''}`}
-                onClick={() => setSelectedCategory('전시')}
-              >
-                전시
-              </button>
-              <button
-                className={`filter-btn-sidebar ${selectedCategory === '회의' ? 'active' : ''}`}
-                onClick={() => setSelectedCategory('회의')}
-              >
-                회의
-              </button>
-              <button
-                className={`filter-btn-sidebar ${selectedCategory === '팝업' ? 'active' : ''}`}
-                onClick={() => setSelectedCategory('팝업')}
-              >
-                팝업
-              </button>
-              <button
-                className={`filter-btn-sidebar ${selectedCategory === '공연' ? 'active' : ''}`}
-                onClick={() => setSelectedCategory('공연')}
-              >
-                공연
-              </button>
+              
+              {/* 나머지 카테고리 버튼 (두 번째 줄) */}
+              <div className="category-buttons-row">
+                <button
+                  className={`filter-btn-sidebar ${selectedCategory === '전시' ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory('전시')}
+                >
+                  전시
+                </button>
+                <button
+                  className={`filter-btn-sidebar ${selectedCategory === '회의' ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory('회의')}
+                >
+                  회의
+                </button>
+                <button
+                  className={`filter-btn-sidebar ${selectedCategory === '팝업' ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory('팝업')}
+                >
+                  팝업
+                </button>
+                <button
+                  className={`filter-btn-sidebar ${selectedCategory === '공연' ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory('공연')}
+                >
+                  공연
+                </button>
+              </div>
             </div>
           </div>
 

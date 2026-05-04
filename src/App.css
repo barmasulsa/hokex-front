@@ -326,14 +326,25 @@ body {
   gap: 0.5rem;
 }
 
-/* 카테고리 버튼 그리드 */
-.category-buttons {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+/* 카테고리 컨테이너 (기간 섹션과 동일한 레이아웃) */
+.category-container {
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
 }
 
-.category-buttons .filter-btn-sidebar {
+.category-buttons-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+}
+
+.category-buttons-row .filter-btn-sidebar {
+  padding: 0.6rem 0.5rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-align: center;
 }
 
