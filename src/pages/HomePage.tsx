@@ -24,33 +24,6 @@ export function HomePage({ isAdmin }: HomePageProps) {
   // 필터링된 이벤트
   const [filteredEvents, setFilteredEvents] = useState<EventRecord[]>(events);
 
-  // 스크롤 위치 복원
-  useEffect(() => {
-    const savedScrollPosition = sessionStorage.getItem('homeScrollPosition');
-    if (savedScrollPosition) {
-      window.scrollTo(0, parseInt(savedScrollPosition, 10));
-      sessionStorage.removeItem('homeScrollPosition');
-    }
-  }, [filteredEvents]);
-
-  // 스크롤 위치 저장 (페이지 떠날 때)
-  useEffect(() => {
-    const saveScrollPosition = () => {
-      sessionStorage.setItem('homeScrollPosition', window.scrollY.toString());
-    };
-
-    // 이벤트 카드 클릭 시 스크롤 위치 저장
-    const handleBeforeUnload = () => {
-      saveScrollPosition();
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, []);
-
   // Supabase에서 데이터 가져오기
   useEffect(() => {
     async function loadEvents() {
@@ -60,6 +33,18 @@ export function HomePage({ isAdmin }: HomePageProps) {
       setLoading(false);
     }
     loadEvents();
+  }, []);
+
+  // 스크롤 위치 복원 (컴포넌트 마운트 시 한 번만)
+  useEffect(() => {
+    const savedScrollPosition = sessionStorage.getItem('homeScrollPosition');
+    if (savedScrollPosition) {
+      // 약간의 지연을 주어 DOM이 완전히 렌더링된 후 스크롤
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedScrollPosition, 10));
+        sessionStorage.removeItem('homeScrollPosition');
+      }, 100);
+    }
   }, []);
 
   useEffect(() => {
