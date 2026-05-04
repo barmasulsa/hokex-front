@@ -50,6 +50,8 @@ export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
   };
 
   const handleCardClick = () => {
+    // 스크롤 위치 저장
+    sessionStorage.setItem('homeScrollPosition', window.scrollY.toString());
     navigate(`/event/${event.id}`);
   };
 
