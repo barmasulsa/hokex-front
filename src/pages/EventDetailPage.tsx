@@ -136,24 +136,15 @@ export function EventDetailPage() {
           {/* Event Info Section */}
           <section className="event-section">
             <h2>행사 소개</h2>
-            <div className="event-theme">
-              {event.description ? (
+            {event.description ? (
+              <div className="event-theme">
                 <p>{event.description}</p>
-              ) : (
-                <>
-                  <p>
-                    {event.title}는 {event.industry} 분야의 최신 트렌드와 혁신 기술을 한자리에서 만나볼 수 있는 
-                    국내 최대 규모의 전문 전시회입니다. 국내외 주요 기업들이 참가하여 신제품과 서비스를 선보이며, 
-                    업계 전문가들과의 네트워킹 기회를 제공합니다.
-                  </p>
-                  <p>
-                    다양한 컨퍼런스, 세미나, 워크숍이 함께 진행되어 산업 전반의 인사이트를 얻을 수 있으며, 
-                    비즈니스 미팅 공간에서 실질적인 거래 상담도 가능합니다. 
-                    {event.venue}에서 개최되는 이번 행사에 여러분을 초대합니다.
-                  </p>
-                </>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="event-theme">
+                <p>행사 소개 정보가 제공되지 않았습니다.</p>
+              </div>
+            )}
 
             <div className="event-details-grid">
               {event.operatingHours && (
