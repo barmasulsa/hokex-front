@@ -219,8 +219,14 @@ export function HomePage({ isAdmin }: HomePageProps) {
                 <input
                   type="date"
                   value={dateRange?.start || ''}
-                  min="2020-01-01"
-                  max="2030-12-31"
+                  onInput={(e) => {
+                    const input = e.target as HTMLInputElement;
+                    const value = input.value;
+                    // 년도가 4자리를 초과하면 입력 방지
+                    if (value && value.length > 10) {
+                      input.value = value.slice(0, 10);
+                    }
+                  }}
                   onChange={(e) => {
                     if (dateRange) {
                       setDateRange({ ...dateRange, start: e.target.value });
@@ -237,8 +243,14 @@ export function HomePage({ isAdmin }: HomePageProps) {
                 <input
                   type="date"
                   value={dateRange?.end || ''}
-                  min="2020-01-01"
-                  max="2030-12-31"
+                  onInput={(e) => {
+                    const input = e.target as HTMLInputElement;
+                    const value = input.value;
+                    // 년도가 4자리를 초과하면 입력 방지
+                    if (value && value.length > 10) {
+                      input.value = value.slice(0, 10);
+                    }
+                  }}
                   onChange={(e) => {
                     if (dateRange) {
                       setDateRange({ ...dateRange, end: e.target.value });
