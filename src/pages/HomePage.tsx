@@ -6,6 +6,28 @@ import type { EventRecord, Venue, FilterCriteria } from '../types/core';
 import { Region, Category, REGION_VENUE_MAP } from '../types/core';
 import { FilterEngine } from '../utils/filterEngine';
 
+// KOSIS 18개 품목 카테고리
+const INDUSTRIES = [
+  '농수축산/식음료',
+  '에너지/환경',
+  '섬유/의류/쥬얼리',
+  '금속/기계/장비',
+  '전기/전자/정보통신/방송',
+  '보건/의료/광학/정밀',
+  '건설/건축/인테리어',
+  '운송장비/서비스',
+  '가정용품/선물용품',
+  '뷰티/화장품',
+  '금융/부동산/전문서비스',
+  '공공/국방',
+  '교육',
+  '임신/출산/육아',
+  '웨딩',
+  '문화/예술',
+  '레저/관광/스포츠',
+  '기타'
+];
+
 interface HomePageProps {
   isAdmin: boolean;
 }
@@ -23,6 +45,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
   const [expandedRegion, setExpandedRegion] = useState<Region | null>(null);
+  const [showIndustries, setShowIndustries] = useState(false);
 
   // 필터링된 이벤트
   const [filteredEvents, setFilteredEvents] = useState<EventRecord[]>(events);
@@ -111,6 +134,14 @@ export function HomePage({ isAdmin }: HomePageProps) {
         : event
     ));
     console.log(`Edited event ${eventId}: ${field} = ${value}`);
+  };
+
+  const handleIndustryToggle = (industry: string) => {
+    if (selectedIndustries.includes(industry)) {
+      setSelectedIndustries(selectedIndustries.filter(i => i !== industry));
+    } else {
+      setSelectedIndustries([...selectedIndustries, industry]);
+    }
   };
 
   return (
@@ -311,6 +342,49 @@ export function HomePage({ isAdmin }: HomePageProps) {
                   </div>
                 );
               })}
+            </div>
+          </div>
+
+          {/* 전시품목 섹션 (아코디언) */}
+          <div className="sidebar-section">
+            <div className="sidebar-title-row">
+              <h3 className="sidebar-title">
+                전시품목
+                {selectedIndustries.length > 0 && (
+                  <span className="selected-count-inline"> ({selectedIndustries.length})</span>
+                )}
+              </h3>
+              {selectedIndustries.length > 0 && (
+                <button 
+                  className="reset-btn-sidebar"
+                  onClick={() => setSelectedIndustries([])}
+                  title="초기화"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            <div className="industry-accordion">
+              <button
+                className={`accordion-header ${showIndustries ? 'expanded' : ''}`}
+                onClick={() => setShowIndustries(!showIndustries)}
+              >
+                <span>{showIndustries ? '품목 숨기기' : '품목 선택'}</span>
+                <span className="accordion-icon">{showIndustries ? '▼' : '▶'}</span>
+              </button>
+              {showIndustries && (
+                <div className="accordion-content">
+                  {INDUSTRIES.map((industry) => (
+                    <button
+                      key={industry}
+                      className={`venue-btn ${selectedIndustries.includes(industry) ? 'active' : ''}`}
+                      onClick={() => handleIndustryToggle(industry)}
+                    >
+                      {industry}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </aside>

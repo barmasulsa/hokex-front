@@ -108,6 +108,12 @@ body {
   margin-bottom: 0;
 }
 
+.selected-count-inline {
+  color: #4A90E2;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .reset-btn-sidebar {
   background: #e0e0e0;
   border: none;
@@ -249,7 +255,8 @@ body {
 }
 
 /* 지역 아코디언 */
-.region-accordion {
+.region-accordion,
+.industry-accordion {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
