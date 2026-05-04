@@ -21,6 +21,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
   const [selectedCategory, setSelectedCategory] = useState<Category | '전체'>('전체');
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
 
   // 필터링된 이벤트
   const [filteredEvents, setFilteredEvents] = useState<EventRecord[]>(events);
@@ -61,6 +62,18 @@ export function HomePage({ isAdmin }: HomePageProps) {
 
     let processed = FilterEngine.process(events, criteria);
     
+    // 날짜 범위 필터링
+    if (dateRange) {
+      const startDate = new Date(dateRange.start);
+      const endDate = new Date(dateRange.end);
+      processed = processed.filter(event => {
+        const eventStart = new Date(event.startDate);
+        const eventEnd = new Date(event.endDate);
+        // 행사 기간이 선택한 날짜 범위와 겹치는지 확인
+        return eventStart <= endDate && eventEnd >= startDate;
+      });
+    }
+    
     // 검색어 필터링
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
@@ -73,7 +86,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
     }
     
     setFilteredEvents(processed);
-  }, [events, selectedRegion, selectedVenue, selectedMonth, selectedCategory, selectedIndustries, searchQuery]);
+  }, [events, selectedRegion, selectedVenue, selectedMonth, selectedCategory, selectedIndustries, searchQuery, dateRange]);
 
   const handleSave = (eventId: string) => {
     setEvents(prev => prev.map(event => 
@@ -129,11 +142,13 @@ export function HomePage({ isAdmin }: HomePageProps) {
         selectedMonth={selectedMonth}
         selectedCategory={selectedCategory}
         selectedIndustries={selectedIndustries}
+        dateRange={dateRange}
         onRegionChange={setSelectedRegion}
         onVenueChange={setSelectedVenue}
         onMonthChange={setSelectedMonth}
         onCategoryChange={setSelectedCategory}
         onIndustriesChange={setSelectedIndustries}
+        onDateRangeChange={setDateRange}
       />
 
       {/* 결과 카운트 */}

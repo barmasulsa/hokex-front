@@ -9,11 +9,13 @@ interface FilterBarProps {
   selectedMonth: string | '전체';
   selectedCategory: Category | '전체';
   selectedIndustries: string[];
+  dateRange: { start: string; end: string } | null;
   onRegionChange: (region: Region | '전체') => void;
   onVenueChange: (venue: Venue | '전체') => void;
   onMonthChange: (month: string | '전체') => void;
   onCategoryChange: (category: Category | '전체') => void;
   onIndustriesChange: (industries: string[]) => void;
+  onDateRangeChange: (dateRange: { start: string; end: string } | null) => void;
 }
 
 // KOSIS 18개 품목 카테고리
@@ -44,14 +46,48 @@ export function FilterBar({
   selectedMonth,
   selectedCategory,
   selectedIndustries,
+  dateRange,
   onRegionChange,
   onVenueChange,
   onMonthChange,
   onCategoryChange,
   onIndustriesChange,
+  onDateRangeChange,
 }: FilterBarProps) {
   const [showIndustries, setShowIndustries] = useState(false);
   const [selectedYear, setSelectedYear] = useState('2026'); // 기본 년도
+
+  // 기간 설정 함수
+  const setDateRangeByPeriod = (months: number) => {
+    const today = new Date();
+    const endDate = new Date(today);
+    endDate.setMonth(today.getMonth() + months);
+    
+    onDateRangeChange({
+      start: today.toISOString().split('T')[0],
+      end: endDate.toISOString().split('T')[0]
+    });
+  };
+
+  const handleStartDateChange = (date: string) => {
+    if (dateRange) {
+      onDateRangeChange({ ...dateRange, start: date });
+    } else {
+      const today = new Date();
+      const endDate = new Date(today);
+      endDate.setMonth(today.getMonth() + 1);
+      onDateRangeChange({ start: date, end: endDate.toISOString().split('T')[0] });
+    }
+  };
+
+  const handleEndDateChange = (date: string) => {
+    if (dateRange) {
+      onDateRangeChange({ ...dateRange, end: date });
+    } else {
+      const today = new Date();
+      onDateRangeChange({ start: today.toISOString().split('T')[0], end: date });
+    }
+  };
 
   // 년도 목록 (2020년부터 2030년까지)
   const years = ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030'];
@@ -98,6 +134,60 @@ export function FilterBar({
 
   return (
     <div className="filter-bar">
+      {/* 기간 필터 */}
+      <div className="filter-section">
+        <h3 className="filter-title">기간</h3>
+        <div className="date-range-filter">
+          <div className="period-buttons">
+            <button
+              className={`filter-btn ${!dateRange ? 'active' : ''}`}
+              onClick={() => onDateRangeChange(null)}
+            >
+              전체
+            </button>
+            <button
+              className="filter-btn"
+              onClick={() => setDateRangeByPeriod(1)}
+            >
+              1개월
+            </button>
+            <button
+              className="filter-btn"
+              onClick={() => setDateRangeByPeriod(3)}
+            >
+              3개월
+            </button>
+            <button
+              className="filter-btn"
+              onClick={() => setDateRangeByPeriod(6)}
+            >
+              6개월
+            </button>
+            <button
+              className="filter-btn"
+              onClick={() => setDateRangeByPeriod(12)}
+            >
+              1년
+            </button>
+          </div>
+          <div className="date-inputs">
+            <input
+              type="date"
+              value={dateRange?.start || ''}
+              onChange={(e) => handleStartDateChange(e.target.value)}
+              className="date-input"
+            />
+            <span className="date-separator">-</span>
+            <input
+              type="date"
+              value={dateRange?.end || ''}
+              onChange={(e) => handleEndDateChange(e.target.value)}
+              className="date-input"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* 지역 필터 */}
       <div className="filter-section">
         <h3 className="filter-title">지역</h3>
