@@ -197,14 +197,14 @@ export function EventDetailPage() {
           {/* External Links */}
           <section className="event-section">
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              {event.targetLink && (
-                <a href={event.targetLink} target="_blank" rel="noopener noreferrer" className="btn-official-website">
-                  <ExternalLink size={20} /> 공식 웹사이트 방문
-                </a>
-              )}
               {event.venueEventPageUrl && (
                 <a href={event.venueEventPageUrl} target="_blank" rel="noopener noreferrer" className="btn-venue-page">
                   <ExternalLink size={20} /> 전시장 행사 페이지
+                </a>
+              )}
+              {event.targetLink && (
+                <a href={event.targetLink} target="_blank" rel="noopener noreferrer" className="btn-official-website">
+                  <ExternalLink size={20} /> 공식 웹사이트 방문
                 </a>
               )}
             </div>
