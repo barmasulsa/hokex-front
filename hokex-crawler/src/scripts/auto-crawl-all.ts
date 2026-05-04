@@ -1,6 +1,6 @@
 /**
  * 전체 전시장 자동 크롤링 통합 스크립트
- * COEX + SETEC 순차 실행
+ * COEX + COEX Magok + SETEC 순차 실행
  */
 
 import { execSync } from 'child_process';
@@ -14,7 +14,7 @@ async function autoCrawlAll() {
   try {
     // 1. COEX 크롤링
     console.log('\n┌────────────────────────────────────────────────────────┐');
-    console.log('│  1/2: COEX 크롤링                                      │');
+    console.log('│  1/3: COEX 크롤링                                      │');
     console.log('└────────────────────────────────────────────────────────┘\n');
     
     execSync('npx tsx src/scripts/auto-crawl-coex.ts', { 
@@ -24,9 +24,21 @@ async function autoCrawlAll() {
 
     console.log('\n✅ COEX 크롤링 완료\n');
 
-    // 2. SETEC 크롤링
+    // 2. COEX Magok 크롤링
     console.log('\n┌────────────────────────────────────────────────────────┐');
-    console.log('│  2/2: SETEC 크롤링                                     │');
+    console.log('│  2/3: COEX Magok 크롤링                                │');
+    console.log('└────────────────────────────────────────────────────────┘\n');
+    
+    execSync('npx tsx src/scripts/auto-crawl-magok.ts', { 
+      stdio: 'inherit',
+      cwd: process.cwd()
+    });
+
+    console.log('\n✅ COEX Magok 크롤링 완료\n');
+
+    // 3. SETEC 크롤링
+    console.log('\n┌────────────────────────────────────────────────────────┐');
+    console.log('│  3/3: SETEC 크롤링                                     │');
     console.log('└────────────────────────────────────────────────────────┘\n');
     
     execSync('npx tsx src/scripts/auto-crawl-setec.ts', { 

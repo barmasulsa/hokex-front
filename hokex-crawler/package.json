@@ -10,6 +10,7 @@
     "load-coex": "tsx src/scripts/load-coex-data.ts",
     "auto-crawl-coex": "tsx src/scripts/auto-crawl-coex.ts",
     "auto-crawl-setec": "tsx src/scripts/auto-crawl-setec.ts",
+    "auto-crawl-magok": "tsx src/scripts/auto-crawl-magok.ts",
     "auto-crawl-all": "tsx src/scripts/auto-crawl-all.ts",
     "load-venue": "tsx src/scripts/load-all-venues.ts",
     "load-all": "tsx src/scripts/load-all-venues.ts",
