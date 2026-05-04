@@ -73,12 +73,30 @@ export function EventDetailPage() {
     if (contact.includes('\n')) {
       return contact;
     }
-    // Email:, Tel:, Fax: 앞에 줄바꿈 추가 (공백 1개 이상)
-    return contact
-      .replace(/\s+(Email:)/gi, '\n$1')
-      .replace(/\s+(Tel:)/gi, '\n$1')
-      .replace(/\s+(Fax:)/gi, '\n$1')
-      .trim();
+    
+    // "담당자:" 레이블 찾기
+    let formatted = contact;
+    
+    // "담당자:" 다음에 오는 이름과 나머지를 분리
+    const contactMatch = contact.match(/^(.+?)\s+(Email:|Tel:|Fax:)/i);
+    if (contactMatch) {
+      const name = contactMatch[1].trim();
+      const rest = contact.substring(contactMatch[1].length).trim();
+      
+      // 이름을 첫 줄에, 나머지를 각각 새 줄에
+      formatted = name + '\n' + rest
+        .replace(/\s+(Email:)/gi, '\n$1')
+        .replace(/\s+(Tel:)/gi, '\n$1')
+        .replace(/\s+(Fax:)/gi, '\n$1');
+    } else {
+      // "담당자:" 패턴이 없으면 기존 방식 사용
+      formatted = contact
+        .replace(/\s+(Email:)/gi, '\n$1')
+        .replace(/\s+(Tel:)/gi, '\n$1')
+        .replace(/\s+(Fax:)/gi, '\n$1');
+    }
+    
+    return formatted.trim();
   };
 
   const handleAddToCalendar = () => {
