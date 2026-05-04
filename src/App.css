@@ -323,6 +323,17 @@ body {
   gap: 0.5rem;
 }
 
+/* 카테고리 버튼 그리드 */
+.category-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.category-buttons .filter-btn-sidebar {
+  text-align: center;
+}
+
 .accordion-item {
   border-radius: 8px;
   overflow: hidden;
