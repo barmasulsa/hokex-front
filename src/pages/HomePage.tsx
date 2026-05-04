@@ -61,6 +61,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(initialState?.dateRange || null);
   const [expandedRegion, setExpandedRegion] = useState<Region | null>(initialState?.expandedRegion || null);
   const [showIndustries, setShowIndustries] = useState(false);
+  const [showCurrentOnly, setShowCurrentOnly] = useState<boolean>(initialState?.showCurrentOnly ?? true); // 기본값: 현재 행사만 표시
 
   // 필터링된 이벤트
   const [filteredEvents, setFilteredEvents] = useState<EventRecord[]>(events);
@@ -105,10 +106,11 @@ export function HomePage({ isAdmin }: HomePageProps) {
       selectedIndustries,
       searchQuery,
       dateRange,
-      expandedRegion
+      expandedRegion,
+      showCurrentOnly
     };
     sessionStorage.setItem('homeFilterState', JSON.stringify(filterState));
-  }, [selectedRegion, selectedVenue, selectedMonth, selectedCategory, selectedIndustries, searchQuery, dateRange, expandedRegion]);
+  }, [selectedRegion, selectedVenue, selectedMonth, selectedCategory, selectedIndustries, searchQuery, dateRange, expandedRegion, showCurrentOnly]);
 
   useEffect(() => {
     const criteria: FilterCriteria = {
@@ -119,10 +121,10 @@ export function HomePage({ isAdmin }: HomePageProps) {
       industries: selectedIndustries.length > 0 ? selectedIndustries : undefined,
     };
 
-    // 날짜 범위가 설정되지 않았을 때만 과거 행사 필터링
-    let processed = dateRange 
-      ? FilterEngine.applyFilters(events, criteria)
-      : FilterEngine.process(events, criteria);
+    // showCurrentOnly가 true이고 날짜 범위가 설정되지 않았을 때만 과거 행사 필터링
+    let processed = (showCurrentOnly && !dateRange)
+      ? FilterEngine.process(events, criteria)
+      : FilterEngine.applyFilters(events, criteria);
     
     // 날짜 범위 필터링
     if (dateRange) {
@@ -136,6 +138,9 @@ export function HomePage({ isAdmin }: HomePageProps) {
       });
       // 날짜 범위 설정 시 정렬
       processed = FilterEngine.sortByStartDate(processed);
+    } else if (!showCurrentOnly) {
+      // "전체" 선택 시 정렬
+      processed = FilterEngine.sortByStartDate(processed);
     }
     
     // 검색어 필터링 (행사명만)
@@ -147,7 +152,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
     }
     
     setFilteredEvents(processed);
-  }, [events, selectedRegion, selectedVenue, selectedMonth, selectedCategory, selectedIndustries, searchQuery, dateRange]);
+  }, [events, selectedRegion, selectedVenue, selectedMonth, selectedCategory, selectedIndustries, searchQuery, dateRange, showCurrentOnly]);
 
   const handleSave = (eventId: string) => {
     setEvents(prev => prev.map(event => 
@@ -191,12 +196,13 @@ export function HomePage({ isAdmin }: HomePageProps) {
           <div className="sidebar-section">
             <div className="sidebar-title-row">
               <h3 className="sidebar-title">기간</h3>
-              {(dateRange || selectedMonth !== '전체') && (
+              {(dateRange || selectedMonth !== '전체' || !showCurrentOnly) && (
                 <button 
                   className="reset-btn-sidebar"
                   onClick={() => {
                     setDateRange(null);
                     setSelectedMonth('전체');
+                    setShowCurrentOnly(true);
                   }}
                   title="초기화"
                 >
@@ -205,16 +211,29 @@ export function HomePage({ isAdmin }: HomePageProps) {
               )}
             </div>
             <div className="date-range-filter-sidebar">
-              {/* 전체 버튼 (전체 너비, 첫 번째 줄) */}
-              <button
-                className={`filter-btn-sidebar ${!dateRange && selectedMonth === '전체' ? 'active' : ''}`}
-                onClick={() => {
-                  setDateRange(null);
-                  setSelectedMonth('전체');
-                }}
-              >
-                전체
-              </button>
+              {/* 전체/현재 버튼 (첫 번째 줄, 2개) */}
+              <div className="period-buttons-row-sidebar" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+                <button
+                  className={`filter-btn-sidebar ${!dateRange && selectedMonth === '전체' && !showCurrentOnly ? 'active' : ''}`}
+                  onClick={() => {
+                    setDateRange(null);
+                    setSelectedMonth('전체');
+                    setShowCurrentOnly(false);
+                  }}
+                >
+                  전체
+                </button>
+                <button
+                  className={`filter-btn-sidebar ${!dateRange && selectedMonth === '전체' && showCurrentOnly ? 'active' : ''}`}
+                  onClick={() => {
+                    setDateRange(null);
+                    setSelectedMonth('전체');
+                    setShowCurrentOnly(true);
+                  }}
+                >
+                  현재
+                </button>
+              </div>
               
               {/* 기간 선택 버튼 (두 번째 줄, 4개) */}
               <div className="period-buttons-row-sidebar">
@@ -229,6 +248,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
                       end: endDate.toISOString().split('T')[0]
                     });
                     setSelectedMonth('전체');
+                    setShowCurrentOnly(true);
                   }}
                 >
                   1개월
@@ -244,6 +264,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
                       end: endDate.toISOString().split('T')[0]
                     });
                     setSelectedMonth('전체');
+                    setShowCurrentOnly(true);
                   }}
                 >
                   3개월
@@ -259,6 +280,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
                       end: endDate.toISOString().split('T')[0]
                     });
                     setSelectedMonth('전체');
+                    setShowCurrentOnly(true);
                   }}
                 >
                   6개월
@@ -274,6 +296,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
                       end: endDate.toISOString().split('T')[0]
                     });
                     setSelectedMonth('전체');
+                    setShowCurrentOnly(true);
                   }}
                 >
                   1년
@@ -289,6 +312,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
                   setSelectedMonth(value);
                   if (value !== '전체') {
                     setDateRange(null);
+                    setShowCurrentOnly(true);
                   }
                 }}
               >
@@ -325,6 +349,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
                         setDateRange({ start: value, end: endDate.toISOString().split('T')[0] });
                       }
                       setSelectedMonth('전체');
+                      setShowCurrentOnly(true);
                     }
                   }}
                 />
@@ -343,6 +368,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
                         setDateRange({ start: today.toISOString().split('T')[0], end: value });
                       }
                       setSelectedMonth('전체');
+                      setShowCurrentOnly(true);
                     }
                   }}
                 />
