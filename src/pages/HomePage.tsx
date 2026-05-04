@@ -40,7 +40,6 @@ export function HomePage({ isAdmin }: HomePageProps) {
   const [selectedRegion, setSelectedRegion] = useState<Region | '전체'>('전체');
   const [selectedVenue, setSelectedVenue] = useState<Venue | '전체'>('전체');
   const [selectedMonth, setSelectedMonth] = useState<string | '전체'>('전체');
-  const [selectedPeriodType, setSelectedPeriodType] = useState<'range' | 'month'>('range'); // 'range' or 'month'
   const [selectedCategory, setSelectedCategory] = useState<Category | '전체'>('전체');
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -168,7 +167,6 @@ export function HomePage({ isAdmin }: HomePageProps) {
                   onClick={() => {
                     setDateRange(null);
                     setSelectedMonth('전체');
-                    setSelectedPeriodType('range');
                   }}
                   title="초기화"
                 >
@@ -190,7 +188,6 @@ export function HomePage({ isAdmin }: HomePageProps) {
                       end: endDate.toISOString().split('T')[0]
                     });
                     setSelectedMonth('전체');
-                    setSelectedPeriodType('range');
                   }}
                 >
                   1개월
@@ -206,7 +203,6 @@ export function HomePage({ isAdmin }: HomePageProps) {
                       end: endDate.toISOString().split('T')[0]
                     });
                     setSelectedMonth('전체');
-                    setSelectedPeriodType('range');
                   }}
                 >
                   3개월
@@ -222,7 +218,6 @@ export function HomePage({ isAdmin }: HomePageProps) {
                       end: endDate.toISOString().split('T')[0]
                     });
                     setSelectedMonth('전체');
-                    setSelectedPeriodType('range');
                   }}
                 >
                   6개월
@@ -238,7 +233,6 @@ export function HomePage({ isAdmin }: HomePageProps) {
                       end: endDate.toISOString().split('T')[0]
                     });
                     setSelectedMonth('전체');
-                    setSelectedPeriodType('range');
                   }}
                 >
                   1년
@@ -254,9 +248,6 @@ export function HomePage({ isAdmin }: HomePageProps) {
                   setSelectedMonth(value);
                   if (value !== '전체') {
                     setDateRange(null);
-                    setSelectedPeriodType('month');
-                  } else {
-                    setSelectedPeriodType('range');
                   }
                 }}
               >
@@ -293,7 +284,6 @@ export function HomePage({ isAdmin }: HomePageProps) {
                         setDateRange({ start: value, end: endDate.toISOString().split('T')[0] });
                       }
                       setSelectedMonth('전체');
-                      setSelectedPeriodType('range');
                     }
                   }}
                 />
@@ -312,7 +302,6 @@ export function HomePage({ isAdmin }: HomePageProps) {
                         setDateRange({ start: today.toISOString().split('T')[0], end: value });
                       }
                       setSelectedMonth('전체');
-                      setSelectedPeriodType('range');
                     }
                   }}
                 />
