@@ -222,6 +222,57 @@ body {
   gap: 0.5rem;
 }
 
+.custom-date-input {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.6rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: #f8f9fa;
+  transition: all 0.3s;
+}
+
+.custom-date-input:focus-within {
+  border-color: #4A90E2;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.date-part-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #333;
+  text-align: center;
+  padding: 0;
+}
+
+.date-part-input::placeholder {
+  color: #999;
+  font-size: 0.75rem;
+}
+
+.year-input {
+  width: 50px;
+}
+
+.month-input {
+  width: 30px;
+}
+
+.day-input {
+  width: 30px;
+}
+
+.custom-date-input .date-separator {
+  color: #666;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
 .date-input-sidebar {
   padding: 0.6rem;
   border: 2px solid #e0e0e0;

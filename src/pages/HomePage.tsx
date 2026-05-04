@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { EventCard } from '../components/EventCard';
 import { FilterBar } from '../components/FilterBar';
+import { CustomDateInput } from '../components/CustomDateInput';
 import { fetchEvents } from '../services/eventService';
 import type { EventRecord, Venue, FilterCriteria } from '../types/core';
 import { Region, Category } from '../types/core';
@@ -205,102 +206,34 @@ export function HomePage({ isAdmin }: HomePageProps) {
                 </button>
               </div>
               <div className="date-inputs-sidebar">
-                <input
-                  type="date"
+                <CustomDateInput
                   value={dateRange?.start || ''}
-                  onKeyDown={(e) => {
-                    const input = e.target as HTMLInputElement;
-                    // 숫자 입력 시 년도 부분이 4자리를 초과하지 않도록 체크
-                    if (e.key >= '0' && e.key <= '9') {
-                      const value = input.value;
-                      const yearPart = value.split('-')[0];
-                      if (yearPart && yearPart.length >= 4 && input.selectionStart !== null && input.selectionStart < 4) {
-                        // 년도 부분이 이미 4자리이고 년도 영역에 입력하려는 경우 막기
-                        return;
-                      }
-                      if (yearPart && yearPart.length >= 4 && input.selectionStart !== null && input.selectionStart <= yearPart.length) {
-                        e.preventDefault();
-                      }
-                    }
-                  }}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    // 년도가 4자리를 초과하는 경우 수정
+                  onChange={(value) => {
                     if (value) {
-                      const parts = value.split('-');
-                      if (parts[0] && parts[0].length > 4) {
-                        parts[0] = parts[0].slice(0, 4);
-                        const correctedValue = parts.join('-');
-                        e.target.value = correctedValue;
-                        if (dateRange) {
-                          setDateRange({ ...dateRange, start: correctedValue });
-                        } else {
-                          const today = new Date();
-                          const endDate = new Date(today);
-                          endDate.setMonth(today.getMonth() + 1);
-                          setDateRange({ start: correctedValue, end: endDate.toISOString().split('T')[0] });
-                        }
-                        return;
+                      if (dateRange) {
+                        setDateRange({ ...dateRange, start: value });
+                      } else {
+                        const today = new Date();
+                        const endDate = new Date(today);
+                        endDate.setMonth(today.getMonth() + 1);
+                        setDateRange({ start: value, end: endDate.toISOString().split('T')[0] });
                       }
                     }
-                    
-                    if (dateRange) {
-                      setDateRange({ ...dateRange, start: e.target.value });
-                    } else {
-                      const today = new Date();
-                      const endDate = new Date(today);
-                      endDate.setMonth(today.getMonth() + 1);
-                      setDateRange({ start: e.target.value, end: endDate.toISOString().split('T')[0] });
-                    }
                   }}
-                  className="date-input-sidebar"
                 />
                 <span className="date-separator-sidebar">-</span>
-                <input
-                  type="date"
+                <CustomDateInput
                   value={dateRange?.end || ''}
-                  onKeyDown={(e) => {
-                    const input = e.target as HTMLInputElement;
-                    // 숫자 입력 시 년도 부분이 4자리를 초과하지 않도록 체크
-                    if (e.key >= '0' && e.key <= '9') {
-                      const value = input.value;
-                      const yearPart = value.split('-')[0];
-                      if (yearPart && yearPart.length >= 4 && input.selectionStart !== null && input.selectionStart < 4) {
-                        // 년도 부분이 이미 4자리이고 년도 영역에 입력하려는 경우 막기
-                        return;
-                      }
-                      if (yearPart && yearPart.length >= 4 && input.selectionStart !== null && input.selectionStart <= yearPart.length) {
-                        e.preventDefault();
-                      }
-                    }
-                  }}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    // 년도가 4자리를 초과하는 경우 수정
+                  onChange={(value) => {
                     if (value) {
-                      const parts = value.split('-');
-                      if (parts[0] && parts[0].length > 4) {
-                        parts[0] = parts[0].slice(0, 4);
-                        const correctedValue = parts.join('-');
-                        e.target.value = correctedValue;
-                        if (dateRange) {
-                          setDateRange({ ...dateRange, end: correctedValue });
-                        } else {
-                          const today = new Date();
-                          setDateRange({ start: today.toISOString().split('T')[0], end: correctedValue });
-                        }
-                        return;
+                      if (dateRange) {
+                        setDateRange({ ...dateRange, end: value });
+                      } else {
+                        const today = new Date();
+                        setDateRange({ start: today.toISOString().split('T')[0], end: value });
                       }
                     }
-                    
-                    if (dateRange) {
-                      setDateRange({ ...dateRange, end: e.target.value });
-                    } else {
-                      const today = new Date();
-                      setDateRange({ start: today.toISOString().split('T')[0], end: e.target.value });
-                    }
                   }}
-                  className="date-input-sidebar"
                 />
               </div>
             </div>
