@@ -5,7 +5,6 @@ export const Region = {
   Metropolitan: "수도권",
   Chungcheong: "충청도",
   Jeolla: "전라도",
-  Gangwon: "강원도",
   Gyeongsang: "경상도",
   Jeju: "제주도"
 } as const;
@@ -16,13 +15,11 @@ export type Venue =
   // 서울
   | "코엑스" | "코엑스 마곡" | "aT센터" | "세텍"
   // 수도권
-  | "킨텍스" | "수원컨벤션센터" | "송도컨벤시아" | "수원메쎄"
+  | "킨텍스" | "수원컨벤션센터" | "수원메쎄" | "송도컨벤시아"
   // 충청도
   | "대전컨벤션센터" | "세종컨벤션센터" | "청주오스코"
   // 전라도
   | "김대중컨벤션센터" | "군산새만금컨벤션센터"
-  // 강원도
-  | "강릉아레나" | "원주컨벤션센터"
   // 경상도
   | "벡스코" | "엑스코" | "창원컨벤션센터" | "유에코" | "경주화백컨벤션센터" | "구미코"
   // 제주도
@@ -84,10 +81,9 @@ export interface FilterCriteria {
 // 지역-장소 매핑
 export const REGION_VENUE_MAP: Record<Region, Venue[]> = {
   [Region.Seoul]: ["코엑스", "코엑스 마곡", "aT센터", "세텍"],
-  [Region.Metropolitan]: ["킨텍스", "수원컨벤션센터", "송도컨벤시아", "수원메쎄"],
+  [Region.Metropolitan]: ["킨텍스", "수원컨벤션센터", "수원메쎄", "송도컨벤시아"],
   [Region.Chungcheong]: ["대전컨벤션센터", "세종컨벤션센터", "청주오스코"],
   [Region.Jeolla]: ["김대중컨벤션센터", "군산새만금컨벤션센터"],
-  [Region.Gangwon]: ["강릉아레나", "원주컨벤션센터"],
   [Region.Gyeongsang]: ["벡스코", "엑스코", "창원컨벤션센터", "유에코", "경주화백컨벤션센터", "구미코"],
   [Region.Jeju]: ["제주국제컨벤션센터"]
 };
