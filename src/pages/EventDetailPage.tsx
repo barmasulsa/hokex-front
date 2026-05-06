@@ -165,15 +165,15 @@ export function EventDetailPage() {
               <h2>행사 정보</h2>
               
               <div className="event-details-grid">
-                {event.operatingHours && (
-                  <div className="detail-item">
-                    <Clock size={24} />
-                    <div>
-                      <h4>운영 시간</h4>
-                      <p style={{ whiteSpace: 'pre-line' }}>{event.operatingHours}</p>
-                    </div>
+                <div className="detail-item">
+                  <Clock size={24} />
+                  <div>
+                    <h4>운영 시간</h4>
+                    <p style={{ whiteSpace: 'pre-line' }}>
+                      {event.operatingHours || formatDateRange()}
+                    </p>
                   </div>
-                )}
+                </div>
                 <div className="detail-item">
                   <DollarSign size={24} />
                   <div>
@@ -242,15 +242,15 @@ export function EventDetailPage() {
               )}
 
               <div className="event-details-grid" style={{ marginTop: '30px' }}>
-                {event.operatingHours && (
-                  <div className="detail-item">
-                    <Clock size={24} />
-                    <div>
-                      <h4>운영 시간</h4>
-                      <p style={{ whiteSpace: 'pre-line' }}>{formatKintexOperatingHours()}</p>
-                    </div>
+                <div className="detail-item">
+                  <Clock size={24} />
+                  <div>
+                    <h4>운영 시간</h4>
+                    <p style={{ whiteSpace: 'pre-line' }}>
+                      {event.operatingHours ? formatKintexOperatingHours() : formatDateRange()}
+                    </p>
                   </div>
-                )}
+                </div>
                 <div className="detail-item">
                   <DollarSign size={24} />
                   <div>
@@ -310,15 +310,15 @@ export function EventDetailPage() {
               )}
 
               <div className="event-details-grid">
-                {event.operatingHours && (
-                  <div className="detail-item">
-                    <Clock size={24} />
-                    <div>
-                      <h4>운영 시간</h4>
-                      <p style={{ whiteSpace: 'pre-line' }}>{event.operatingHours}</p>
-                    </div>
+                <div className="detail-item">
+                  <Clock size={24} />
+                  <div>
+                    <h4>운영 시간</h4>
+                    <p style={{ whiteSpace: 'pre-line' }}>
+                      {event.operatingHours || formatDateRange()}
+                    </p>
                   </div>
-                )}
+                </div>
                 {event.admissionFee && (
                   <div className="detail-item">
                     <DollarSign size={24} />
