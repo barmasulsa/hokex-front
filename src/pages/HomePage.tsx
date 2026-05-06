@@ -463,7 +463,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
           {/* 카테고리 섹션 */}
           <div className="sidebar-section">
             <h3 className="sidebar-title">카테고리</h3>
-            <div className="category-container">
+            <div className="category-container" data-version="v2">
               {/* 전체 버튼 (첫 번째 줄) */}
               <button
                 className={`filter-btn-sidebar ${selectedCategory === '전체' ? 'active' : ''}`}
