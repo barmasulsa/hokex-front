@@ -203,14 +203,12 @@ export function EventDetailPage() {
                 </div>
               )}
 
-              {event.eventPurpose && (
-                <div style={{ marginTop: '30px' }}>
-                  <h3>전시목적</h3>
-                  <div className="event-theme">
-                    <p>{event.eventPurpose}</p>
-                  </div>
+              <div style={{ marginTop: '30px' }}>
+                <h3>행사목적</h3>
+                <div className="event-theme">
+                  <p>{event.eventPurpose || ''}</p>
                 </div>
-              )}
+              </div>
             </section>
           ) : event.venue === '킨텍스' ? (
             /* KINTEX Layout: Description, Event Purpose, then details */
@@ -226,14 +224,12 @@ export function EventDetailPage() {
                 </div>
               )}
 
-              {event.eventPurpose && (
-                <div style={{ marginTop: '30px' }}>
-                  <h3>전시목적</h3>
-                  <div className="event-theme">
-                    <p>{event.eventPurpose}</p>
-                  </div>
+              <div style={{ marginTop: '30px' }}>
+                <h3>행사목적</h3>
+                <div className="event-theme">
+                  <p>{event.eventPurpose || ''}</p>
                 </div>
-              )}
+              </div>
 
               <div className="event-details-grid" style={{ marginTop: '30px' }}>
                 {event.operatingHours && (
