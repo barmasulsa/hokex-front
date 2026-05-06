@@ -41,7 +41,7 @@ export const mockEvents: EventRecord[] = [
     startDate: new Date('2026-10-05'),
     endDate: new Date('2026-10-14'),
     dayString: generateDayString(new Date('2026-10-05')),
-    category: Category.Performance,
+    category: Category.EventPerformance,
     industry: '문화/예술',
     targetLink: 'https://www.bexco.co.kr',
     isSaved: false,
