@@ -204,7 +204,7 @@ export function EventDetailPage() {
               )}
             </section>
           ) : event.venue === '킨텍스' ? (
-            /* KINTEX Layout: Description, Event Purpose, then details */
+            /* KINTEX Layout: Description, then details */
             <section className="event-section">
               <h2>행사 소개</h2>
               {event.description ? (
@@ -216,13 +216,6 @@ export function EventDetailPage() {
                   <p>행사 소개 정보가 제공되지 않았습니다.</p>
                 </div>
               )}
-
-              <div style={{ marginTop: '30px' }}>
-                <h3>행사목적</h3>
-                <div className="event-theme">
-                  <p>{event.eventPurpose || ''}</p>
-                </div>
-              </div>
 
               <div className="event-details-grid" style={{ marginTop: '30px' }}>
                 {event.operatingHours && (
