@@ -68,6 +68,30 @@ export function EventDetailPage() {
     return `${startStr} ~ ${endStr}`;
   };
 
+  // 킨텍스 전용: 운영시간 포맷팅 (날짜 + 시간)
+  const formatKintexOperatingHours = () => {
+    const generateDayString = (date: Date) => {
+      const days = ['(일)', '(월)', '(화)', '(수)', '(목)', '(금)', '(토)'];
+      return days[date.getDay()];
+    };
+    
+    const formatDate = (date: Date) => {
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${month}/${day}${generateDayString(date)}`;
+    };
+    
+    const dateRange = `${formatDate(event.startDate)} - ${formatDate(event.endDate)}`;
+    const timeInfo = event.operatingHours || '';
+    
+    // 시간 정보가 없으면 날짜만 반환
+    if (!timeInfo.trim()) {
+      return dateRange;
+    }
+    
+    return `${dateRange}\n${timeInfo}`;
+  };
+
   // Contact 필드 포맷팅 (줄바꿈이 없는 경우 추가)
   const formatContact = (contact: string) => {
     // 이미 줄바꿈이 있으면 그대로 반환
@@ -223,7 +247,7 @@ export function EventDetailPage() {
                     <Clock size={24} />
                     <div>
                       <h4>운영 시간</h4>
-                      <p style={{ whiteSpace: 'pre-line' }}>{event.operatingHours}</p>
+                      <p style={{ whiteSpace: 'pre-line' }}>{formatKintexOperatingHours()}</p>
                     </div>
                   </div>
                 )}
