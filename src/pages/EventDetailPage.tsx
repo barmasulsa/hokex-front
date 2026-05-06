@@ -234,15 +234,13 @@ export function EventDetailPage() {
                     </div>
                   </div>
                 )}
-                {event.admissionFee && (
-                  <div className="detail-item">
-                    <DollarSign size={24} />
-                    <div>
-                      <h4>입장료</h4>
-                      <p>{event.admissionFee}</p>
-                    </div>
+                <div className="detail-item">
+                  <DollarSign size={24} />
+                  <div>
+                    <h4>입장료</h4>
+                    <p>{event.admissionFee || ''}</p>
                   </div>
-                )}
+                </div>
                 {event.contact && (
                   <div className="detail-item">
                     <Phone size={24} />
