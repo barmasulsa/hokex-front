@@ -29,8 +29,7 @@ export type Venue =
 export const Category = {
   Exhibition: "전시",
   Conference: "회의",
-  Popup: "팝업",
-  Performance: "공연"
+  EventPerformance: "행사/공연"
 } as const;
 
 export type Category = typeof Category[keyof typeof Category];

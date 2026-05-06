@@ -70,7 +70,7 @@ body {
 
 /* 왼쪽 사이드바 */
 .filter-sidebar {
-  width: 280px;
+  width: 300px;
   flex-shrink: 0;
   background: white;
   padding: 1.5rem;

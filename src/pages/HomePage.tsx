@@ -473,7 +473,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
               </button>
               
               {/* 나머지 카테고리 버튼 (두 번째 줄) */}
-              <div className="category-buttons-row">
+              <div className="category-buttons-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                 <button
                   className={`filter-btn-sidebar ${selectedCategory === '전시' ? 'active' : ''}`}
                   onClick={() => setSelectedCategory('전시')}
@@ -487,16 +487,10 @@ export function HomePage({ isAdmin }: HomePageProps) {
                   회의
                 </button>
                 <button
-                  className={`filter-btn-sidebar ${selectedCategory === '팝업' ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory('팝업')}
+                  className={`filter-btn-sidebar ${selectedCategory === '행사/공연' ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory('행사/공연')}
                 >
-                  팝업
-                </button>
-                <button
-                  className={`filter-btn-sidebar ${selectedCategory === '공연' ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory('공연')}
-                >
-                  공연
+                  행사/공연
                 </button>
               </div>
             </div>
