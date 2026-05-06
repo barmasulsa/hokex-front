@@ -68,7 +68,7 @@ body {
   margin: 0 auto;
 }
 
-/* 왼쪽 사이드바 */
+/* 왼쪽 사이드바 - 3개 카테고리 버튼 (전시, 회의, 행사/공연) */
 .filter-sidebar {
   width: 300px;
   flex-shrink: 0;
