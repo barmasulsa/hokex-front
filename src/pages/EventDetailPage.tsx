@@ -84,6 +84,11 @@ export function EventDetailPage() {
     const dateRange = `${formatDate(event.startDate)} - ${formatDate(event.endDate)}`;
     const timeInfo = event.operatingHours || '';
     
+    // 시간 정보가 없으면 날짜만 반환
+    if (!timeInfo.trim()) {
+      return dateRange;
+    }
+    
     return `${dateRange}\n${timeInfo}`;
   };
 
