@@ -125,36 +125,46 @@ export function EventDetailPage() {
     return `${dateRange}\n${event.operatingHours}`;
   };
 
-  // Contact 필드 포맷팅 (줄바꿈이 없는 경우 추가)
+  // Contact 필드 포맷팅 (전화번호 / 이메일 형식을 Tel: / Email: 형식으로 변환)
   const formatContact = (contact: string) => {
-    // 이미 줄바꿈이 있으면 그대로 반환
-    if (contact.includes('\n')) {
+    // 이미 Tel: 또는 Email: 형식이 있으면 그대로 반환
+    if (contact.includes('Tel:') || contact.includes('Email:')) {
+      // 줄바꿈이 없으면 추가
+      if (!contact.includes('\n')) {
+        let formatted = contact
+          .replace(/\s+(Email:)/gi, '\n$1')
+          .replace(/\s+(Tel:)/gi, '\n$1')
+          .replace(/\s+(Fax:)/gi, '\n$1');
+        return formatted.trim();
+      }
       return contact;
     }
     
-    // "담당자:" 레이블 찾기
-    let formatted = contact;
-    
-    // "담당자:" 다음에 오는 이름과 나머지를 분리
-    const contactMatch = contact.match(/^(.+?)\s+(Email:|Tel:|Fax:)/i);
-    if (contactMatch) {
-      const name = contactMatch[1].trim();
-      const rest = contact.substring(contactMatch[1].length).trim();
+    // "전화번호 / 이메일" 형식을 "Tel: 전화번호\nEmail: 이메일" 형식으로 변환
+    if (contact.includes(' / ')) {
+      const parts = contact.split(' / ');
+      const phone = parts[0].trim();
+      const email = parts[1]?.trim();
       
-      // 이름을 첫 줄에, 나머지를 각각 새 줄에
-      formatted = name + '\n' + rest
-        .replace(/\s+(Email:)/gi, '\n$1')
-        .replace(/\s+(Tel:)/gi, '\n$1')
-        .replace(/\s+(Fax:)/gi, '\n$1');
-    } else {
-      // "담당자:" 패턴이 없으면 기존 방식 사용
-      formatted = contact
-        .replace(/\s+(Email:)/gi, '\n$1')
-        .replace(/\s+(Tel:)/gi, '\n$1')
-        .replace(/\s+(Fax:)/gi, '\n$1');
+      if (email) {
+        return `Tel: ${phone}\nEmail: ${email}`;
+      } else {
+        return `Tel: ${phone}`;
+      }
     }
     
-    return formatted.trim();
+    // 이메일만 있는 경우 (@ 포함)
+    if (contact.includes('@')) {
+      return `Email: ${contact}`;
+    }
+    
+    // 전화번호만 있는 경우 (숫자와 하이픈으로 시작)
+    if (/^[\d\-\+\(\)]+/.test(contact)) {
+      return `Tel: ${contact}`;
+    }
+    
+    // 그 외의 경우 그대로 반환
+    return contact;
   };
 
   const handleAddToCalendar = () => {
@@ -361,7 +371,7 @@ export function EventDetailPage() {
 
               {event.organizer && (
                 <div style={{ marginTop: '30px' }}>
-                  <h3>주최</h3>
+                  <h3>주최/주관</h3>
                   <p>{event.organizer}</p>
                 </div>
               )}
