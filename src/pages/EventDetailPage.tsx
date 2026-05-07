@@ -92,6 +92,39 @@ export function EventDetailPage() {
     return `${dateRange}\n${timeInfo}`;
   };
 
+  // 벡스코 전용: 운영시간 포맷팅 (날짜 + 시간)
+  const formatBexcoOperatingHours = () => {
+    const generateDayString = (date: Date) => {
+      const days = ['(일)', '(월)', '(화)', '(수)', '(목)', '(금)', '(토)'];
+      return days[date.getDay()];
+    };
+    
+    const formatDate = (date: Date) => {
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${month}/${day}${generateDayString(date)}`;
+    };
+    
+    const dateRange = `${formatDate(event.startDate)} - ${formatDate(event.endDate)}`;
+    
+    // operatingHours가 없으면 날짜만 반환
+    if (!event.operatingHours || !event.operatingHours.trim()) {
+      return dateRange;
+    }
+    
+    // operatingHours에서 시간 정보 추출
+    // 예: "2026.10.01 ~ 2026.10.04 10시 ~ 18시" -> "10시 ~ 18시"
+    const timeMatch = event.operatingHours.match(/(\d{1,2})\s*시\s*~\s*(\d{1,2})\s*시/);
+    if (timeMatch) {
+      const startHour = timeMatch[1].padStart(2, '0');
+      const endHour = timeMatch[2].padStart(2, '0');
+      return `${dateRange}\n${startHour}:00 ~ ${endHour}:00`;
+    }
+    
+    // 시간 패턴이 없으면 원본 operatingHours 사용
+    return `${dateRange}\n${event.operatingHours}`;
+  };
+
   // Contact 필드 포맷팅 (줄바꿈이 없는 경우 추가)
   const formatContact = (contact: string) => {
     // 이미 줄바꿈이 있으면 그대로 반환
@@ -294,6 +327,72 @@ export function EventDetailPage() {
                 <h3>관람 장소</h3>
                 <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
               </div>
+            </section>
+          ) : event.venue === '벡스코' ? (
+            /* BEXCO Layout: Details first (always show all fields), then description */
+            <section className="event-section">
+              <h2>행사 정보</h2>
+              
+              <div className="event-details-grid">
+                <div className="detail-item">
+                  <Clock size={24} />
+                  <div>
+                    <h4>운영 시간</h4>
+                    <p style={{ whiteSpace: 'pre-line' }}>
+                      {formatBexcoOperatingHours()}
+                    </p>
+                  </div>
+                </div>
+                <div className="detail-item">
+                  <DollarSign size={24} />
+                  <div>
+                    <h4>입장료</h4>
+                    <p>{event.admissionFee || '미상'}</p>
+                  </div>
+                </div>
+                <div className="detail-item">
+                  <Phone size={24} />
+                  <div>
+                    <h4>문의</h4>
+                    <p style={{ whiteSpace: 'pre-line' }}>{event.contact ? formatContact(event.contact) : '미상'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {event.organizer && (
+                <div style={{ marginTop: '30px' }}>
+                  <h3>주최</h3>
+                  <p>{event.organizer}</p>
+                </div>
+              )}
+
+              {event.supervisor && (
+                <div style={{ marginTop: '20px' }}>
+                  <h3>주관</h3>
+                  <p>{event.supervisor}</p>
+                </div>
+              )}
+
+              <div style={{ marginTop: '30px' }}>
+                <h3>관람 장소</h3>
+                <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
+              </div>
+
+              {event.exhibitItems && (
+                <div style={{ marginTop: '20px' }}>
+                  <h3>전시품목</h3>
+                  <p>{event.exhibitItems}</p>
+                </div>
+              )}
+
+              {event.description && (
+                <div style={{ marginTop: '40px' }}>
+                  <h3>행사 소개</h3>
+                  <div className="event-theme">
+                    <p>{event.description}</p>
+                  </div>
+                </div>
+              )}
             </section>
           ) : (
             /* COEX and other venues: Description first, then details */
