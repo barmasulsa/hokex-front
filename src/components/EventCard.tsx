@@ -10,13 +10,22 @@ interface EventCardProps {
   onEdit?: (eventId: string, field: string, value: string) => void;
 }
 
+// 송도컨벤시아 기본 포스터 이미지
+const SONGDO_DEFAULT_POSTER = '/images/songdo-default-poster.jpg';
+
 export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
   const navigate = useNavigate();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(event.title);
+  const [imgError, setImgError] = useState(false);
   
   const badge = calculateStatusBadge(event);
   const daysUntilStart = calculateDaysUntilStart(event);
+  
+  // 포스터 URL 결정: 송도는 포스터 없으면 기본 이미지, 다른 전시장은 그대로
+  const posterUrl = (imgError || !event.poster) && event.venue === '송도컨벤시아'
+    ? SONGDO_DEFAULT_POSTER
+    : event.poster;
   
   const formatDateRange = () => {
     const startStr = `${event.startDate.toISOString().slice(0, 10).replace(/-/g, '.')} ${event.dayString}`;
@@ -58,7 +67,13 @@ export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
   return (
     <div className="event-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
       <div className="card-image-wrap" style={{ position: 'relative', width: '100%', height: '200px', overflow: 'hidden' }}>
-        <img src={event.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
+        <img 
+          src={posterUrl} 
+          alt="" 
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+          referrerPolicy="no-referrer"
+          onError={() => setImgError(true)}
+        />
         <div style={{
           position: 'absolute',
           top: 0,
