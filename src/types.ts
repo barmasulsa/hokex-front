@@ -1,5 +1,5 @@
 export type Region = '서울' | '수도권' | '충청' | '동남' | '대경' | '호남' | '제주';
-export type Category = '전시' | '회의' | '팝업' | '공연';
+export type Category = '전시' | '회의' | '행사/공연';
 export type StatusBadge = 'COMING SOON' | 'D-Day' | 'ON-GOING' | 'REGISTERING';
 
 export interface EventRecord {
@@ -27,7 +27,7 @@ export const REGIONS: Record<Region, string[]> = {
   '제주': ['전체', '제주국제컨벤션센터']
 };
 
-export const CATEGORIES: ('전체' | Category)[] = ['전체', '전시', '회의', '팝업', '공연'];
+export const CATEGORIES: ('전체' | Category)[] = ['전체', '전시', '회의', '행사/공연'];
 
 export const INDUSTRIES = [
   '전체',

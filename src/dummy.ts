@@ -53,7 +53,7 @@ export const DUMMY_EVENTS: EventRecord[] = [
     venue: '벡스코',
     startDate: addDays(today, 20),
     endDate: addDays(today, 21),
-    category: '공연',
+    category: '행사/공연',
     industry: '예술, 스포츠 및 여가관련 서비스업',
     targetLink: 'https://example.com'
   },
@@ -65,7 +65,7 @@ export const DUMMY_EVENTS: EventRecord[] = [
     venue: '코엑스 마곡',
     startDate: addDays(today, 30),
     endDate: addDays(today, 35),
-    category: '팝업',
+    category: '행사/공연',
     industry: '도매 및 소매업',
     targetLink: 'https://example.com'
   }
