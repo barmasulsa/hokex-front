@@ -121,10 +121,20 @@ export function HomePage({ isAdmin }: HomePageProps) {
       industries: selectedIndustries.length > 0 ? selectedIndustries : undefined,
     };
 
+    console.log('[HomePage] Filtering with:', {
+      venue: selectedVenue,
+      month: selectedMonth,
+      showCurrentOnly,
+      dateRange,
+      totalEvents: events.length
+    });
+
     // showCurrentOnly가 true이고 날짜 범위가 설정되지 않았을 때만 과거 행사 필터링
     let processed = (showCurrentOnly && !dateRange)
       ? FilterEngine.process(events, criteria)
       : FilterEngine.applyFilters(events, criteria);
+    
+    console.log('[HomePage] After initial filter:', processed.length);
     
     // 날짜 범위 필터링
     if (dateRange) {
@@ -149,6 +159,16 @@ export function HomePage({ isAdmin }: HomePageProps) {
       processed = processed.filter(event => 
         event.title.toLowerCase().includes(query)
       );
+    }
+    
+    console.log('[HomePage] Final filtered:', processed.length);
+    
+    // 엑스코 6월 이후 확인
+    if (selectedVenue === '엑스코' || selectedVenue === '전체') {
+      const excoAfterMay = processed.filter(e => 
+        e.venue === '엑스코' && e.startDate >= new Date('2026-06-01')
+      );
+      console.log('[HomePage] EXCO after May in final:', excoAfterMay.length);
     }
     
     setFilteredEvents(processed);

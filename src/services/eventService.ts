@@ -37,11 +37,24 @@ export async function fetchEvents() {
   const { data, error } = await supabase
     .from('events')
     .select('*')
-    .order('start_date', { ascending: true });
+    .order('start_date', { ascending: true});
 
   if (error) {
     console.error('Error fetching events:', error);
     return [];
+  }
+
+  console.log('[fetchEvents] Total events:', data?.length);
+  
+  // 엑스코 행사 확인
+  const excoEvents = data?.filter(e => e.venue === '엑스코') || [];
+  console.log('[fetchEvents] EXCO events:', excoEvents.length);
+  
+  // 6월 이후 엑스코 행사 확인
+  const excoAfterMay = excoEvents.filter(e => e.start_date >= '2026-06-01');
+  console.log('[fetchEvents] EXCO after May:', excoAfterMay.length);
+  if (excoAfterMay.length > 0) {
+    console.log('[fetchEvents] Sample:', excoAfterMay.slice(0, 3).map(e => e.title));
   }
 
   return data.map(mapSupabaseEventToEventRecord);
