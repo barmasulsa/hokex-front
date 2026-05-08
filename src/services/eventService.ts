@@ -34,10 +34,12 @@ function mapSupabaseEventToEventRecord(event: any): EventRecord {
 
 // 모든 행사 가져오기
 export async function fetchEvents() {
+  // Supabase 기본 limit은 1000개이므로 명시적으로 큰 값 설정
   const { data, error } = await supabase
     .from('events')
     .select('*')
-    .order('start_date', { ascending: true});
+    .order('start_date', { ascending: true})
+    .limit(10000); // 충분히 큰 limit 설정
 
   if (error) {
     console.error('Error fetching events:', error);
@@ -45,11 +47,11 @@ export async function fetchEvents() {
   }
 
   console.log('[fetchEvents] Total events:', data?.length);
-  
+
   // 엑스코 행사 확인
   const excoEvents = data?.filter(e => e.venue === '엑스코') || [];
   console.log('[fetchEvents] EXCO events:', excoEvents.length);
-  
+
   // 6월 이후 엑스코 행사 확인
   const excoAfterMay = excoEvents.filter(e => e.start_date >= '2026-06-01');
   console.log('[fetchEvents] EXCO after May:', excoAfterMay.length);
@@ -59,6 +61,7 @@ export async function fetchEvents() {
 
   return data.map(mapSupabaseEventToEventRecord);
 }
+
 
 // 특정 행사 가져오기
 export async function fetchEventById(id: string) {
