@@ -61,7 +61,7 @@ export function HomePage({ isAdmin }: HomePageProps) {
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(initialState?.dateRange || null);
   const [expandedRegion, setExpandedRegion] = useState<Region | null>(initialState?.expandedRegion || null);
   const [showIndustries, setShowIndustries] = useState(false);
-  const [showCurrentOnly, setShowCurrentOnly] = useState<boolean>(initialState?.showCurrentOnly ?? true); // 기본값: 현재 행사만 표시
+  const [showCurrentOnly, setShowCurrentOnly] = useState<boolean>(initialState?.showCurrentOnly ?? false); // 기본값: 전체 행사 표시
 
   // 필터링된 이벤트
   const [filteredEvents, setFilteredEvents] = useState<EventRecord[]>(events);
