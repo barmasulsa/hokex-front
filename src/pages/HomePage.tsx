@@ -163,15 +163,22 @@ export function HomePage({ isAdmin }: HomePageProps) {
     
     console.log('[HomePage] Final filtered:', processed.length);
     
+    // ID 기준으로 중복 제거 (같은 행사가 여러 품목으로 중복 표시되는 것 방지)
+    const uniqueEvents = Array.from(
+      new Map(processed.map(event => [event.id, event])).values()
+    );
+    
+    console.log('[HomePage] After deduplication:', uniqueEvents.length);
+    
     // 엑스코 6월 이후 확인
     if (selectedVenue === '엑스코' || selectedVenue === '전체') {
-      const excoAfterMay = processed.filter(e => 
+      const excoAfterMay = uniqueEvents.filter(e => 
         e.venue === '엑스코' && e.startDate >= new Date('2026-06-01')
       );
       console.log('[HomePage] EXCO after May in final:', excoAfterMay.length);
     }
     
-    setFilteredEvents(processed);
+    setFilteredEvents(uniqueEvents);
   }, [events, selectedRegion, selectedVenue, selectedMonth, selectedCategory, selectedIndustries, searchQuery, dateRange, showCurrentOnly]);
 
   const handleSave = (eventId: string) => {
@@ -480,9 +487,9 @@ export function HomePage({ isAdmin }: HomePageProps) {
             </div>
           </div>
 
-          {/* 카테고리 섹션 */}
+          {/* 행사 카테고리 섹션 */}
           <div className="sidebar-section">
-            <h3 className="sidebar-title">카테고리</h3>
+            <h3 className="sidebar-title">행사 카테고리</h3>
             <div className="category-container" data-version="v2">
               {/* 전체 버튼 (첫 번째 줄) */}
               <button
