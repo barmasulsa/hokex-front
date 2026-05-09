@@ -12,7 +12,7 @@ interface EventCardProps {
 
 // 기본 포스터 이미지
 const SONGDO_DEFAULT_POSTER = '/images/songdo-default-poster.jpg';
-const KDJ_DEFAULT_POSTER = '/images/thumb.png';
+const KDJ_DEFAULT_POSTER = '/images/thumb.jpg';
 
 export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
   const navigate = useNavigate();
