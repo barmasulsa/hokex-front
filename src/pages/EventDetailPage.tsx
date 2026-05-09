@@ -7,7 +7,7 @@ import { Calendar, MapPin, Clock, DollarSign, Phone, ExternalLink, Share2, Copy 
 
 // 기본 포스터 이미지
 const SONGDO_DEFAULT_POSTER = '/images/songdo-default-poster.jpg';
-const KDJ_DEFAULT_POSTER = '/images/thumb.png';
+const KDJ_DEFAULT_POSTER = '/images/songdo-default-poster.jpg'; // 임시로 송도 포스터 사용
 
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
