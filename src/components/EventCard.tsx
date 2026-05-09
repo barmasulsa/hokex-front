@@ -27,15 +27,15 @@ export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
     ? SONGDO_DEFAULT_POSTER
     : event.poster;
   
-  const formatDateRange = () => {
-    const startStr = `${event.startDate.toISOString().slice(0, 10).replace(/-/g, '.')} ${event.dayString}`;
-    const endStr = `${event.endDate.toISOString().slice(0, 10).replace(/-/g, '.')} ${generateDayString(event.endDate)}`;
-    return `${startStr} ~ ${endStr}`;
-  };
-
   const generateDayString = (date: Date) => {
     const days = ['(일)', '(월)', '(화)', '(수)', '(목)', '(금)', '(토)'];
     return days[date.getDay()];
+  };
+
+  const formatDateRange = () => {
+    const startStr = `${event.startDate.toISOString().slice(0, 10).replace(/-/g, '.')} ${generateDayString(event.startDate)}`;
+    const endStr = `${event.endDate.toISOString().slice(0, 10).replace(/-/g, '.')} ${generateDayString(event.endDate)}`;
+    return `${startStr} ~ ${endStr}`;
   };
 
   const getBadgeText = () => {

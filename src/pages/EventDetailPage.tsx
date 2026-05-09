@@ -250,7 +250,7 @@ export function EventDetailPage() {
               )}
 
               <div style={{ marginTop: '30px' }}>
-                <h3>관람 장소</h3>
+                <h3>행사 장소</h3>
                 <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
               </div>
 
@@ -280,7 +280,7 @@ export function EventDetailPage() {
                 </div>
               ) : (
                 <div className="event-theme">
-                  <p>행사 소개 정보가 제공되지 않았습니다.</p>
+                  <p>정보 없음</p>
                 </div>
               )}
 
@@ -312,8 +312,13 @@ export function EventDetailPage() {
                 )}
               </div>
 
+              <div style={{ marginTop: '30px' }}>
+                <h3>행사 장소</h3>
+                <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
+              </div>
+
               {event.organizer && (
-                <div style={{ marginTop: '30px' }}>
+                <div style={{ marginTop: '20px' }}>
                   <h3>주최</h3>
                   <p>{event.organizer}</p>
                 </div>
@@ -332,11 +337,6 @@ export function EventDetailPage() {
                   <p>{event.exhibitItems}</p>
                 </div>
               )}
-
-              <div style={{ marginTop: '30px' }}>
-                <h3>관람 장소</h3>
-                <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
-              </div>
             </section>
           ) : event.venue === '벡스코' ? (
             /* BEXCO Layout: Details first (always show all fields), then description */
@@ -369,9 +369,85 @@ export function EventDetailPage() {
                 </div>
               </div>
 
+              <div style={{ marginTop: '30px' }}>
+                <h3>행사 장소</h3>
+                <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
+              </div>
+
+              {event.organizer && (
+                <div style={{ marginTop: '20px' }}>
+                  <h3>주최/주관</h3>
+                  <p>{event.organizer}</p>
+                </div>
+              )}
+
+              {event.supervisor && (
+                <div style={{ marginTop: '20px' }}>
+                  <h3>주관</h3>
+                  <p>{event.supervisor}</p>
+                </div>
+              )}
+
+              {event.exhibitItems && (
+                <div style={{ marginTop: '20px' }}>
+                  <h3>전시품목</h3>
+                  <p>{event.exhibitItems}</p>
+                </div>
+              )}
+
+              {event.description && (
+                <div style={{ marginTop: '40px' }}>
+                  <h3>행사 소개</h3>
+                  <div className="event-theme">
+                    <p>{event.description}</p>
+                  </div>
+                </div>
+              )}
+            </section>
+          ) : event.venue === '엑스코' ? (
+            /* EXCO Layout: Description first, then details */
+            <section className="event-section">
+              {event.description && (
+                <>
+                  <h2>행사 소개</h2>
+                  <div className="event-theme">
+                    <p>{event.description}</p>
+                  </div>
+                </>
+              )}
+
+              <h2 style={{ marginTop: event.description ? '40px' : '0' }}>행사 정보</h2>
+              <div className="event-details-grid">
+                <div className="detail-item">
+                  <Clock size={24} />
+                  <div>
+                    <h4>운영 시간</h4>
+                    <p style={{ whiteSpace: 'pre-line' }}>
+                      {event.operatingHours || formatDateRange()}
+                    </p>
+                  </div>
+                </div>
+                <div className="detail-item">
+                  <DollarSign size={24} />
+                  <div>
+                    <h4>입장료</h4>
+                    <p>{event.admissionFee || '미상'}</p>
+                  </div>
+                </div>
+                {event.contact && (
+                  <div className="detail-item">
+                    <Phone size={24} />
+                    <div>
+                      <h4>문의</h4>
+                      <p style={{ whiteSpace: 'pre-line' }}>{formatContact(event.contact)}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {event.organizer && (
                 <div style={{ marginTop: '30px' }}>
-                  <h3>주최/주관</h3>
+                  <h3>주최</h3>
                   <p>{event.organizer}</p>
                 </div>
               )}
@@ -395,12 +471,10 @@ export function EventDetailPage() {
                 </div>
               )}
 
-              {event.description && (
-                <div style={{ marginTop: '40px' }}>
-                  <h3>행사 소개</h3>
-                  <div className="event-theme">
-                    <p>{event.description}</p>
-                  </div>
+              {event.exhibitProducts && (
+                <div style={{ marginTop: '20px' }}>
+                  <h3>전시제품</h3>
+                  <p>{event.exhibitProducts}</p>
                 </div>
               )}
             </section>
@@ -414,7 +488,7 @@ export function EventDetailPage() {
                 </div>
               ) : (
                 <div className="event-theme">
-                  <p>행사 소개 정보가 제공되지 않았습니다.</p>
+                  <p>정보 없음</p>
                 </div>
               )}
 
@@ -448,8 +522,13 @@ export function EventDetailPage() {
                 )}
               </div>
 
+              <div style={{ marginTop: '30px' }}>
+                <h3>행사 장소</h3>
+                <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
+              </div>
+
               {event.organizer && (
-                <div style={{ marginTop: '30px' }}>
+                <div style={{ marginTop: '20px' }}>
                   <h3>주최</h3>
                   <p>{event.organizer}</p>
                 </div>
@@ -468,21 +547,21 @@ export function EventDetailPage() {
                   <p>{event.exhibitItems}</p>
                 </div>
               )}
-
-              <div style={{ marginTop: '30px' }}>
-                <h3>관람 장소</h3>
-                <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
-              </div>
             </section>
           )}
 
           {/* External Links */}
           <section className="event-section">
+            <h2>관련 링크</h2>
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              {event.venueEventPageUrl && (
+              {event.venueEventPageUrl ? (
                 <a href={event.venueEventPageUrl} target="_blank" rel="noopener noreferrer" className="btn-venue-page">
                   <ExternalLink size={20} /> 전시장 행사 페이지
                 </a>
+              ) : (
+                <div style={{ color: '#999', padding: '10px' }}>
+                  전시장 행사 페이지 정보가 없습니다
+                </div>
               )}
               {event.targetLink && (
                 <a href={event.targetLink} target="_blank" rel="noopener noreferrer" className="btn-official-website">
