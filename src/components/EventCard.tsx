@@ -25,6 +25,17 @@ export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
   
   // 포스터 URL 결정: 포스터 없으면 venue별 기본 이미지
   const getPosterUrl = () => {
+    // 디버깅: 김대중컨벤션센터 행사만 로그
+    if (event.venue === '김대중컨벤션센터') {
+      console.log('[KDJ Poster Debug]', {
+        title: event.title,
+        poster: event.poster,
+        imgError,
+        isEmpty: !event.poster,
+        willUseFallback: imgError || !event.poster
+      });
+    }
+    
     if (imgError || !event.poster) {
       if (event.venue === '송도컨벤시아') return SONGDO_DEFAULT_POSTER;
       if (event.venue === '김대중컨벤션센터') return KDJ_DEFAULT_POSTER;
