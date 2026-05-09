@@ -9,7 +9,7 @@ function mapSupabaseEventToEventRecord(event: any): EventRecord {
   return {
     id: event.id,
     title: event.title,
-    poster: event.poster_url || PLACEHOLDER_IMAGE,
+    poster: event.poster_url || '', // NULL이면 빈 문자열 (EventCard에서 venue별 범용 포스터 처리)
     region: event.region as any,
     venue: event.venue as any,
     startDate: new Date(event.start_date),
