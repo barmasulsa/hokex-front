@@ -5,10 +5,15 @@ import type { EventRecord } from '../types/core';
 import { calculateStatusBadge, calculateDaysUntilStart } from '../utils/badgeCalculator';
 import { Calendar, MapPin, Clock, DollarSign, Phone, ExternalLink, Share2, Copy } from 'lucide-react';
 
+// 기본 포스터 이미지
+const SONGDO_DEFAULT_POSTER = '/images/songdo-default-poster.jpg';
+const KDJ_DEFAULT_POSTER = 'https://kdjcenter.gjto.or.kr/api/v1/file/mainPoster/thumb.png';
+
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [event, setEvent] = useState<EventRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     async function loadEvent() {
@@ -43,6 +48,17 @@ export function EventDetailPage() {
       </div>
     );
   }
+
+  // 포스터 URL 결정: 포스터 없으면 venue별 기본 이미지
+  const getPosterUrl = () => {
+    if (imgError || !event.poster) {
+      if (event.venue === '송도컨벤시아') return SONGDO_DEFAULT_POSTER;
+      if (event.venue === '김대중컨벤션센터') return KDJ_DEFAULT_POSTER;
+    }
+    return event.poster;
+  };
+
+  const posterUrl = getPosterUrl();
 
   const badge = calculateStatusBadge(event);
   const daysUntilStart = calculateDaysUntilStart(event);
@@ -183,7 +199,7 @@ export function EventDetailPage() {
   return (
     <div className="event-detail-page">
       {/* Hero Section */}
-      <div className="event-hero" style={{ backgroundImage: `url(${event.poster})` }}>
+      <div className="event-hero" style={{ backgroundImage: `url(${posterUrl})` }}>
         <div className="event-hero-overlay"></div>
         <div className="event-hero-content">
           <div className="event-hero-badge">{event.category}</div>

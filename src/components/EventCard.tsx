@@ -10,8 +10,9 @@ interface EventCardProps {
   onEdit?: (eventId: string, field: string, value: string) => void;
 }
 
-// 송도컨벤시아 기본 포스터 이미지
+// 기본 포스터 이미지
 const SONGDO_DEFAULT_POSTER = '/images/songdo-default-poster.jpg';
+const KDJ_DEFAULT_POSTER = 'https://kdjcenter.gjto.or.kr/api/v1/file/mainPoster/thumb.png';
 
 export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
   const navigate = useNavigate();
@@ -22,10 +23,16 @@ export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
   const badge = calculateStatusBadge(event);
   const daysUntilStart = calculateDaysUntilStart(event);
   
-  // 포스터 URL 결정: 송도는 포스터 없으면 기본 이미지, 다른 전시장은 그대로
-  const posterUrl = (imgError || !event.poster) && event.venue === '송도컨벤시아'
-    ? SONGDO_DEFAULT_POSTER
-    : event.poster;
+  // 포스터 URL 결정: 포스터 없으면 venue별 기본 이미지
+  const getPosterUrl = () => {
+    if (imgError || !event.poster) {
+      if (event.venue === '송도컨벤시아') return SONGDO_DEFAULT_POSTER;
+      if (event.venue === '김대중컨벤션센터') return KDJ_DEFAULT_POSTER;
+    }
+    return event.poster;
+  };
+  
+  const posterUrl = getPosterUrl();
   
   const generateDayString = (date: Date) => {
     const days = ['(일)', '(월)', '(화)', '(수)', '(목)', '(금)', '(토)'];
