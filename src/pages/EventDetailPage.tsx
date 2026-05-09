@@ -7,7 +7,7 @@ import { Calendar, MapPin, Clock, DollarSign, Phone, ExternalLink, Share2, Copy 
 
 // 기본 포스터 이미지
 const SONGDO_DEFAULT_POSTER = '/images/songdo-default-poster.jpg';
-const KDJ_DEFAULT_POSTER = 'https://kdjcenter.gjto.or.kr/api/v1/file/mainPoster/thumb.png';
+const KDJ_DEFAULT_POSTER = '/images/thumb.png';
 
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
