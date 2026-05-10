@@ -1,9 +1,6 @@
 import { supabase } from '../lib/supabase';
 import type { EventRecord } from '../types/core';
 
-// Placeholder 이미지 URL
-const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/400x300/e5e7eb/6b7280?text=No+Poster';
-
 // Supabase 데이터를 EventRecord 타입으로 변환
 function mapSupabaseEventToEventRecord(event: any): EventRecord {
   return {

@@ -13,7 +13,6 @@ export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [event, setEvent] = useState<EventRecord | null>(null);
   const [loading, setLoading] = useState(true);
-  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     async function loadEvent() {
@@ -51,7 +50,7 @@ export function EventDetailPage() {
 
   // 포스터 URL 결정: 포스터 없으면 venue별 기본 이미지
   const getPosterUrl = () => {
-    if (imgError || !event.poster) {
+    if (!event.poster) {
       if (event.venue === '송도컨벤시아') return SONGDO_DEFAULT_POSTER;
       if (event.venue === '김대중컨벤션센터') return KDJ_DEFAULT_POSTER;
     }
