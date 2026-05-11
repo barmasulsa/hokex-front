@@ -66,7 +66,8 @@ export interface EventRecord {
   exhibitProducts?: string; // 전시제품 (전시되는 제품)
   organizer?: string;
   supervisor?: string; // 주관 (행사를 주관하는 기관/단체)
-  contact?: string;
+  manager?: string; // 담당자명
+  contact?: string; // 연락처 전화번호
   operatingHours?: string;
   venueHall?: string;
   isSaved: boolean; // 사용자별 상태

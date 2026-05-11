@@ -419,6 +419,75 @@ export function EventDetailPage() {
                 </div>
               )}
             </section>
+          ) : event.venue === '창원컨벤션센터' ? (
+            /* CECO Layout: Details first with manager/contact split, then description */
+            <section className="event-section">
+              <h2>행사 정보</h2>
+              
+              <div className="event-details-grid">
+                <div className="detail-item">
+                  <Clock size={24} />
+                  <div>
+                    <h4>운영 시간</h4>
+                    <p style={{ whiteSpace: 'pre-line' }}>
+                      {event.operatingHours || formatDateRange()}
+                    </p>
+                  </div>
+                </div>
+                <div className="detail-item">
+                  <DollarSign size={24} />
+                  <div>
+                    <h4>입장료</h4>
+                    <p>{event.admissionFee || '미상'}</p>
+                  </div>
+                </div>
+                {(event.manager || event.contact) && (
+                  <div className="detail-item">
+                    <Phone size={24} />
+                    <div>
+                      <h4>문의</h4>
+                      {event.manager && <p>담당자: {event.manager}</p>}
+                      {event.contact && <p>Tel: {event.contact}</p>}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ marginTop: '30px' }}>
+                <h3>행사 장소</h3>
+                <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
+              </div>
+
+              {event.organizer && (
+                <div style={{ marginTop: '20px' }}>
+                  <h3>주최</h3>
+                  <p>{event.organizer}</p>
+                </div>
+              )}
+
+              {event.supervisor && (
+                <div style={{ marginTop: '20px' }}>
+                  <h3>주관</h3>
+                  <p>{event.supervisor}</p>
+                </div>
+              )}
+
+              {event.exhibitItems && (
+                <div style={{ marginTop: '20px' }}>
+                  <h3>전시품목</h3>
+                  <p>{event.exhibitItems}</p>
+                </div>
+              )}
+
+              {event.description && (
+                <div style={{ marginTop: '40px' }}>
+                  <h3>행사 소개</h3>
+                  <div className="event-theme">
+                    <p>{event.description}</p>
+                  </div>
+                </div>
+              )}
+            </section>
           ) : event.venue === '엑스코' ? (
             /* EXCO Layout: Description first, then details */
             <section className="event-section">
@@ -526,12 +595,13 @@ export function EventDetailPage() {
                     </div>
                   </div>
                 )}
-                {event.contact && (
+                {(event.manager || event.contact) && (
                   <div className="detail-item">
                     <Phone size={24} />
                     <div>
                       <h4>문의</h4>
-                      <p style={{ whiteSpace: 'pre-line' }}>{formatContact(event.contact)}</p>
+                      {event.manager && <p>담당자: {event.manager}</p>}
+                      {event.contact && <p>Tel: {event.contact}</p>}
                     </div>
                   </div>
                 )}

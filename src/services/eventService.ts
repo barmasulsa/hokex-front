@@ -22,6 +22,7 @@ function mapSupabaseEventToEventRecord(event: any): EventRecord {
     exhibitProducts: event.exhibit_products,
     organizer: event.organizer,
     supervisor: event.supervisor,
+    manager: event.manager,
     contact: event.contact,
     operatingHours: event.operating_hours,
     venueHall: event.venue_hall,
