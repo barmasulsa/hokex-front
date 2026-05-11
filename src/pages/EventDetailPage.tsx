@@ -446,8 +446,28 @@ export function EventDetailPage() {
                     <Phone size={24} />
                     <div>
                       <h4>문의</h4>
-                      {event.manager && <p>담당자: {event.manager}</p>}
-                      {event.contact && <p>Tel: {event.contact}</p>}
+                      {event.manager ? (
+                        <>
+                          <p>담당자: {event.manager}</p>
+                          {event.contact && <p>Tel: {event.contact}</p>}
+                        </>
+                      ) : event.contact ? (
+                        // manager가 없고 contact만 있는 경우: "담당자 / 전화번호" 형식 파싱
+                        (() => {
+                          const parts = event.contact.split(' / ');
+                          if (parts.length === 2) {
+                            return (
+                              <>
+                                <p>담당자: {parts[0].trim()}</p>
+                                <p>Tel: {parts[1].trim()}</p>
+                              </>
+                            );
+                          } else {
+                            // "/"가 없으면 전화번호만 있는 것으로 간주
+                            return <p>Tel: {event.contact}</p>;
+                          }
+                        })()
+                      ) : null}
                     </div>
                   </div>
                 )}
