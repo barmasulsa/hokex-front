@@ -1,4 +1,4 @@
-import type { EventRecord, FilterCriteria } from '../types/core';
+import type { EventRecord, FilterCriteria, Category } from '../types/core';
 
 export class FilterEngine {
   /**
@@ -35,7 +35,7 @@ export class FilterEngine {
       filtered = filtered.filter(event => {
         // 배열인 경우 포함 여부 확인, 단일 값인 경우 직접 비교
         if (Array.isArray(event.category)) {
-          return event.category.includes(criteria.category!);
+          return event.category.includes(criteria.category as Category);
         }
         return event.category === criteria.category;
       });

@@ -73,17 +73,19 @@ export function EventDetailPage() {
       
       // 구미코: 카테고리별 기본 포스터
       if (event.venue === '구미코') {
-        if (event.category === '전시') return GUMICO_EXHIBITION_POSTER;
-        if (event.category === '회의') return GUMICO_CONVENTION_POSTER;
-        if (event.category === '행사/공연') return GUMICO_EVENT_POSTER;
+        const category = Array.isArray(event.category) ? event.category[0] : event.category;
+        if (category === '전시') return GUMICO_EXHIBITION_POSTER;
+        if (category === '회의') return GUMICO_CONVENTION_POSTER;
+        if (category === '행사/공연') return GUMICO_EVENT_POSTER;
         return GUMICO_CONVENTION_POSTER;
       }
       
       // 대전컨벤션센터: 카테고리별 기본 포스터
       if (event.venue === '대전컨벤션센터') {
-        if (event.category === '전시') return DCC_EXHIBITION_POSTER;
-        if (event.category === '회의') return DCC_CONFERENCE_POSTER;
-        if (event.category === '행사/공연') return DCC_EVENT_POSTER;
+        const category = Array.isArray(event.category) ? event.category[0] : event.category;
+        if (category === '전시') return DCC_EXHIBITION_POSTER;
+        if (category === '회의') return DCC_CONFERENCE_POSTER;
+        if (category === '행사/공연') return DCC_EVENT_POSTER;
         return DCC_CONFERENCE_POSTER;
       }
       

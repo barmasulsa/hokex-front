@@ -15,7 +15,7 @@ function arbitraryEvent(): fc.Arbitrary<EventRecord> {
     startDate: fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }),
     endDate: fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }),
     dayString: fc.constantFrom('(월)', '(화)', '(수)', '(목)', '(금)', '(토)', '(일)'),
-    category: fc.constantFrom(...Object.values(Category)),
+    category: fc.array(fc.constantFrom(...Object.values(Category)), { minLength: 1, maxLength: 3 }),
     industry: fc.string({ minLength: 1, maxLength: 50 }),
     targetLink: fc.webUrl(),
     isSaved: fc.boolean(),
@@ -154,7 +154,12 @@ describe('Property 23: Category Filter Application', () => {
           const filtered = applyFilters(events, { category });
 
           filtered.forEach(event => {
-            expect(event.category).toBe(category);
+            // 배열인 경우 포함 여부 확인
+            if (Array.isArray(event.category)) {
+              expect(event.category).toContain(category);
+            } else {
+              expect(event.category).toBe(category);
+            }
           });
         }
       ),
@@ -202,7 +207,12 @@ describe('Property 25: Combined Filter AND Condition', () => {
               expect(event.region).toBe(filters.region);
             }
             if (filters.category) {
-              expect(event.category).toBe(filters.category);
+              // 배열인 경우 포함 여부 확인
+              if (Array.isArray(event.category)) {
+                expect(event.category).toContain(filters.category);
+              } else {
+                expect(event.category).toBe(filters.category);
+              }
             }
             if (filters.month) {
               const eventMonth = event.startDate.toISOString().slice(0, 7);
