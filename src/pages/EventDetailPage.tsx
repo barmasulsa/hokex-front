@@ -193,11 +193,17 @@ export function EventDetailPage() {
 
   // Contact 필드 포맷팅 (전화번호 / 이메일 형식을 Tel: / Email: 형식으로 변환)
   const formatContact = (contact: string) => {
+    // 이미 한글 형식(담당자:, 전화:, 이메일:)이 있으면 그대로 반환
+    if (contact.includes('담당자:') || contact.includes('전화:') || contact.includes('이메일:')) {
+      return contact;
+    }
+    
     // 이미 Tel: 또는 Email: 형식이 있으면 그대로 반환
     if (contact.includes('Tel:') || contact.includes('Email:')) {
       // 줄바꿈이 없으면 추가
       if (!contact.includes('\n')) {
         let formatted = contact
+          .replace(/\s+(담당자)/gi, '\n$1')
           .replace(/\s+(Email:)/gi, '\n$1')
           .replace(/\s+(Tel:)/gi, '\n$1')
           .replace(/\s+(Fax:)/gi, '\n$1');
