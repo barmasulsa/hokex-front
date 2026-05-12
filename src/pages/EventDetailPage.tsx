@@ -659,14 +659,21 @@ export function EventDetailPage() {
           <section className="event-section">
             <h2>관련 링크</h2>
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              {event.venueEventPageUrl ? (
-                <a href={event.venueEventPageUrl} target="_blank" rel="noopener noreferrer" className="btn-venue-page">
-                  <ExternalLink size={20} /> 전시장 행사 페이지
+              {/* 경주화백컨벤션센터는 HICO 홈페이지 링크 표시 */}
+              {event.venue === '경주화백컨벤션센터' ? (
+                <a href="https://www.hico.or.kr/" target="_blank" rel="noopener noreferrer" className="btn-venue-page">
+                  <ExternalLink size={20} /> 전시장 홈페이지
                 </a>
               ) : (
-                <div style={{ color: '#999', padding: '10px' }}>
-                  전시장 행사 페이지 정보가 없습니다
-                </div>
+                event.venueEventPageUrl ? (
+                  <a href={event.venueEventPageUrl} target="_blank" rel="noopener noreferrer" className="btn-venue-page">
+                    <ExternalLink size={20} /> 전시장 행사 페이지
+                  </a>
+                ) : (
+                  <div style={{ color: '#999', padding: '10px' }}>
+                    전시장 행사 페이지 정보가 없습니다
+                  </div>
+                )
               )}
               {event.targetLink && (
                 <a href={event.targetLink} target="_blank" rel="noopener noreferrer" className="btn-official-website">
