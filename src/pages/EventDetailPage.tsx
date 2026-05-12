@@ -87,8 +87,8 @@ export function EventDetailPage() {
         return DCC_CONFERENCE_POSTER;
       }
       
-      // 다른 venue는 송도 기본 포스터 사용
-      return SONGDO_DEFAULT_POSTER;
+      // 다른 venue는 빈 문자열 반환 (포스터 없음)
+      return '';
     }
     return event.poster;
   };
