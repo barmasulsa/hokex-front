@@ -132,7 +132,15 @@ export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
               event.category === '회의' ? GUMICO_CONVENTION_POSTER :
               event.category === '행사/공연' ? GUMICO_EVENT_POSTER :
               GUMICO_CONVENTION_POSTER
-            ) : SONGDO_DEFAULT_POSTER
+            ) :
+            event.venue === '대전컨벤션센터' ? (
+              event.category === '전시' ? DCC_EXHIBITION_POSTER :
+              event.category === '회의' ? DCC_CONFERENCE_POSTER :
+              event.category === '행사/공연' ? DCC_EVENT_POSTER :
+              DCC_CONFERENCE_POSTER
+            ) :
+            event.venue === '킨텍스' ? '' :
+            ''
           ) : posterUrl} 
           alt="" 
           style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
