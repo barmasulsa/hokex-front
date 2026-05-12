@@ -1,6 +1,6 @@
 /**
  * 전시장 설정
- * 22개 전시장의 정보와 엑셀 파싱 설정
+ * 21개 전시장의 정보와 엑셀 파싱 설정
  */
 
 export interface VenueConfig {
@@ -152,20 +152,6 @@ export const VENUE_CONFIGS: VenueConfig[] = [
   {
     code: 'DAEJEON_CONV',
     name: '대전컨벤션센터',
-    region: '충청도',
-    columnMapping: {
-      title: '행사명',
-      startDate: '시작일',
-      endDate: '종료일',
-      category: '구분',
-      industry: '산업',
-      organizer: '주최'
-    },
-    fileFormat: 'xlsx'
-  },
-  {
-    code: 'SEJONG_CONV',
-    name: '세종컨벤션센터',
     region: '충청도',
     columnMapping: {
       title: '행사명',

@@ -79,6 +79,17 @@ export async function fetchEvents() {
     console.log('[fetchEvents] Sample:', excoAfterMay.slice(0, 3).map(e => e.title));
   }
 
+  // HICO 행사 확인
+  const hicoEvents = allData.filter(e => e.venue === '경주화백컨벤션센터') || [];
+  console.log('[fetchEvents] HICO events:', hicoEvents.length);
+  if (hicoEvents.length > 0) {
+    console.log('[fetchEvents] HICO sample:', hicoEvents.slice(0, 3).map(e => ({
+      title: e.title,
+      date: e.start_date,
+      poster: e.poster_url
+    })));
+  }
+
   return allData.map(mapSupabaseEventToEventRecord);
 }
 

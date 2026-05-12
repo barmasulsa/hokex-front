@@ -13,37 +13,60 @@ interface EventCardProps {
 // 기본 포스터 이미지
 const SONGDO_DEFAULT_POSTER = '/images/songdo-default-poster.jpg';
 const KDJ_DEFAULT_POSTER = '/images/thumb.jpg';
+const HICO_DEFAULT_POSTER = '/images/hico-default.png';
+
+// 구미코 카테고리별 기본 포스터
+const GUMICO_EXHIBITION_POSTER = '/images/gumico_exhibition.png';
+const GUMICO_CONVENTION_POSTER = '/images/gumico_convention.png';
+const GUMICO_EVENT_POSTER = '/images/gumico_event.png';
 
 export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
   const navigate = useNavigate();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(event.title);
-  const [imgError, setImgError] = useState(false);
   
   const badge = calculateStatusBadge(event);
   const daysUntilStart = calculateDaysUntilStart(event);
   
   // 포스터 URL 결정: 포스터 없으면 venue별 기본 이미지
   const getPosterUrl = () => {
-    // 디버깅: 김대중컨벤션센터 행사만 로그
-    if (event.venue === '김대중컨벤션센터') {
-      console.log('[KDJ Poster Debug]', {
-        title: event.title,
-        poster: event.poster,
-        imgError,
-        isEmpty: !event.poster,
-        willUseFallback: imgError || !event.poster
-      });
+    console.log('[EventCard] Getting poster for:', event.title, 'venue:', event.venue, 'poster:', event.poster);
+    
+    // 포스터가 없거나 빈 문자열인 경우
+    if (!event.poster || event.poster.trim() === '') {
+      console.log('[EventCard] No poster, using default for venue:', event.venue);
+      
+      // 송도컨벤시아
+      if (event.venue === '송도컨벤시아') return SONGDO_DEFAULT_POSTER;
+      
+      // 김대중컨벤션센터
+      if (event.venue === '김대중컨벤션센터') return KDJ_DEFAULT_POSTER;
+      
+      // 경주화백컨벤션센터
+      if (event.venue === '경주화백컨벤션센터') {
+        console.log('[EventCard] Using HICO default poster');
+        return HICO_DEFAULT_POSTER;
+      }
+      
+      // 구미코: 카테고리별 기본 포스터
+      if (event.venue === '구미코') {
+        if (event.category === '전시') return GUMICO_EXHIBITION_POSTER;
+        if (event.category === '회의') return GUMICO_CONVENTION_POSTER;
+        if (event.category === '행사/공연') return GUMICO_EVENT_POSTER;
+        // 기타 카테고리는 컨벤션 포스터 사용
+        return GUMICO_CONVENTION_POSTER;
+      }
+      
+      // 다른 venue는 송도 기본 포스터 사용
+      return SONGDO_DEFAULT_POSTER;
     }
     
-    if (imgError || !event.poster) {
-      if (event.venue === '송도컨벤시아') return SONGDO_DEFAULT_POSTER;
-      if (event.venue === '김대중컨벤션센터') return KDJ_DEFAULT_POSTER;
-    }
+    // 포스터가 있으면 그대로 사용
     return event.poster;
   };
   
   const posterUrl = getPosterUrl();
+  const [imgError, setImgError] = useState(false);
   
   const generateDayString = (date: Date) => {
     const days = ['(일)', '(월)', '(화)', '(수)', '(목)', '(금)', '(토)'];
@@ -86,7 +109,17 @@ export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
     <div className="event-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
       <div className="card-image-wrap" style={{ position: 'relative', width: '100%', height: '200px', overflow: 'hidden' }}>
         <img 
-          src={posterUrl} 
+          src={imgError ? (
+            event.venue === '송도컨벤시아' ? SONGDO_DEFAULT_POSTER :
+            event.venue === '김대중컨벤션센터' ? KDJ_DEFAULT_POSTER :
+            event.venue === '경주화백컨벤션센터' ? HICO_DEFAULT_POSTER :
+            event.venue === '구미코' ? (
+              event.category === '전시' ? GUMICO_EXHIBITION_POSTER :
+              event.category === '회의' ? GUMICO_CONVENTION_POSTER :
+              event.category === '행사/공연' ? GUMICO_EVENT_POSTER :
+              GUMICO_CONVENTION_POSTER
+            ) : SONGDO_DEFAULT_POSTER
+          ) : posterUrl} 
           alt="" 
           style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
           referrerPolicy="no-referrer"

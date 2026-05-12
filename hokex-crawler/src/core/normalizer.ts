@@ -255,7 +255,6 @@ export class DataNormalizer {
       'SONGDO': '송도컨벤시아',
       'SUWON_MESSE': '수원메쎄',
       'DAEJEON_CONV': '대전컨벤션센터',
-      'SEJONG_CONV': '세종컨벤션센터',
       'CHEONGJU_OSCO': '청주오스코',
       'KIMDAEJUNG_CONV': '김대중컨벤션센터',
       'GUNSAN_CONV': '군산새만금컨벤션센터',

@@ -33,18 +33,7 @@ export const DUMMY_EVENTS: EventRecord[] = [
     industry: '제조업',
     targetLink: 'https://example.com'
   },
-  {
-    id: '3',
-    title: '스마트팜 혁신 기술전',
-    poster: 'https://images.unsplash.com/photo-1628183201402-ddc9f91a92e1?auto=format&fit=crop&w=400&q=80',
-    region: '충청',
-    venue: '세종컨벤션센터',
-    startDate: addDays(today, 10),
-    endDate: addDays(today, 12),
-    category: '전시',
-    industry: '농업, 임업 및 어업',
-    targetLink: 'https://example.com'
-  },
+
   {
     id: '4',
     title: '인디 락 아티스트 페스티벌',
