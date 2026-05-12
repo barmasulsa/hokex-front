@@ -176,6 +176,21 @@ export function EventDetailPage() {
     return `${dateRange}\n${event.operatingHours}`;
   };
 
+  // Contact 필드 포맷팅 (코엑스/마곡 전용: 이미 줄바꿈이 있으면 그대로 반환)
+  const formatCoexContact = (contact: string) => {
+    // 이미 줄바꿈이 있으면 그대로 반환
+    if (contact.includes('\n')) {
+      return contact;
+    }
+    
+    // 줄바꿈이 없으면 추가
+    return contact
+      .replace(/\s+(Email:)/g, '\n$1')
+      .replace(/\s+(Tel:)/g, '\n$1')
+      .replace(/\s+(Fax:)/g, '\n$1')
+      .trim();
+  };
+
   // Contact 필드 포맷팅 (전화번호 / 이메일 형식을 Tel: / Email: 형식으로 변환)
   const formatContact = (contact: string) => {
     // 이미 Tel: 또는 Email: 형식이 있으면 그대로 반환
@@ -651,13 +666,14 @@ export function EventDetailPage() {
                     </div>
                   </div>
                 )}
-                {(event.manager || event.contact) && (
+                {event.contact && (
                   <div className="detail-item">
                     <Phone size={24} />
                     <div>
                       <h4>문의</h4>
-                      {event.manager && <p>담당자: {event.manager}</p>}
-                      {event.contact && <p>Tel: {event.contact}</p>}
+                      <p style={{ whiteSpace: 'pre-line' }}>
+                        {(event.venue === '코엑스' || event.venue === '코엑스 마곡') ? formatCoexContact(event.contact) : formatContact(event.contact)}
+                      </p>
                     </div>
                   </div>
                 )}
