@@ -182,10 +182,10 @@ export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
 
         <div className="card-tags">
           <span className="card-tag tag-industry">{event.industry}</span>
-          {/* 다중 카테고리 지원 */}
+          {/* 다중 카테고리 지원 - 각 카테고리를 별도 배지로 렌더링 */}
           {Array.isArray(event.category) ? (
             event.category.map((cat, index) => (
-              <span key={index} className="card-tag tag-category">{cat}</span>
+              <span key={`${event.id}-cat-${index}`} className="card-tag tag-category">{cat}</span>
             ))
           ) : (
             <span className="card-tag tag-category">{event.category}</span>
