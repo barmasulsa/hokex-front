@@ -8,6 +8,17 @@ import { Calendar, MapPin, Clock, DollarSign, Phone, ExternalLink, Share2, Copy 
 // 기본 포스터 이미지
 const SONGDO_DEFAULT_POSTER = '/images/songdo-default-poster.jpg';
 const KDJ_DEFAULT_POSTER = '/images/thumb.jpg';
+const HICO_DEFAULT_POSTER = '/images/hico-default.png';
+
+// 구미코 카테고리별 기본 포스터
+const GUMICO_EXHIBITION_POSTER = '/images/gumico_exhibition.png';
+const GUMICO_CONVENTION_POSTER = '/images/gumico_convention.png';
+const GUMICO_EVENT_POSTER = '/images/gumico_event.png';
+
+// 대전컨벤션센터 카테고리별 기본 포스터
+const DCC_EXHIBITION_POSTER = '/images/dcc-exhibition.png';
+const DCC_CONFERENCE_POSTER = '/images/dcc-conference.png';
+const DCC_EVENT_POSTER = '/images/dcc-event.png';
 
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -50,9 +61,34 @@ export function EventDetailPage() {
 
   // 포스터 URL 결정: 포스터 없으면 venue별 기본 이미지
   const getPosterUrl = () => {
-    if (!event.poster) {
+    if (!event.poster || event.poster.trim() === '') {
+      // 송도컨벤시아
       if (event.venue === '송도컨벤시아') return SONGDO_DEFAULT_POSTER;
+      
+      // 김대중컨벤션센터
       if (event.venue === '김대중컨벤션센터') return KDJ_DEFAULT_POSTER;
+      
+      // 경주화백컨벤션센터
+      if (event.venue === '경주화백컨벤션센터') return HICO_DEFAULT_POSTER;
+      
+      // 구미코: 카테고리별 기본 포스터
+      if (event.venue === '구미코') {
+        if (event.category === '전시') return GUMICO_EXHIBITION_POSTER;
+        if (event.category === '회의') return GUMICO_CONVENTION_POSTER;
+        if (event.category === '행사/공연') return GUMICO_EVENT_POSTER;
+        return GUMICO_CONVENTION_POSTER;
+      }
+      
+      // 대전컨벤션센터: 카테고리별 기본 포스터
+      if (event.venue === '대전컨벤션센터') {
+        if (event.category === '전시') return DCC_EXHIBITION_POSTER;
+        if (event.category === '회의') return DCC_CONFERENCE_POSTER;
+        if (event.category === '행사/공연') return DCC_EVENT_POSTER;
+        return DCC_CONFERENCE_POSTER;
+      }
+      
+      // 다른 venue는 송도 기본 포스터 사용
+      return SONGDO_DEFAULT_POSTER;
     }
     return event.poster;
   };

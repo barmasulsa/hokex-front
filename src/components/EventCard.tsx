@@ -20,6 +20,11 @@ const GUMICO_EXHIBITION_POSTER = '/images/gumico_exhibition.png';
 const GUMICO_CONVENTION_POSTER = '/images/gumico_convention.png';
 const GUMICO_EVENT_POSTER = '/images/gumico_event.png';
 
+// 대전컨벤션센터 카테고리별 기본 포스터
+const DCC_EXHIBITION_POSTER = '/images/dcc-exhibition.png';
+const DCC_CONFERENCE_POSTER = '/images/dcc-conference.png';
+const DCC_EVENT_POSTER = '/images/dcc-event.png';
+
 export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
   const navigate = useNavigate();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -55,6 +60,15 @@ export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
         if (event.category === '행사/공연') return GUMICO_EVENT_POSTER;
         // 기타 카테고리는 컨벤션 포스터 사용
         return GUMICO_CONVENTION_POSTER;
+      }
+      
+      // 대전컨벤션센터: 카테고리별 기본 포스터
+      if (event.venue === '대전컨벤션센터') {
+        if (event.category === '전시') return DCC_EXHIBITION_POSTER;
+        if (event.category === '회의') return DCC_CONFERENCE_POSTER;
+        if (event.category === '행사/공연') return DCC_EVENT_POSTER;
+        // 기타 카테고리는 회의 포스터 사용
+        return DCC_CONFERENCE_POSTER;
       }
       
       // 다른 venue는 송도 기본 포스터 사용
