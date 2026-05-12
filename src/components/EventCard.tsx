@@ -55,18 +55,20 @@ export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
       
       // 구미코: 카테고리별 기본 포스터
       if (event.venue === '구미코') {
-        if (event.category === '전시') return GUMICO_EXHIBITION_POSTER;
-        if (event.category === '회의') return GUMICO_CONVENTION_POSTER;
-        if (event.category === '행사/공연') return GUMICO_EVENT_POSTER;
+        const category = Array.isArray(event.category) ? event.category[0] : event.category;
+        if (category === '전시') return GUMICO_EXHIBITION_POSTER;
+        if (category === '회의') return GUMICO_CONVENTION_POSTER;
+        if (category === '행사/공연') return GUMICO_EVENT_POSTER;
         // 기타 카테고리는 컨벤션 포스터 사용
         return GUMICO_CONVENTION_POSTER;
       }
       
       // 대전컨벤션센터: 카테고리별 기본 포스터
       if (event.venue === '대전컨벤션센터') {
-        if (event.category === '전시') return DCC_EXHIBITION_POSTER;
-        if (event.category === '회의') return DCC_CONFERENCE_POSTER;
-        if (event.category === '행사/공연') return DCC_EVENT_POSTER;
+        const category = Array.isArray(event.category) ? event.category[0] : event.category;
+        if (category === '전시') return DCC_EXHIBITION_POSTER;
+        if (category === '회의') return DCC_CONFERENCE_POSTER;
+        if (category === '행사/공연') return DCC_EVENT_POSTER;
         // 기타 카테고리는 회의 포스터 사용
         return DCC_CONFERENCE_POSTER;
       }
@@ -128,15 +130,15 @@ export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
             event.venue === '김대중컨벤션센터' ? KDJ_DEFAULT_POSTER :
             event.venue === '경주화백컨벤션센터' ? HICO_DEFAULT_POSTER :
             event.venue === '구미코' ? (
-              event.category === '전시' ? GUMICO_EXHIBITION_POSTER :
-              event.category === '회의' ? GUMICO_CONVENTION_POSTER :
-              event.category === '행사/공연' ? GUMICO_EVENT_POSTER :
+              (Array.isArray(event.category) ? event.category[0] : event.category) === '전시' ? GUMICO_EXHIBITION_POSTER :
+              (Array.isArray(event.category) ? event.category[0] : event.category) === '회의' ? GUMICO_CONVENTION_POSTER :
+              (Array.isArray(event.category) ? event.category[0] : event.category) === '행사/공연' ? GUMICO_EVENT_POSTER :
               GUMICO_CONVENTION_POSTER
             ) :
             event.venue === '대전컨벤션센터' ? (
-              event.category === '전시' ? DCC_EXHIBITION_POSTER :
-              event.category === '회의' ? DCC_CONFERENCE_POSTER :
-              event.category === '행사/공연' ? DCC_EVENT_POSTER :
+              (Array.isArray(event.category) ? event.category[0] : event.category) === '전시' ? DCC_EXHIBITION_POSTER :
+              (Array.isArray(event.category) ? event.category[0] : event.category) === '회의' ? DCC_CONFERENCE_POSTER :
+              (Array.isArray(event.category) ? event.category[0] : event.category) === '행사/공연' ? DCC_EVENT_POSTER :
               DCC_CONFERENCE_POSTER
             ) :
             event.venue === '킨텍스' ? '' :
@@ -180,7 +182,14 @@ export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
 
         <div className="card-tags">
           <span className="card-tag tag-industry">{event.industry}</span>
-          <span className="card-tag tag-category">{event.category}</span>
+          {/* 다중 카테고리 지원 */}
+          {Array.isArray(event.category) ? (
+            event.category.map((cat, index) => (
+              <span key={index} className="card-tag tag-category">{cat}</span>
+            ))
+          ) : (
+            <span className="card-tag tag-category">{event.category}</span>
+          )}
         </div>
 
         {isEditingTitle ? (

@@ -30,9 +30,15 @@ export class FilterEngine {
       });
     }
 
-    // 카테고리 필터
+    // 카테고리 필터 (배열 지원)
     if (criteria.category && criteria.category !== '전체') {
-      filtered = filtered.filter(event => event.category === criteria.category);
+      filtered = filtered.filter(event => {
+        // 배열인 경우 포함 여부 확인, 단일 값인 경우 직접 비교
+        if (Array.isArray(event.category)) {
+          return event.category.includes(criteria.category!);
+        }
+        return event.category === criteria.category;
+      });
     }
 
     // 산업 다중 선택 필터 (OR 조건)
@@ -69,18 +75,20 @@ export class FilterEngine {
    * @param events - 행사 목록
    * @param criteria - 필터 조건
    * @param currentDate - 현재 날짜
+   * @param showCurrentOnly - 현재/미래 행사만 표시할지 여부 (기본값: true)
    * @returns 필터링 및 정렬된 행사 목록
    */
   static process(
     events: EventRecord[],
     criteria: FilterCriteria,
-    currentDate: Date = new Date()
+    currentDate: Date = new Date(),
+    showCurrentOnly: boolean = true
   ): EventRecord[] {
     let processed = events;
     
-    // 월 필터가 "전체"일 때만 과거 행사 필터링
+    // showCurrentOnly가 true이고 월 필터가 "전체"일 때만 과거 행사 필터링
     // 특정 월을 선택하면 그 달의 모든 행사(과거 포함)를 표시
-    if (!criteria.month || criteria.month === '전체') {
+    if (showCurrentOnly && (!criteria.month || criteria.month === '전체')) {
       processed = this.filterPastEvents(events, currentDate);
     }
     

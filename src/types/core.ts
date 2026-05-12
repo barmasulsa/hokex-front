@@ -55,7 +55,7 @@ export interface EventRecord {
   startDate: Date;
   endDate: Date;
   dayString: string; // 자동 생성
-  category: Category;
+  category: Category[]; // 다중 카테고리 지원
   industry: Industry;
   targetLink: string;
   venueEventPageUrl?: string; // 전시장 행사 소개 페이지 URL (예: COEX 행사 페이지)
