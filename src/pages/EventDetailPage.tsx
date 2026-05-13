@@ -658,7 +658,8 @@ export function EventDetailPage() {
                   <div>
                     <h4>운영 시간</h4>
                     <p style={{ whiteSpace: 'pre-line' }}>
-                      {event.operatingHours || formatDateRange()}
+                      {formatDateRange()}
+                      {event.operatingHours && `\n${event.operatingHours}`}
                     </p>
                   </div>
                 </div>
