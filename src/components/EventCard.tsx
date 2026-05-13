@@ -25,6 +25,9 @@ const DCC_EXHIBITION_POSTER = '/images/dcc-exhibition.png';
 const DCC_CONFERENCE_POSTER = '/images/dcc-conference.png';
 const DCC_EVENT_POSTER = '/images/dcc-event.png';
 
+// 수원메쎄 기본 포스터
+const SUWONMESSE_DEFAULT_POSTER = '/images/suwonmesse-default.png';
+
 export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
   const navigate = useNavigate();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -72,6 +75,9 @@ export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
         // 기타 카테고리는 회의 포스터 사용
         return DCC_CONFERENCE_POSTER;
       }
+      
+      // 수원메쎄
+      if (event.venue === '수원메쎄') return SUWONMESSE_DEFAULT_POSTER;
       
       // 다른 venue는 빈 문자열 반환 (포스터 없음)
       return '';
@@ -141,6 +147,7 @@ export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
               (Array.isArray(event.category) ? event.category[0] : event.category) === '행사/공연' ? DCC_EVENT_POSTER :
               DCC_CONFERENCE_POSTER
             ) :
+            event.venue === '수원메쎄' ? SUWONMESSE_DEFAULT_POSTER :
             event.venue === '킨텍스' ? '' :
             ''
           ) : posterUrl} 

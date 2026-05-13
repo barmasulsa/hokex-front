@@ -20,6 +20,9 @@ const DCC_EXHIBITION_POSTER = '/images/dcc-exhibition.png';
 const DCC_CONFERENCE_POSTER = '/images/dcc-conference.png';
 const DCC_EVENT_POSTER = '/images/dcc-event.png';
 
+// 수원메쎄 기본 포스터
+const SUWONMESSE_DEFAULT_POSTER = '/images/suwonmesse-default.png';
+
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [event, setEvent] = useState<EventRecord | null>(null);
@@ -88,6 +91,9 @@ export function EventDetailPage() {
         if (category === '행사/공연') return DCC_EVENT_POSTER;
         return DCC_CONFERENCE_POSTER;
       }
+      
+      // 수원메쎄
+      if (event.venue === '수원메쎄') return SUWONMESSE_DEFAULT_POSTER;
       
       // 다른 venue는 빈 문자열 반환 (포스터 없음)
       return '';
