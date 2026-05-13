@@ -647,6 +647,77 @@ export function EventDetailPage() {
                 </div>
               )}
             </section>
+          ) : event.venue === '수원메쎄' ? (
+            /* SUWONMESSE Layout: Details first (always show all fields), then description */
+            <section className="event-section">
+              <h2>행사 정보</h2>
+              
+              <div className="event-details-grid">
+                <div className="detail-item">
+                  <Clock size={24} />
+                  <div>
+                    <h4>운영 시간</h4>
+                    <p style={{ whiteSpace: 'pre-line' }}>
+                      {event.operatingHours || formatDateRange()}
+                    </p>
+                  </div>
+                </div>
+                <div className="detail-item">
+                  <DollarSign size={24} />
+                  <div>
+                    <h4>입장료</h4>
+                    <p>{event.admissionFee || '미상'}</p>
+                  </div>
+                </div>
+                <div className="detail-item">
+                  <Phone size={24} />
+                  <div>
+                    <h4>문의</h4>
+                    <p style={{ whiteSpace: 'pre-line' }}>{event.contact ? formatContact(event.contact) : '미상'}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '30px' }}>
+                <h3>행사 장소</h3>
+                <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
+              </div>
+
+              <div style={{ marginTop: '20px' }}>
+                <h3>주최</h3>
+                <p>{event.organizer || '미상'}</p>
+              </div>
+
+              {event.supervisor && (
+                <div style={{ marginTop: '20px' }}>
+                  <h3>주관</h3>
+                  <p>{event.supervisor}</p>
+                </div>
+              )}
+
+              <div style={{ marginTop: '20px' }}>
+                <h3>전시품목</h3>
+                <p>{event.exhibitItems || '미상'}</p>
+              </div>
+
+              {event.targetLink && (
+                <div style={{ marginTop: '20px' }}>
+                  <h3>공식 웹사이트</h3>
+                  <a href={event.targetLink} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff' }}>
+                    {event.targetLink}
+                  </a>
+                </div>
+              )}
+
+              {event.description && (
+                <div style={{ marginTop: '40px' }}>
+                  <h3>행사 소개</h3>
+                  <div className="event-theme">
+                    <p>{event.description}</p>
+                  </div>
+                </div>
+              )}
+            </section>
           ) : (
             /* COEX and other venues: Description first, then details */
             <section className="event-section">
