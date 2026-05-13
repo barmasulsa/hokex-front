@@ -16,6 +16,7 @@ function mapSupabaseEventToEventRecord(event: any): EventRecord {
     industry: event.industry,
     targetLink: event.website_url || event.target_link || '',  // website_url 우선, 없으면 target_link
     venueEventPageUrl: event.venue_event_page_url,  // 전시장 행사 페이지 URL
+    websiteUrl: event.website_url,  // 공식 웹사이트 URL
     description: event.description,
     admissionFee: event.admission_fee,
     exhibitItems: event.exhibit_items,

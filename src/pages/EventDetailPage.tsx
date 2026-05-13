@@ -700,15 +700,6 @@ export function EventDetailPage() {
                 <p>{event.exhibitItems || '미상'}</p>
               </div>
 
-              {event.targetLink && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>공식 웹사이트</h3>
-                  <a href={event.targetLink} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff' }}>
-                    {event.targetLink}
-                  </a>
-                </div>
-              )}
-
               {event.description && (
                 <div style={{ marginTop: '40px' }}>
                   <h3>행사 소개</h3>
@@ -812,8 +803,8 @@ export function EventDetailPage() {
                   </div>
                 )
               )}
-              {event.targetLink && (
-                <a href={event.targetLink} target="_blank" rel="noopener noreferrer" className="btn-official-website">
+              {(event.websiteUrl || event.targetLink) && (
+                <a href={event.websiteUrl || event.targetLink} target="_blank" rel="noopener noreferrer" className="btn-official-website">
                   <ExternalLink size={20} /> 공식 웹사이트 방문
                 </a>
               )}

@@ -59,6 +59,7 @@ export interface EventRecord {
   industry: Industry;
   targetLink: string;
   venueEventPageUrl?: string; // 전시장 행사 소개 페이지 URL (예: COEX 행사 페이지)
+  websiteUrl?: string; // 공식 웹사이트 URL (행사 주최측 웹사이트)
   description?: string;
   eventPurpose?: string; // 행사목적 (킨텍스 전용)
   admissionFee?: string;
