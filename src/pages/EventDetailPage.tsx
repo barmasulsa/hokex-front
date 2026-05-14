@@ -711,7 +711,7 @@ export function EventDetailPage() {
               )}
             </section>
           ) : event.venue === '수원컨벤션센터' ? (
-            /* SCC Layout: Details first (always show all fields), then description - with "주최주관" label */
+            /* SCC Layout: Details first (always show all fields), then description - with "주최주관" label, NO exhibit items */
             <section className="event-section">
               <h2>행사 정보</h2>
               
@@ -750,11 +750,6 @@ export function EventDetailPage() {
               <div style={{ marginTop: '20px' }}>
                 <h3>주최주관</h3>
                 <p>{event.organizer || '미상'}</p>
-              </div>
-
-              <div style={{ marginTop: '20px' }}>
-                <h3>전시품목</h3>
-                <p>{event.exhibitItems || '미상'}</p>
               </div>
 
               {event.description && (
