@@ -1,0 +1,2 @@
+Cache bust timestamp: 2026-05-15T10:30:00Z
+This file forces a new build to invalidate browser caches.
