@@ -144,6 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       console.log('Edge Function response:', { data, error });
+      console.log('Raw Stibee data:', data?.rawData); // 디버깅용
 
       if (error) {
         console.error('Error checking subscription:', error);

@@ -59,18 +59,21 @@ serve(async (req) => {
     // 구독자가 존재하고 구독 상태인지 확인
     if (stibeeResponse.ok) {
       const subscriberData = await stibeeResponse.json()
-      console.log('Subscriber data:', JSON.stringify(subscriberData))
+      console.log('Full Stibee response:', JSON.stringify(subscriberData, null, 2))
       
-      // 구독 상태 확인 (SUBSCRIBED 상태만 허용)
-      const isSubscribed = subscriberData.status === 'SUBSCRIBED'
+      // Stibee API 응답 구조 확인
+      // 가능한 구조: { status: 'SUBSCRIBED' } 또는 { subscriber: { status: 'SUBSCRIBED' } }
+      const status = subscriberData.status || subscriberData.subscriber?.status || subscriberData.state
+      const isSubscribed = status === 'SUBSCRIBED' || status === 'subscribed' || status === 'ACTIVE' || status === 'active'
       
-      console.log(`Is subscribed: ${isSubscribed}, Status: ${subscriberData.status}`)
+      console.log(`Is subscribed: ${isSubscribed}, Status: ${status}, Raw data keys: ${Object.keys(subscriberData).join(', ')}`)
       
       return new Response(
         JSON.stringify({ 
           isSubscriber: isSubscribed,
           email: email,
-          status: subscriberData.status 
+          status: status,
+          rawData: subscriberData // 디버깅용
         }),
         { 
           status: 200, 
