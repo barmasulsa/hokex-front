@@ -40,6 +40,9 @@ serve(async (req) => {
     }
 
     // 스티비 API 호출: 구독자 조회
+    console.log(`Checking subscription for email: ${email}`)
+    console.log(`Using List ID: ${STIBEE_LIST_ID}`)
+    
     const stibeeResponse = await fetch(
       `https://api.stibee.com/v1/lists/${STIBEE_LIST_ID}/subscribers/${encodeURIComponent(email)}`,
       {
@@ -51,12 +54,17 @@ serve(async (req) => {
       }
     )
 
+    console.log(`Stibee API response status: ${stibeeResponse.status}`)
+
     // 구독자가 존재하고 구독 상태인지 확인
     if (stibeeResponse.ok) {
       const subscriberData = await stibeeResponse.json()
+      console.log('Subscriber data:', JSON.stringify(subscriberData))
       
       // 구독 상태 확인 (SUBSCRIBED 상태만 허용)
       const isSubscribed = subscriberData.status === 'SUBSCRIBED'
+      
+      console.log(`Is subscribed: ${isSubscribed}, Status: ${subscriberData.status}`)
       
       return new Response(
         JSON.stringify({ 
@@ -71,6 +79,7 @@ serve(async (req) => {
       )
     } else if (stibeeResponse.status === 404) {
       // 구독자가 없음
+      console.log('Subscriber not found (404)')
       return new Response(
         JSON.stringify({ 
           isSubscriber: false,
@@ -83,9 +92,14 @@ serve(async (req) => {
         }
       )
     } else {
-      console.error('Stibee API error:', stibeeResponse.status)
+      const errorText = await stibeeResponse.text()
+      console.error('Stibee API error:', stibeeResponse.status, errorText)
       return new Response(
-        JSON.stringify({ error: 'Failed to verify subscription', isSubscriber: false }),
+        JSON.stringify({ 
+          error: 'Failed to verify subscription', 
+          isSubscriber: false,
+          details: errorText 
+        }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

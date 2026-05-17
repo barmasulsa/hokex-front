@@ -137,16 +137,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // 스티비 구독자 확인
   const checkSubscription = async (email: string): Promise<boolean> => {
     try {
+      console.log('Checking subscription for:', email);
+      
       const { data, error } = await supabase.functions.invoke('check-stibee-subscriber', {
         body: { email },
       });
+
+      console.log('Edge Function response:', { data, error });
 
       if (error) {
         console.error('Error checking subscription:', error);
         return false;
       }
 
-      return data?.isSubscriber === true;
+      const isSubscriber = data?.isSubscriber === true;
+      console.log('Is subscriber:', isSubscriber, 'Status:', data?.status);
+      
+      return isSubscriber;
     } catch (error) {
       console.error('Error checking subscription:', error);
       return false;
