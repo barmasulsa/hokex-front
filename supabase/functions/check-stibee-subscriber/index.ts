@@ -6,7 +6,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // CORS preflight 처리
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -17,14 +16,10 @@ serve(async (req) => {
     if (!email) {
       return new Response(
         JSON.stringify({ error: 'Email is required', isSubscriber: false }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // 스티비 API 설정
     const STIBEE_API_KEY = Deno.env.get('STIBEE_API_KEY')
     const STIBEE_LIST_ID = Deno.env.get('STIBEE_LIST_ID')
 
@@ -32,81 +27,78 @@ serve(async (req) => {
       console.error('Missing Stibee configuration')
       return new Response(
         JSON.stringify({ error: 'Server configuration error', isSubscriber: false }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // 스티비 API 호출: 구독자 조회
     console.log(`Checking subscription for email: ${email}`)
     console.log(`Using List ID: ${STIBEE_LIST_ID}`)
     
+    // Stibee API v2 사용: 전체 구독자 목록 조회
     const stibeeResponse = await fetch(
-      `https://api.stibee.com/v1/lists/${STIBEE_LIST_ID}/subscribers/${encodeURIComponent(email)}`,
+      `https://api.stibee.com/v2/lists/${STIBEE_LIST_ID}/subscribers`,
       {
         method: 'GET',
         headers: {
           'AccessToken': STIBEE_API_KEY,
-          'Content-Type': 'application/json',
         },
       }
     )
 
-    console.log(`Stibee API response status: ${stibeeResponse.status}`)
+    console.log(`Stibee API v2 response status: ${stibeeResponse.status}`)
 
-    // 구독자가 존재하고 구독 상태인지 확인
     if (stibeeResponse.ok) {
-      const subscriberData = await stibeeResponse.json()
-      console.log('Full Stibee response:', JSON.stringify(subscriberData, null, 2))
+      const responseData = await stibeeResponse.json()
+      console.log('Stibee API v2 response structure:', Object.keys(responseData))
       
-      // Stibee API 응답 구조 확인
-      // 가능한 구조: { status: 'SUBSCRIBED' } 또는 { subscriber: { status: 'SUBSCRIBED' } }
-      const status = subscriberData.status || subscriberData.subscriber?.status || subscriberData.state
-      const isSubscribed = status === 'SUBSCRIBED' || status === 'subscribed' || status === 'ACTIVE' || status === 'active'
+      // API 응답 구조 확인 (subscribers 배열이 있을 것으로 예상)
+      const subscribers = responseData.subscribers || responseData.data || []
+      console.log(`Total subscribers in list: ${subscribers.length}`)
       
-      console.log(`Is subscribed: ${isSubscribed}, Status: ${status}, Raw data keys: ${Object.keys(subscriberData).join(', ')}`)
+      // 이메일로 구독자 찾기 (대소문자 구분 없이)
+      const normalizedEmail = email.toLowerCase().trim()
+      const subscriber = subscribers.find((sub: any) => {
+        const subEmail = (sub.email || '').toLowerCase().trim()
+        return subEmail === normalizedEmail
+      })
       
-      return new Response(
-        JSON.stringify({ 
-          isSubscriber: isSubscribed,
-          email: email,
-          status: status,
-          rawData: subscriberData // 디버깅용
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    } else if (stibeeResponse.status === 404) {
-      // 구독자가 없음
-      console.log('Subscriber not found (404)')
-      return new Response(
-        JSON.stringify({ 
-          isSubscriber: false,
-          email: email,
-          message: 'Not a subscriber' 
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+      if (subscriber) {
+        // 구독 상태 확인
+        const status = subscriber.status || subscriber.state || 'UNKNOWN'
+        const isSubscribed = status === 'SUBSCRIBED' || status === 'subscribed' || status === 'ACTIVE' || status === 'active' || status === '구독 중'
+        
+        console.log(`Subscriber found - Email: ${subscriber.email}, Status: ${status}, Is subscribed: ${isSubscribed}`)
+        
+        return new Response(
+          JSON.stringify({ 
+            isSubscriber: isSubscribed,
+            email: email,
+            status: status,
+            subscriberData: subscriber
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      } else {
+        console.log(`Subscriber not found in list for email: ${email}`)
+        return new Response(
+          JSON.stringify({ 
+            isSubscriber: false,
+            email: email,
+            message: 'Not a subscriber' 
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
     } else {
       const errorText = await stibeeResponse.text()
-      console.error('Stibee API error:', stibeeResponse.status, errorText)
+      console.error('Stibee API v2 error:', stibeeResponse.status, errorText)
       return new Response(
         JSON.stringify({ 
           error: 'Failed to verify subscription', 
           isSubscriber: false,
           details: errorText 
         }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -114,10 +106,7 @@ serve(async (req) => {
     console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: 'Internal server error', isSubscriber: false }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 })
