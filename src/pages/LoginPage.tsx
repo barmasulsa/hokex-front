@@ -19,8 +19,12 @@ export function LoginPage() {
       try {
         await signInWithMagicLink(email);
         alert('이메일로 로그인 링크를 전송했습니다. 이메일을 확인해주세요.');
-      } catch (error) {
-        alert('로그인 링크 전송에 실패했습니다.');
+      } catch (error: any) {
+        if (error.message === 'SUBSCRIBER_ONLY') {
+          alert('⚠️ 뉴스레터 구독자만 이용할 수 있습니다.\n\n스티비 뉴스레터를 구독한 이메일 주소로 로그인해주세요.');
+        } else {
+          alert('로그인 링크 전송에 실패했습니다. 다시 시도해주세요.');
+        }
       }
     }
   };
@@ -46,7 +50,7 @@ export function LoginPage() {
         <div className="login-content">
           <h2>로그인</h2>
           <p className="login-description">
-            HOKEX 서비스를 이용하려면 로그인이 필요합니다.
+            HOKEX는 뉴스레터 구독자 전용 서비스입니다.
           </p>
 
           <div className="login-buttons">
@@ -57,6 +61,11 @@ export function LoginPage() {
               <span className="btn-icon">✉️</span>
               이메일로 로그인
             </button>
+          </div>
+
+          <div className="subscriber-notice">
+            <p>💡 뉴스레터를 구독한 이메일 주소로 로그인해주세요.</p>
+            <p>아직 구독하지 않으셨나요? <a href="https://stibee.com/api/v1.0/lists/289942/public/subscribe" target="_blank" rel="noopener noreferrer">뉴스레터 구독하기</a></p>
           </div>
 
           <div className="login-footer">

@@ -134,8 +134,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     alert('네이버 로그인은 아직 구현되지 않았습니다.');
   };
 
-  // Magic Link 로그인 (이메일 전용)
+  // 스티비 구독자 확인
+  const checkSubscription = async (email: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('check-stibee-subscriber', {
+        body: { email },
+      });
+
+      if (error) {
+        console.error('Error checking subscription:', error);
+        return false;
+      }
+
+      return data?.isSubscriber === true;
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+      return false;
+    }
+  };
+
+  // Magic Link 로그인 (이메일 전용) - 구독자만 허용
   const signInWithMagicLink = async (email: string) => {
+    // 1. 먼저 스티비 구독자인지 확인
+    const isSubscriber = await checkSubscription(email);
+    
+    if (!isSubscriber) {
+      throw new Error('SUBSCRIBER_ONLY');
+    }
+
+    // 2. 구독자라면 Magic Link 전송
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
