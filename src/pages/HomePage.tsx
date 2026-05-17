@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { EventCard } from '../components/EventCard';
 import { FilterBar } from '../components/FilterBar';
 import { fetchEvents } from '../services/eventService';
@@ -30,9 +31,17 @@ const INDUSTRIES = [
 ];
 
 export function HomePage() {
-  const { isAdmin, userProfile, toggleAdminMode } = useAuth();
+  const { user, loading: authLoading, isAdmin, userProfile, toggleAdminMode } = useAuth();
+  const navigate = useNavigate();
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // 로그인 체크 - 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/login');
+    }
+  }, [user, authLoading, navigate]);
   
   // sessionStorage에서 필터 상태 복원
   const getInitialFilterState = () => {
@@ -203,6 +212,11 @@ export function HomePage() {
       setSelectedIndustries([...selectedIndustries, industry]);
     }
   };
+
+  // 인증 로딩 중이거나 사용자가 없으면 아무것도 렌더링하지 않음
+  if (authLoading || !user) {
+    return null;
+  }
 
   return (
     <>
