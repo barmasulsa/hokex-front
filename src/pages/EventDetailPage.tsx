@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 import { fetchEventById } from '../services/eventService';
 import type { EventRecord } from '../types/core';
 import { calculateStatusBadge, calculateDaysUntilStart } from '../utils/badgeCalculator';
-import { Calendar, MapPin, Clock, DollarSign, Phone, ExternalLink, Share2, Copy } from 'lucide-react';
+import { Calendar, MapPin, Clock, DollarSign, ExternalLink, Share2, Copy } from 'lucide-react';
 
-// 기본 포스터 이미지
+  // 킨텍스 전용: 운영시간 포맷팅 (날짜 + 시간)
 const SONGDO_DEFAULT_POSTER = '/images/songdo-default-poster.jpg';
 const KDJ_DEFAULT_POSTER = '/images/thumb.jpg';
 const HICO_DEFAULT_POSTER = '/images/hico-default.png';
@@ -184,69 +184,6 @@ export function EventDetailPage() {
     return `${dateRange}\n${event.operatingHours}`;
   };
 
-  // Contact 필드 포맷팅 (코엑스/마곡 전용: 이미 줄바꿈이 있으면 그대로 반환)
-  const formatCoexContact = (contact: string) => {
-    // 이미 줄바꿈이 있으면 그대로 반환
-    if (contact.includes('\n')) {
-      return contact;
-    }
-    
-    // 줄바꿈이 없으면 추가
-    return contact
-      .replace(/\s+(Email:)/g, '\n$1')
-      .replace(/\s+(Tel:)/g, '\n$1')
-      .replace(/\s+(Fax:)/g, '\n$1')
-      .trim();
-  };
-
-  // Contact 필드 포맷팅 (전화번호 / 이메일 형식을 Tel: / Email: 형식으로 변환)
-  const formatContact = (contact: string) => {
-    // 이미 한글 형식(담당자:, 전화:, 이메일:)이 있으면 그대로 반환
-    if (contact.includes('담당자:') || contact.includes('전화:') || contact.includes('이메일:')) {
-      return contact;
-    }
-    
-    // 이미 Tel: 또는 Email: 형식이 있으면 그대로 반환
-    if (contact.includes('Tel:') || contact.includes('Email:')) {
-      // 줄바꿈이 없으면 추가
-      if (!contact.includes('\n')) {
-        let formatted = contact
-          .replace(/\s+(담당자)/gi, '\n$1')
-          .replace(/\s+(Email:)/gi, '\n$1')
-          .replace(/\s+(Tel:)/gi, '\n$1')
-          .replace(/\s+(Fax:)/gi, '\n$1');
-        return formatted.trim();
-      }
-      return contact;
-    }
-    
-    // "전화번호 / 이메일" 형식을 "Tel: 전화번호\nEmail: 이메일" 형식으로 변환
-    if (contact.includes(' / ')) {
-      const parts = contact.split(' / ');
-      const phone = parts[0].trim();
-      const email = parts[1]?.trim();
-      
-      if (email) {
-        return `Tel: ${phone}\nEmail: ${email}`;
-      } else {
-        return `Tel: ${phone}`;
-      }
-    }
-    
-    // 이메일만 있는 경우 (@ 포함)
-    if (contact.includes('@')) {
-      return `Email: ${contact}`;
-    }
-    
-    // 전화번호만 있는 경우 (숫자와 하이픈으로 시작)
-    if (/^[\d\-\+\(\)]+/.test(contact)) {
-      return `Tel: ${contact}`;
-    }
-    
-    // 그 외의 경우 그대로 반환
-    return contact;
-  };
-
   const handleAddToCalendar = () => {
     alert('캘린더 추가 기능 (Google/Apple/Outlook)');
   };
@@ -304,15 +241,6 @@ export function EventDetailPage() {
                     <p>{event.admissionFee || '미상'}</p>
                   </div>
                 </div>
-                {event.contact && (
-                  <div className="detail-item">
-                    <Phone size={24} />
-                    <div>
-                      <h4>문의</h4>
-                      <p style={{ whiteSpace: 'pre-line' }}>{formatContact(event.contact)}</p>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {event.organizer && (
@@ -381,15 +309,6 @@ export function EventDetailPage() {
                     <p>{event.admissionFee || ''}</p>
                   </div>
                 </div>
-                {event.contact && (
-                  <div className="detail-item">
-                    <Phone size={24} />
-                    <div>
-                      <h4>문의</h4>
-                      <p style={{ whiteSpace: 'pre-line' }}>{formatContact(event.contact)}</p>
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div style={{ marginTop: '30px' }}>
@@ -438,13 +357,6 @@ export function EventDetailPage() {
                   <div>
                     <h4>입장료</h4>
                     <p>{event.admissionFee || '미상'}</p>
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <Phone size={24} />
-                  <div>
-                    <h4>문의</h4>
-                    <p style={{ whiteSpace: 'pre-line' }}>{event.contact ? formatContact(event.contact) : '미상'}</p>
                   </div>
                 </div>
               </div>
@@ -506,36 +418,6 @@ export function EventDetailPage() {
                     <p>{event.admissionFee || '미상'}</p>
                   </div>
                 </div>
-                {(event.manager || event.contact) && (
-                  <div className="detail-item">
-                    <Phone size={24} />
-                    <div>
-                      <h4>문의</h4>
-                      {event.manager ? (
-                        <>
-                          <p>담당자: {event.manager}</p>
-                          {event.contact && <p>Tel: {event.contact}</p>}
-                        </>
-                      ) : event.contact ? (
-                        // manager가 없고 contact만 있는 경우: "담당자 / 전화번호" 형식 파싱
-                        (() => {
-                          const parts = event.contact.split(' / ');
-                          if (parts.length === 2) {
-                            return (
-                              <>
-                                <p>담당자: {parts[0].trim()}</p>
-                                <p>Tel: {parts[1].trim()}</p>
-                              </>
-                            );
-                          } else {
-                            // "/"가 없으면 전화번호만 있는 것으로 간주
-                            return <p>Tel: {event.contact}</p>;
-                          }
-                        })()
-                      ) : null}
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div style={{ marginTop: '30px' }}>
@@ -603,15 +485,6 @@ export function EventDetailPage() {
                     <p>{event.admissionFee || '미상'}</p>
                   </div>
                 </div>
-                {event.contact && (
-                  <div className="detail-item">
-                    <Phone size={24} />
-                    <div>
-                      <h4>문의</h4>
-                      <p style={{ whiteSpace: 'pre-line' }}>{formatContact(event.contact)}</p>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {event.organizer && (
@@ -670,13 +543,6 @@ export function EventDetailPage() {
                     <p>{event.admissionFee || '미상'}</p>
                   </div>
                 </div>
-                <div className="detail-item">
-                  <Phone size={24} />
-                  <div>
-                    <h4>문의</h4>
-                    <p style={{ whiteSpace: 'pre-line' }}>{event.contact ? formatContact(event.contact) : '미상'}</p>
-                  </div>
-                </div>
               </div>
 
               <div style={{ marginTop: '30px' }}>
@@ -733,13 +599,6 @@ export function EventDetailPage() {
                     <p>{event.admissionFee || '미상'}</p>
                   </div>
                 </div>
-                <div className="detail-item">
-                  <Phone size={24} />
-                  <div>
-                    <h4>문의</h4>
-                    <p style={{ whiteSpace: 'pre-line' }}>{event.contact ? formatContact(event.contact) : '미상'}</p>
-                  </div>
-                </div>
               </div>
 
               <div style={{ marginTop: '30px' }}>
@@ -791,17 +650,6 @@ export function EventDetailPage() {
                     <div>
                       <h4>입장료</h4>
                       <p>{event.admissionFee}</p>
-                    </div>
-                  </div>
-                )}
-                {event.contact && (
-                  <div className="detail-item">
-                    <Phone size={24} />
-                    <div>
-                      <h4>문의</h4>
-                      <p style={{ whiteSpace: 'pre-line' }}>
-                        {(event.venue === '코엑스' || event.venue === '코엑스 마곡') ? formatCoexContact(event.contact) : formatContact(event.contact)}
-                      </p>
                     </div>
                   </div>
                 )}
