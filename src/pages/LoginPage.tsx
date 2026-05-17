@@ -1,11 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import '../styles/LoginPage.css';
 
 export function LoginPage() {
-  const { user, loading, signInWithMagicLink } = useAuth();
+  const { user, loading, signInWithPassword, signInWithMagicLink, resetPassword } = useAuth();
   const navigate = useNavigate();
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
@@ -13,17 +18,59 @@ export function LoginPage() {
     }
   }, [user, loading, navigate]);
 
+  const handlePasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      await signInWithPassword(email, password);
+      // 로그인 성공 시 자동으로 리다이렉트됨
+    } catch (error: any) {
+      console.error('Login error:', error);
+      if (error.message === 'SUBSCRIBER_ONLY') {
+        setError('⚠️ 뉴스레터 구독자만 이용할 수 있습니다.');
+      } else if (error.message === 'Invalid login credentials') {
+        setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+      } else {
+        setError('로그인에 실패했습니다. 다시 시도해주세요.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleMagicLink = async () => {
-    const email = prompt('이메일 주소를 입력하세요:');
-    if (email) {
+    const emailInput = prompt('이메일 주소를 입력하세요:');
+    if (emailInput) {
       try {
-        await signInWithMagicLink(email);
+        await signInWithMagicLink(emailInput);
         alert('이메일로 로그인 링크를 전송했습니다. 이메일을 확인해주세요.');
       } catch (error: any) {
         if (error.message === 'SUBSCRIBER_ONLY') {
           alert('⚠️ 뉴스레터 구독자만 이용할 수 있습니다.\n\n스티비 뉴스레터를 구독한 이메일 주소로 로그인해주세요.');
+        } else if (error.message?.includes('rate limit')) {
+          alert('⚠️ 이메일 전송 제한에 도달했습니다.\n\n비밀번호 로그인을 사용하거나 잠시 후 다시 시도해주세요.');
         } else {
           alert('로그인 링크 전송에 실패했습니다. 다시 시도해주세요.');
+        }
+      }
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    const emailInput = prompt('비밀번호를 재설정할 이메일 주소를 입력하세요:');
+    if (emailInput) {
+      try {
+        await resetPassword(emailInput);
+        alert('✅ 비밀번호 재설정 링크를 이메일로 전송했습니다.\n\n이메일을 확인하여 비밀번호를 재설정해주세요.');
+      } catch (error: any) {
+        if (error.message === 'SUBSCRIBER_ONLY') {
+          alert('⚠️ 뉴스레터 구독자만 이용할 수 있습니다.\n\n스티비 뉴스레터를 구독한 이메일 주소를 입력해주세요.');
+        } else if (error.message?.includes('rate limit')) {
+          alert('⚠️ 이메일 전송 제한에 도달했습니다.\n\n잠시 후 다시 시도해주세요.');
+        } else {
+          alert('비밀번호 재설정 이메일 전송에 실패했습니다. 다시 시도해주세요.');
         }
       }
     }
@@ -53,19 +100,69 @@ export function LoginPage() {
             HOKEX는 뉴스레터 구독자 전용 서비스입니다.
           </p>
 
-          <div className="login-buttons">
+          <form onSubmit={handlePasswordLogin} className="login-form">
+            <div className="form-group">
+              <label htmlFor="email">이메일</label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="구독한 이메일 주소"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password">비밀번호</label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="비밀번호"
+                required
+                disabled={isSubmitting}
+              />
+              <button 
+                type="button" 
+                className="forgot-password-link"
+                onClick={handleForgotPassword}
+                disabled={isSubmitting}
+              >
+                비밀번호를 잊으셨나요?
+              </button>
+            </div>
+
+            {error && <div className="error-message">{error}</div>}
+
             <button 
-              className="login-btn email-btn"
-              onClick={handleMagicLink}
+              type="submit" 
+              className="login-btn primary-btn"
+              disabled={isSubmitting}
             >
-              <span className="btn-icon">✉️</span>
-              이메일로 로그인
+              {isSubmitting ? '로그인 중...' : '로그인'}
             </button>
+          </form>
+
+          <div className="divider">
+            <span>또는</span>
           </div>
+
+          <button 
+            className="login-btn secondary-btn"
+            onClick={handleMagicLink}
+            disabled={isSubmitting}
+          >
+            <span className="btn-icon">✉️</span>
+            이메일 링크로 로그인
+          </button>
 
           <div className="subscriber-notice">
             <p>💡 뉴스레터를 구독한 이메일 주소로 로그인해주세요.</p>
             <p>아직 구독하지 않으셨나요? <a href="https://page.stibee.com/subscriptions/289942" target="_blank" rel="noopener noreferrer">뉴스레터 구독하기</a></p>
+            <p>비밀번호가 없으신가요? 이메일 링크로 로그인 후 비밀번호를 설정하세요.</p>
           </div>
 
           <div className="login-footer">

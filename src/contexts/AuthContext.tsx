@@ -19,7 +19,9 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithKakao: () => Promise<void>;
   signInWithNaver: () => Promise<void>;
+  signInWithPassword: (email: string, password: string) => Promise<void>;
   signInWithMagicLink: (email: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   toggleAdminMode: () => void;
 }
@@ -161,6 +163,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // 비밀번호 로그인 - 구독자만 허용
+  const signInWithPassword = async (email: string, password: string) => {
+    // 1. 먼저 스티비 구독자인지 확인
+    const isSubscriber = await checkSubscription(email);
+    
+    if (!isSubscriber) {
+      throw new Error('SUBSCRIBER_ONLY');
+    }
+
+    // 2. 구독자라면 비밀번호 로그인 진행
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    if (error) {
+      console.error('Error signing in with password:', error);
+      throw error;
+    }
+  };
+
+  // 비밀번호 재설정 이메일 전송 - 구독자만 허용
+  const resetPassword = async (email: string) => {
+    // 1. 먼저 스티비 구독자인지 확인
+    const isSubscriber = await checkSubscription(email);
+    
+    if (!isSubscriber) {
+      throw new Error('SUBSCRIBER_ONLY');
+    }
+
+    // 2. 구독자라면 비밀번호 재설정 이메일 전송
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    
+    if (error) {
+      console.error('Error sending password reset email:', error);
+      throw error;
+    }
+  };
+
   // Magic Link 로그인 (이메일 전용) - 구독자만 허용
   const signInWithMagicLink = async (email: string) => {
     // 1. 먼저 스티비 구독자인지 확인
@@ -212,7 +255,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signInWithGoogle,
     signInWithKakao,
     signInWithNaver,
+    signInWithPassword,
     signInWithMagicLink,
+    resetPassword,
     signOut,
     toggleAdminMode,
   };

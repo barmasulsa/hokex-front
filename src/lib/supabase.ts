@@ -12,7 +12,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    // 세션을 30일(2592000초) 동안 유지
+    // 세션을 1년(31536000초) 동안 유지
     storageKey: 'hokex-auth',
   },
 });
