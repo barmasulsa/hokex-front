@@ -9,6 +9,17 @@ HOKEX는 스티비 뉴스레터 구독자만 이용할 수 있도록 제한되�
 
 ## 배포 단계
 
+### 0. JWT 만료 시간 설정 (30일 자동 로그인)
+
+Supabase 대시보드에서 JWT 만료 시간을 30일로 설정:
+
+1. Supabase 대시보드 → Settings → Auth
+2. **JWT Expiry** 섹션 찾기
+3. `JWT expiry limit` 값을 `2592000` (30일 = 30 × 24 × 60 × 60초)으로 설정
+4. Save 클릭
+
+이렇게 하면 사용자가 한 번 로그인하면 30일 동안 자동으로 로그인 상태가 유지됩니다.
+
 ### 1. Supabase CLI 설치 (아직 안 했다면)
 
 ```bash
@@ -107,6 +118,12 @@ https://stibee.com/api/v1.0/lists/289942/public/subscribe
 - 현재 설정: `Access-Control-Allow-Origin: *` (모든 도메인 허용)
 
 ## 구현 세부사항
+
+### Supabase Client 설정
+- `autoRefreshToken: true`: 토큰 자동 갱신 활성화
+- `persistSession: true`: 브라우저 localStorage에 세션 저장
+- `detectSessionInUrl: true`: URL에서 세션 자동 감지 (Magic Link 콜백용)
+- JWT 만료 시간: 30일 (Supabase 대시보드에서 설정)
 
 ### AuthContext 변경사항
 - `checkSubscription()` 함수 추가: Edge Function 호출하여 구독자 확인
