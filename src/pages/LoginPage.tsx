@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import '../styles/LoginPage.css';
 
 export function LoginPage() {
-  const { user, loading, signInWithGoogle, signInWithKakao, signInWithMagicLink } = useAuth();
+  const { user, loading, signInWithMagicLink } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,22 +50,6 @@ export function LoginPage() {
           </p>
 
           <div className="login-buttons">
-            <button 
-              className="login-btn google-btn"
-              onClick={signInWithGoogle}
-            >
-              <span className="btn-icon">🔍</span>
-              Google로 로그인
-            </button>
-
-            <button 
-              className="login-btn kakao-btn"
-              onClick={signInWithKakao}
-            >
-              <span className="btn-icon">💬</span>
-              Kakao로 로그인
-            </button>
-
             <button 
               className="login-btn email-btn"
               onClick={handleMagicLink}

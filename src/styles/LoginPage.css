@@ -66,10 +66,10 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 14px 20px;
+  padding: 16px 20px;
   border: none;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -77,31 +77,7 @@
 }
 
 .btn-icon {
-  font-size: 20px;
-}
-
-.google-btn {
-  background: #fff;
-  color: #333;
-  border: 2px solid #ddd;
-}
-
-.google-btn:hover {
-  background: #f8f9fa;
-  border-color: #ccc;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.kakao-btn {
-  background: #FEE500;
-  color: #000;
-}
-
-.kakao-btn:hover {
-  background: #fdd835;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(254, 229, 0, 0.3);
+  font-size: 22px;
 }
 
 .email-btn {
