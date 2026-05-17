@@ -30,7 +30,7 @@ const INDUSTRIES = [
 ];
 
 export function HomePage() {
-  const { isAdmin, userProfile, toggleAdminMode, adminModeEnabled } = useAuth();
+  const { isAdmin, userProfile, toggleAdminMode } = useAuth();
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
   
