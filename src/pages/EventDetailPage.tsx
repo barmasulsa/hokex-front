@@ -1,9 +1,10 @@
 import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { fetchEventById } from '../services/eventService';
+import { fetchEventById, updateEvent, fetchEventHistory, revertEventChange } from '../services/eventService';
 import type { EventRecord } from '../types/core';
 import { calculateStatusBadge, calculateDaysUntilStart } from '../utils/badgeCalculator';
-import { Calendar, MapPin, Clock, DollarSign, ExternalLink, Share2, Copy } from 'lucide-react';
+import { Calendar, MapPin, ExternalLink, Share2, Copy, Edit2, Check, X, Image, History, RotateCcw } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
   // 킨텍스 전용: 운영시간 포맷팅 (날짜 + 시간)
 const SONGDO_DEFAULT_POSTER = '/images/songdo-default-poster.jpg';
@@ -27,6 +28,48 @@ export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [event, setEvent] = useState<EventRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isAdmin } = useAuth();
+  
+  // URL 편집 상태
+  const [editingVenueUrl, setEditingVenueUrl] = useState(false);
+  const [editingWebsiteUrl, setEditingWebsiteUrl] = useState(false);
+  const [tempVenueUrl, setTempVenueUrl] = useState('');
+  const [tempWebsiteUrl, setTempWebsiteUrl] = useState('');
+  const [saving, setSaving] = useState(false);
+  
+  // 포스터 편집 상태
+  const [editingPoster, setEditingPoster] = useState(false);
+  const [tempPosterUrl, setTempPosterUrl] = useState('');
+  
+  // 변경 이력 모달
+  const [showHistory, setShowHistory] = useState(false);
+  const [eventHistory, setEventHistory] = useState<any[]>([]);
+  
+  // 텍스트 필드 편집 상태
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [tempDescription, setTempDescription] = useState('');
+  const [editingOrganizer, setEditingOrganizer] = useState(false);
+  const [tempOrganizer, setTempOrganizer] = useState('');
+  const [editingSupervisor, setEditingSupervisor] = useState(false);
+  const [tempSupervisor, setTempSupervisor] = useState('');
+  const [editingAdmissionFee, setEditingAdmissionFee] = useState(false);
+  const [tempAdmissionFee, setTempAdmissionFee] = useState('');
+  const [editingExhibitItems, setEditingExhibitItems] = useState(false);
+  const [tempExhibitItems, setTempExhibitItems] = useState('');
+  const [editingOperatingHours, setEditingOperatingHours] = useState(false);
+  const [tempOperatingHours, setTempOperatingHours] = useState('');
+  const [editingVenueHall, setEditingVenueHall] = useState(false);
+  const [tempVenueHall, setTempVenueHall] = useState('');
+  
+  // 날짜 편집 상태
+  const [editingStartDate, setEditingStartDate] = useState(false);
+  const [tempStartDate, setTempStartDate] = useState('');
+  const [editingEndDate, setEditingEndDate] = useState(false);
+  const [tempEndDate, setTempEndDate] = useState('');
+  
+  // 카테고리 편집 상태
+  const [editingCategory, setEditingCategory] = useState(false);
+  const [tempCategory, setTempCategory] = useState<'전시' | '회의' | '행사/공연'>('전시');
 
   useEffect(() => {
     async function loadEvent() {
@@ -197,21 +240,771 @@ export function EventDetailPage() {
     alert('링크가 복사되었습니다');
   };
 
+  // URL 편집 시작
+  const startEditVenueUrl = () => {
+    setTempVenueUrl(event?.venueEventPageUrl || '');
+    setEditingVenueUrl(true);
+  };
+
+  const startEditWebsiteUrl = () => {
+    setTempWebsiteUrl(event?.websiteUrl || event?.targetLink || '');
+    setEditingWebsiteUrl(true);
+  };
+
+  // URL 저장
+  const saveVenueUrl = async () => {
+    if (!event || !id) return;
+    
+    setSaving(true);
+    try {
+      await updateEvent(id, { venueEventPageUrl: tempVenueUrl });
+      setEvent({ ...event, venueEventPageUrl: tempVenueUrl });
+      setEditingVenueUrl(false);
+      alert('전시장 행사 페이지 URL이 업데이트되었습니다');
+    } catch (error) {
+      console.error('Failed to update venue URL:', error);
+      alert('URL 업데이트에 실패했습니다');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveWebsiteUrl = async () => {
+    if (!event || !id) return;
+    
+    setSaving(true);
+    try {
+      await updateEvent(id, { websiteUrl: tempWebsiteUrl });
+      setEvent({ ...event, websiteUrl: tempWebsiteUrl });
+      setEditingWebsiteUrl(false);
+      alert('공식 웹사이트 URL이 업데이트되었습니다');
+    } catch (error) {
+      console.error('Failed to update website URL:', error);
+      alert('URL 업데이트에 실패했습니다');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // URL 편집 취소
+  const cancelEditVenueUrl = () => {
+    setEditingVenueUrl(false);
+    setTempVenueUrl('');
+  };
+
+  const cancelEditWebsiteUrl = () => {
+    setEditingWebsiteUrl(false);
+    setTempWebsiteUrl('');
+  };
+
+  // 포스터 편집 시작
+  const startEditPoster = () => {
+    setTempPosterUrl(event?.poster || '');
+    setEditingPoster(true);
+  };
+
+  // 포스터 저장
+  const savePoster = async () => {
+    if (!event || !id) return;
+    
+    setSaving(true);
+    try {
+      await updateEvent(id, { poster: tempPosterUrl });
+      setEvent({ ...event, poster: tempPosterUrl });
+      setEditingPoster(false);
+      alert('포스터 URL이 업데이트되었습니다');
+    } catch (error) {
+      console.error('Failed to update poster:', error);
+      alert('포스터 URL 업데이트에 실패했습니다');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // 포스터 편집 취소
+  const cancelEditPoster = () => {
+    setEditingPoster(false);
+    setTempPosterUrl('');
+  };
+
+  // 변경 이력 불러오기
+  const loadHistory = async () => {
+    if (!id) return;
+    const history = await fetchEventHistory(id);
+    setEventHistory(history);
+    setShowHistory(true);
+  };
+
+  // 변경 되돌리기
+  const handleRevert = async (historyId: string) => {
+    if (!id) return;
+    
+    if (!confirm('이 변경사항을 되돌리시겠습니까?')) return;
+    
+    const success = await revertEventChange(id, historyId);
+    if (success) {
+      alert('변경사항이 되돌려졌습니다');
+      window.location.reload();
+    } else {
+      alert('되돌리기에 실패했습니다');
+    }
+  };
+
+  // 텍스트 필드 편집 시작
+  const startEditDescription = () => {
+    setTempDescription(event?.description || '');
+    setEditingDescription(true);
+  };
+
+  const startEditOrganizer = () => {
+    setTempOrganizer(event?.organizer || '');
+    setEditingOrganizer(true);
+  };
+
+  const startEditSupervisor = () => {
+    setTempSupervisor(event?.supervisor || '');
+    setEditingSupervisor(true);
+  };
+
+  const startEditAdmissionFee = () => {
+    setTempAdmissionFee(event?.admissionFee || '');
+    setEditingAdmissionFee(true);
+  };
+
+  const startEditExhibitItems = () => {
+    setTempExhibitItems(event?.exhibitItems || '');
+    setEditingExhibitItems(true);
+  };
+
+  const startEditOperatingHours = () => {
+    setTempOperatingHours(event?.operatingHours || '');
+    setEditingOperatingHours(true);
+  };
+
+  const startEditVenueHall = () => {
+    setTempVenueHall(event?.venueHall || '');
+    setEditingVenueHall(true);
+  };
+
+  // 날짜 편집 시작
+  const startEditStartDate = () => {
+    setTempStartDate(event?.startDate.toISOString().split('T')[0] || '');
+    setEditingStartDate(true);
+  };
+
+  const startEditEndDate = () => {
+    setTempEndDate(event?.endDate.toISOString().split('T')[0] || '');
+    setEditingEndDate(true);
+  };
+
+  // 텍스트 필드 저장
+  const saveDescription = async () => {
+    if (!event || !id) return;
+    setSaving(true);
+    try {
+      await updateEvent(id, { description: tempDescription });
+      setEvent({ ...event, description: tempDescription });
+      setEditingDescription(false);
+      alert('행사 개요가 업데이트되었습니다');
+    } catch (error) {
+      console.error('Failed to update description:', error);
+      alert('행사 개요 업데이트에 실패했습니다');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveOrganizer = async () => {
+    if (!event || !id) return;
+    setSaving(true);
+    try {
+      await updateEvent(id, { organizer: tempOrganizer });
+      setEvent({ ...event, organizer: tempOrganizer });
+      setEditingOrganizer(false);
+      alert('주최가 업데이트되었습니다');
+    } catch (error) {
+      console.error('Failed to update organizer:', error);
+      alert('주최 업데이트에 실패했습니다');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveSupervisor = async () => {
+    if (!event || !id) return;
+    setSaving(true);
+    try {
+      await updateEvent(id, { supervisor: tempSupervisor });
+      setEvent({ ...event, supervisor: tempSupervisor });
+      setEditingSupervisor(false);
+      alert('주관이 업데이트되었습니다');
+    } catch (error) {
+      console.error('Failed to update supervisor:', error);
+      alert('주관 업데이트에 실패했습니다');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveAdmissionFee = async () => {
+    if (!event || !id) return;
+    setSaving(true);
+    try {
+      await updateEvent(id, { admissionFee: tempAdmissionFee });
+      setEvent({ ...event, admissionFee: tempAdmissionFee });
+      setEditingAdmissionFee(false);
+      alert('입장료가 업데이트되었습니다');
+    } catch (error) {
+      console.error('Failed to update admission fee:', error);
+      alert('입장료 업데이트에 실패했습니다');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveExhibitItems = async () => {
+    if (!event || !id) return;
+    setSaving(true);
+    try {
+      await updateEvent(id, { exhibitItems: tempExhibitItems });
+      setEvent({ ...event, exhibitItems: tempExhibitItems });
+      setEditingExhibitItems(false);
+      alert('전시품목이 업데이트되었습니다');
+    } catch (error) {
+      console.error('Failed to update exhibit items:', error);
+      alert('전시품목 업데이트에 실패했습니다');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveOperatingHours = async () => {
+    if (!event || !id) return;
+    setSaving(true);
+    try {
+      await updateEvent(id, { operatingHours: tempOperatingHours });
+      setEvent({ ...event, operatingHours: tempOperatingHours });
+      setEditingOperatingHours(false);
+      alert('운영시간이 업데이트되었습니다');
+    } catch (error) {
+      console.error('Failed to update operating hours:', error);
+      alert('운영시간 업데이트에 실패했습니다');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveVenueHall = async () => {
+    if (!event || !id) return;
+    setSaving(true);
+    try {
+      await updateEvent(id, { venueHall: tempVenueHall });
+      setEvent({ ...event, venueHall: tempVenueHall });
+      setEditingVenueHall(false);
+      alert('행사장소가 업데이트되었습니다');
+    } catch (error) {
+      console.error('Failed to update venue hall:', error);
+      alert('행사장소 업데이트에 실패했습니다');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // 날짜 저장
+  const saveStartDate = async () => {
+    if (!event || !id) return;
+    setSaving(true);
+    try {
+      const newStartDate = new Date(tempStartDate);
+      await updateEvent(id, { startDate: newStartDate });
+      setEvent({ ...event, startDate: newStartDate });
+      setEditingStartDate(false);
+      alert('시작일이 업데이트되었습니다. 행사가 새로운 날짜로 이동되었습니다.');
+    } catch (error) {
+      console.error('Failed to update start date:', error);
+      alert('시작일 업데이트에 실패했습니다');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveEndDate = async () => {
+    if (!event || !id) return;
+    setSaving(true);
+    try {
+      const newEndDate = new Date(tempEndDate);
+      await updateEvent(id, { endDate: newEndDate });
+      setEvent({ ...event, endDate: newEndDate });
+      setEditingEndDate(false);
+      alert('종료일이 업데이트되었습니다. 행사가 새로운 날짜로 이동되었습니다.');
+    } catch (error) {
+      console.error('Failed to update end date:', error);
+      alert('종료일 업데이트에 실패했습니다');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // 텍스트 필드 편집 취소
+  const cancelEditDescription = () => {
+    setEditingDescription(false);
+    setTempDescription('');
+  };
+
+  const cancelEditOrganizer = () => {
+    setEditingOrganizer(false);
+    setTempOrganizer('');
+  };
+
+  const cancelEditSupervisor = () => {
+    setEditingSupervisor(false);
+    setTempSupervisor('');
+  };
+
+  const cancelEditAdmissionFee = () => {
+    setEditingAdmissionFee(false);
+    setTempAdmissionFee('');
+  };
+
+  const cancelEditExhibitItems = () => {
+    setEditingExhibitItems(false);
+    setTempExhibitItems('');
+  };
+
+  const cancelEditOperatingHours = () => {
+    setEditingOperatingHours(false);
+    setTempOperatingHours('');
+  };
+
+  const cancelEditVenueHall = () => {
+    setEditingVenueHall(false);
+    setTempVenueHall('');
+  };
+
+  // 날짜 편집 취소
+  const cancelEditStartDate = () => {
+    setEditingStartDate(false);
+    setTempStartDate('');
+  };
+
+  const cancelEditEndDate = () => {
+    setEditingEndDate(false);
+    setTempEndDate('');
+  };
+
+  // 카테고리 편집 시작
+  const startEditCategory = () => {
+    const currentCategory = Array.isArray(event?.category) ? event.category[0] : event?.category;
+    setTempCategory(currentCategory as '전시' | '회의' | '행사/공연');
+    setEditingCategory(true);
+  };
+
+  // 카테고리 저장
+  const saveCategory = async () => {
+    if (!event || !id) return;
+    setSaving(true);
+    try {
+      await updateEvent(id, { category: [tempCategory] as any });
+      setEvent({ ...event, category: [tempCategory] as any });
+      setEditingCategory(false);
+      alert('카테고리가 업데이트되었습니다.');
+    } catch (error) {
+      console.error('Failed to update category:', error);
+      alert('카테고리 업데이트에 실패했습니다');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // 카테고리 편집 취소
+  const cancelEditCategory = () => {
+    setEditingCategory(false);
+  };
+
+  // 편집 가능한 텍스트 필드 렌더 헬퍼
+  const renderEditableField = (
+    label: string,
+    value: string | undefined,
+    isEditing: boolean,
+    tempValue: string,
+    onEdit: () => void,
+    onSave: () => void,
+    onCancel: () => void,
+    onChange: (value: string) => void,
+    minHeight: string = '80px'
+  ) => {
+    return (
+      <div style={{ marginTop: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+          <h3>{label}</h3>
+          {isAdmin && !isEditing && (
+            <button
+              onClick={onEdit}
+              style={{
+                padding: '4px 8px',
+                background: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '12px'
+              }}
+            >
+              <Edit2 size={14} /> 수정
+            </button>
+          )}
+        </div>
+        {isEditing ? (
+          <div>
+            <textarea
+              value={tempValue}
+              onChange={(e) => onChange(e.target.value)}
+              style={{
+                width: '100%',
+                minHeight: minHeight,
+                padding: '10px',
+                border: '2px solid #007bff',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'inherit',
+                resize: 'vertical'
+              }}
+            />
+            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+              <button
+                onClick={onSave}
+                disabled={saving}
+                style={{
+                  padding: '8px 16px',
+                  background: '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+              >
+                <Check size={16} /> {saving ? '저장 중..' : '저장'}
+              </button>
+              <button
+                onClick={onCancel}
+                disabled={saving}
+                style={{
+                  padding: '8px 16px',
+                  background: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+              >
+                <X size={16} /> 취소
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p style={{ whiteSpace: 'pre-wrap' }}>{value || '미상'}</p>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="event-detail-page">
       {/* Hero Section */}
       <div className="event-hero" style={{ backgroundImage: `url(${posterUrl})` }}>
         <div className="event-hero-overlay"></div>
         <div className="event-hero-content">
-          <div className="event-hero-badge">{event.category}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {editingCategory ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <select
+                  value={tempCategory}
+                  onChange={(e) => setTempCategory(e.target.value as '전시' | '회의' | '행사/공연')}
+                  style={{
+                    padding: '8px 12px',
+                    fontSize: '14px',
+                    border: '2px solid #007bff',
+                    borderRadius: '4px',
+                    background: 'white',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="전시">전시</option>
+                  <option value="회의">회의</option>
+                  <option value="행사/공연">행사/공연</option>
+                </select>
+                <button
+                  onClick={saveCategory}
+                  disabled={saving}
+                  style={{
+                    padding: '6px 12px',
+                    background: '#28a745',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <Check size={14} />
+                </button>
+                <button
+                  onClick={cancelEditCategory}
+                  disabled={saving}
+                  style={{
+                    padding: '6px 12px',
+                    background: '#6c757d',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="event-hero-badge">{event.category}</div>
+                {isAdmin && (
+                  <button
+                    onClick={startEditCategory}
+                    style={{
+                      padding: '4px 8px',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      color: '#007bff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '12px'
+                    }}
+                  >
+                    <Edit2 size={12} />
+                  </button>
+                )}
+              </>
+            )}
+          </div>
           <h1 className="event-hero-title">{event.title}</h1>
           <div className="event-hero-meta">
-            <span><Calendar size={20} /> {formatDateRange()}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {editingStartDate || editingEndDate ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(255,255,255,0.95)', padding: '15px', borderRadius: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <label style={{ color: '#333', fontWeight: 'bold', minWidth: '60px' }}>시작일:</label>
+                    <input
+                      type="date"
+                      value={tempStartDate}
+                      onChange={(e) => setTempStartDate(e.target.value)}
+                      style={{
+                        padding: '6px 10px',
+                        border: '2px solid #007bff',
+                        borderRadius: '4px',
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <label style={{ color: '#333', fontWeight: 'bold', minWidth: '60px' }}>종료일:</label>
+                    <input
+                      type="date"
+                      value={tempEndDate}
+                      onChange={(e) => setTempEndDate(e.target.value)}
+                      style={{
+                        padding: '6px 10px',
+                        border: '2px solid #007bff',
+                        borderRadius: '4px',
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={async () => {
+                        await saveStartDate();
+                        await saveEndDate();
+                      }}
+                      disabled={saving}
+                      style={{
+                        padding: '6px 12px',
+                        background: '#28a745',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <Check size={14} /> 저장
+                    </button>
+                    <button
+                      onClick={() => {
+                        cancelEditStartDate();
+                        cancelEditEndDate();
+                      }}
+                      disabled={saving}
+                      style={{
+                        padding: '6px 12px',
+                        background: '#6c757d',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <X size={14} /> 취소
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <span><Calendar size={20} /> {formatDateRange()}</span>
+                  {isAdmin && (
+                    <button
+                      onClick={() => {
+                        startEditStartDate();
+                        startEditEndDate();
+                      }}
+                      style={{
+                        padding: '4px 8px',
+                        background: 'rgba(255, 255, 255, 0.9)',
+                        color: '#007bff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontSize: '12px'
+                      }}
+                    >
+                      <Edit2 size={12} /> 날짜 수정
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
             <span><MapPin size={20} /> {event.venue}, {event.region}</span>
           </div>
-          <button className="btn-add-calendar" onClick={handleAddToCalendar}>
-            <Calendar size={20} /> Add to Calendar
-          </button>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button className="btn-add-calendar" onClick={handleAddToCalendar}>
+              <Calendar size={20} /> Add to Calendar
+            </button>
+            {isAdmin && (
+              <>
+                {editingPoster ? (
+                  <div style={{ display: 'flex', gap: '10px', background: 'rgba(255,255,255,0.95)', padding: '10px', borderRadius: '8px', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      value={tempPosterUrl}
+                      onChange={(e) => setTempPosterUrl(e.target.value)}
+                      placeholder="포스터 URL 입력"
+                      style={{
+                        padding: '8px 12px',
+                        border: '2px solid #007bff',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        minWidth: '300px'
+                      }}
+                    />
+                    <button
+                      onClick={savePoster}
+                      disabled={saving}
+                      style={{
+                        padding: '6px 12px',
+                        background: '#28a745',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      onClick={cancelEditPoster}
+                      disabled={saving}
+                      style={{
+                        padding: '6px 12px',
+                        background: '#6c757d',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={startEditPoster}
+                    style={{
+                      padding: '8px 16px',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      color: '#007bff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '14px',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    <Image size={16} /> 포스터 변경
+                  </button>
+                )}
+                <button
+                  onClick={loadHistory}
+                  style={{
+                    padding: '8px 16px',
+                    background: 'rgba(255, 255, 255, 0.9)',
+                    color: '#007bff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  <History size={16} /> 변경 이력
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -224,117 +1017,175 @@ export function EventDetailPage() {
             <section className="event-section">
               <h2>행사 정보</h2>
               
-              <div className="event-details-grid">
-                <div className="detail-item">
-                  <Clock size={24} />
-                  <div>
-                    <h4>운영 시간</h4>
-                    <p style={{ whiteSpace: 'pre-line' }}>
-                      {event.operatingHours || formatDateRange()}
-                    </p>
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <DollarSign size={24} />
-                  <div>
-                    <h4>입장료</h4>
-                    <p>{event.admissionFee || '미상'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {event.organizer && (
-                <div style={{ marginTop: '30px' }}>
-                  <h3>주최</h3>
-                  <p>{event.organizer}</p>
-                </div>
+              {renderEditableField(
+                '운영 시간',
+                event.operatingHours || formatDateRange(),
+                editingOperatingHours,
+                tempOperatingHours,
+                startEditOperatingHours,
+                saveOperatingHours,
+                cancelEditOperatingHours,
+                setTempOperatingHours,
+                '80px'
               )}
 
-              {event.supervisor && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>주관</h3>
-                  <p>{event.supervisor}</p>
-                </div>
+              {renderEditableField(
+                '입장료',
+                event.admissionFee || '미상',
+                editingAdmissionFee,
+                tempAdmissionFee,
+                startEditAdmissionFee,
+                saveAdmissionFee,
+                cancelEditAdmissionFee,
+                setTempAdmissionFee,
+                '60px'
               )}
 
-              <div style={{ marginTop: '30px' }}>
-                <h3>행사 장소</h3>
-                <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
-              </div>
-
-              {event.exhibitItems && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>전시품목</h3>
-                  <p>{event.exhibitItems}</p>
-                </div>
+              {renderEditableField(
+                '주최',
+                event.organizer,
+                editingOrganizer,
+                tempOrganizer,
+                startEditOrganizer,
+                saveOrganizer,
+                cancelEditOrganizer,
+                setTempOrganizer,
+                '60px'
               )}
 
-              {event.description && (
-                <div style={{ marginTop: '40px' }}>
-                  <h3>행사 소개</h3>
-                  <div className="event-theme">
-                    <p>{event.description}</p>
-                  </div>
-                </div>
+              {renderEditableField(
+                '주관',
+                event.supervisor,
+                editingSupervisor,
+                tempSupervisor,
+                startEditSupervisor,
+                saveSupervisor,
+                cancelEditSupervisor,
+                setTempSupervisor,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '행사 장소',
+                event.venue + (event.venueHall ? ` - ${event.venueHall}` : ''),
+                editingVenueHall,
+                tempVenueHall,
+                startEditVenueHall,
+                saveVenueHall,
+                cancelEditVenueHall,
+                setTempVenueHall,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '전시품목',
+                event.exhibitItems,
+                editingExhibitItems,
+                tempExhibitItems,
+                startEditExhibitItems,
+                saveExhibitItems,
+                cancelEditExhibitItems,
+                setTempExhibitItems,
+                '80px'
+              )}
+
+              {renderEditableField(
+                '행사 소개',
+                event.description,
+                editingDescription,
+                tempDescription,
+                startEditDescription,
+                saveDescription,
+                cancelEditDescription,
+                setTempDescription,
+                '120px'
               )}
             </section>
           ) : event.venue === '킨텍스' ? (
             /* KINTEX Layout: Description, then details */
             <section className="event-section">
-              <h2>행사 소개</h2>
-              {event.description ? (
-                <div className="event-theme">
-                  <p>{event.description}</p>
-                </div>
-              ) : (
-                <div className="event-theme">
-                  <p>정보 없음</p>
-                </div>
+              {renderEditableField(
+                '행사 소개',
+                event.description || '정보 없음',
+                editingDescription,
+                tempDescription,
+                startEditDescription,
+                saveDescription,
+                cancelEditDescription,
+                setTempDescription,
+                '120px'
               )}
 
-              <div className="event-details-grid" style={{ marginTop: '30px' }}>
-                <div className="detail-item">
-                  <Clock size={24} />
-                  <div>
-                    <h4>운영 시간</h4>
-                    <p style={{ whiteSpace: 'pre-line' }}>
-                      {event.operatingHours ? formatKintexOperatingHours() : formatDateRange()}
-                    </p>
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <DollarSign size={24} />
-                  <div>
-                    <h4>입장료</h4>
-                    <p>{event.admissionFee || ''}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: '30px' }}>
-                <h3>행사 장소</h3>
-                <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
-              </div>
-
-              {event.organizer && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>주최</h3>
-                  <p>{event.organizer}</p>
-                </div>
+              {renderEditableField(
+                '운영 시간',
+                event.operatingHours ? formatKintexOperatingHours() : formatDateRange(),
+                editingOperatingHours,
+                tempOperatingHours,
+                startEditOperatingHours,
+                saveOperatingHours,
+                cancelEditOperatingHours,
+                setTempOperatingHours,
+                '80px'
               )}
 
-              {event.supervisor && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>주관</h3>
-                  <p>{event.supervisor}</p>
-                </div>
+              {renderEditableField(
+                '입장료',
+                event.admissionFee || '',
+                editingAdmissionFee,
+                tempAdmissionFee,
+                startEditAdmissionFee,
+                saveAdmissionFee,
+                cancelEditAdmissionFee,
+                setTempAdmissionFee,
+                '60px'
               )}
 
-              {event.exhibitItems && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>전시품목</h3>
-                  <p>{event.exhibitItems}</p>
-                </div>
+              {renderEditableField(
+                '행사 장소',
+                event.venue + (event.venueHall ? ` - ${event.venueHall}` : ''),
+                editingVenueHall,
+                tempVenueHall,
+                startEditVenueHall,
+                saveVenueHall,
+                cancelEditVenueHall,
+                setTempVenueHall,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '주최',
+                event.organizer,
+                editingOrganizer,
+                tempOrganizer,
+                startEditOrganizer,
+                saveOrganizer,
+                cancelEditOrganizer,
+                setTempOrganizer,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '주관',
+                event.supervisor,
+                editingSupervisor,
+                tempSupervisor,
+                startEditSupervisor,
+                saveSupervisor,
+                cancelEditSupervisor,
+                setTempSupervisor,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '전시품목',
+                event.exhibitItems,
+                editingExhibitItems,
+                tempExhibitItems,
+                startEditExhibitItems,
+                saveExhibitItems,
+                cancelEditExhibitItems,
+                setTempExhibitItems,
+                '80px'
               )}
             </section>
           ) : event.venue === '벡스코' ? (
@@ -342,58 +1193,88 @@ export function EventDetailPage() {
             <section className="event-section">
               <h2>행사 정보</h2>
               
-              <div className="event-details-grid">
-                <div className="detail-item">
-                  <Clock size={24} />
-                  <div>
-                    <h4>운영 시간</h4>
-                    <p style={{ whiteSpace: 'pre-line' }}>
-                      {formatBexcoOperatingHours()}
-                    </p>
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <DollarSign size={24} />
-                  <div>
-                    <h4>입장료</h4>
-                    <p>{event.admissionFee || '미상'}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: '30px' }}>
-                <h3>행사 장소</h3>
-                <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
-              </div>
-
-              {event.organizer && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>주최/주관</h3>
-                  <p>{event.organizer}</p>
-                </div>
+              {renderEditableField(
+                '운영 시간',
+                formatBexcoOperatingHours(),
+                editingOperatingHours,
+                tempOperatingHours,
+                startEditOperatingHours,
+                saveOperatingHours,
+                cancelEditOperatingHours,
+                setTempOperatingHours,
+                '80px'
               )}
 
-              {event.supervisor && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>주관</h3>
-                  <p>{event.supervisor}</p>
-                </div>
+              {renderEditableField(
+                '입장료',
+                event.admissionFee || '미상',
+                editingAdmissionFee,
+                tempAdmissionFee,
+                startEditAdmissionFee,
+                saveAdmissionFee,
+                cancelEditAdmissionFee,
+                setTempAdmissionFee,
+                '60px'
               )}
 
-              {event.exhibitItems && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>전시품목</h3>
-                  <p>{event.exhibitItems}</p>
-                </div>
+              {renderEditableField(
+                '행사 장소',
+                event.venue + (event.venueHall ? ` - ${event.venueHall}` : ''),
+                editingVenueHall,
+                tempVenueHall,
+                startEditVenueHall,
+                saveVenueHall,
+                cancelEditVenueHall,
+                setTempVenueHall,
+                '60px'
               )}
 
-              {event.description && (
-                <div style={{ marginTop: '40px' }}>
-                  <h3>행사 소개</h3>
-                  <div className="event-theme">
-                    <p>{event.description}</p>
-                  </div>
-                </div>
+              {renderEditableField(
+                '주최/주관',
+                event.organizer,
+                editingOrganizer,
+                tempOrganizer,
+                startEditOrganizer,
+                saveOrganizer,
+                cancelEditOrganizer,
+                setTempOrganizer,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '주관',
+                event.supervisor,
+                editingSupervisor,
+                tempSupervisor,
+                startEditSupervisor,
+                saveSupervisor,
+                cancelEditSupervisor,
+                setTempSupervisor,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '전시품목',
+                event.exhibitItems,
+                editingExhibitItems,
+                tempExhibitItems,
+                startEditExhibitItems,
+                saveExhibitItems,
+                cancelEditExhibitItems,
+                setTempExhibitItems,
+                '80px'
+              )}
+
+              {renderEditableField(
+                '행사 소개',
+                event.description,
+                editingDescription,
+                tempDescription,
+                startEditDescription,
+                saveDescription,
+                cancelEditDescription,
+                setTempDescription,
+                '120px'
               )}
             </section>
           ) : event.venue === '창원컨벤션센터' ? (
@@ -401,116 +1282,177 @@ export function EventDetailPage() {
             <section className="event-section">
               <h2>행사 정보</h2>
               
-              <div className="event-details-grid">
-                <div className="detail-item">
-                  <Clock size={24} />
-                  <div>
-                    <h4>운영 시간</h4>
-                    <p style={{ whiteSpace: 'pre-line' }}>
-                      {event.operatingHours || formatDateRange()}
-                    </p>
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <DollarSign size={24} />
-                  <div>
-                    <h4>입장료</h4>
-                    <p>{event.admissionFee || '미상'}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: '30px' }}>
-                <h3>행사 장소</h3>
-                <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
-              </div>
-
-              {event.organizer && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>주최</h3>
-                  <p>{event.organizer}</p>
-                </div>
+              {renderEditableField(
+                '운영 시간',
+                event.operatingHours || formatDateRange(),
+                editingOperatingHours,
+                tempOperatingHours,
+                startEditOperatingHours,
+                saveOperatingHours,
+                cancelEditOperatingHours,
+                setTempOperatingHours,
+                '80px'
               )}
 
-              {event.supervisor && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>주관</h3>
-                  <p>{event.supervisor}</p>
-                </div>
+              {renderEditableField(
+                '입장료',
+                event.admissionFee || '미상',
+                editingAdmissionFee,
+                tempAdmissionFee,
+                startEditAdmissionFee,
+                saveAdmissionFee,
+                cancelEditAdmissionFee,
+                setTempAdmissionFee,
+                '60px'
               )}
 
-              {event.exhibitItems && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>전시품목</h3>
-                  <p>{event.exhibitItems}</p>
-                </div>
+              {renderEditableField(
+                '행사 장소',
+                event.venue + (event.venueHall ? ` - ${event.venueHall}` : ''),
+                editingVenueHall,
+                tempVenueHall,
+                startEditVenueHall,
+                saveVenueHall,
+                cancelEditVenueHall,
+                setTempVenueHall,
+                '60px'
               )}
 
-              {event.description && (
-                <div style={{ marginTop: '40px' }}>
-                  <h3>행사 소개</h3>
-                  <div className="event-theme">
-                    <p>{event.description}</p>
-                  </div>
-                </div>
+              {renderEditableField(
+                '주최',
+                event.organizer,
+                editingOrganizer,
+                tempOrganizer,
+                startEditOrganizer,
+                saveOrganizer,
+                cancelEditOrganizer,
+                setTempOrganizer,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '주관',
+                event.supervisor,
+                editingSupervisor,
+                tempSupervisor,
+                startEditSupervisor,
+                saveSupervisor,
+                cancelEditSupervisor,
+                setTempSupervisor,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '전시품목',
+                event.exhibitItems,
+                editingExhibitItems,
+                tempExhibitItems,
+                startEditExhibitItems,
+                saveExhibitItems,
+                cancelEditExhibitItems,
+                setTempExhibitItems,
+                '80px'
+              )}
+
+              {renderEditableField(
+                '행사 소개',
+                event.description,
+                editingDescription,
+                tempDescription,
+                startEditDescription,
+                saveDescription,
+                cancelEditDescription,
+                setTempDescription,
+                '120px'
               )}
             </section>
           ) : event.venue === '엑스코' ? (
             /* EXCO Layout: Description first, then details */
             <section className="event-section">
-              {event.description && (
-                <>
-                  <h2>행사 소개</h2>
-                  <div className="event-theme">
-                    <p>{event.description}</p>
-                  </div>
-                </>
+              {renderEditableField(
+                '행사 소개',
+                event.description,
+                editingDescription,
+                tempDescription,
+                startEditDescription,
+                saveDescription,
+                cancelEditDescription,
+                setTempDescription,
+                '120px'
               )}
 
               <h2 style={{ marginTop: event.description ? '40px' : '0' }}>행사 정보</h2>
-              <div className="event-details-grid">
-                <div className="detail-item">
-                  <Clock size={24} />
-                  <div>
-                    <h4>운영 시간</h4>
-                    <p style={{ whiteSpace: 'pre-line' }}>
-                      {event.operatingHours || formatDateRange()}
-                    </p>
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <DollarSign size={24} />
-                  <div>
-                    <h4>입장료</h4>
-                    <p>{event.admissionFee || '미상'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {event.organizer && (
-                <div style={{ marginTop: '30px' }}>
-                  <h3>주최</h3>
-                  <p>{event.organizer}</p>
-                </div>
+              
+              {renderEditableField(
+                '운영 시간',
+                event.operatingHours || formatDateRange(),
+                editingOperatingHours,
+                tempOperatingHours,
+                startEditOperatingHours,
+                saveOperatingHours,
+                cancelEditOperatingHours,
+                setTempOperatingHours,
+                '80px'
               )}
 
-              {event.supervisor && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>주관</h3>
-                  <p>{event.supervisor}</p>
-                </div>
+              {renderEditableField(
+                '입장료',
+                event.admissionFee || '미상',
+                editingAdmissionFee,
+                tempAdmissionFee,
+                startEditAdmissionFee,
+                saveAdmissionFee,
+                cancelEditAdmissionFee,
+                setTempAdmissionFee,
+                '60px'
               )}
 
-              <div style={{ marginTop: '30px' }}>
-                <h3>관람 장소</h3>
-                <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
-              </div>
+              {renderEditableField(
+                '주최',
+                event.organizer,
+                editingOrganizer,
+                tempOrganizer,
+                startEditOrganizer,
+                saveOrganizer,
+                cancelEditOrganizer,
+                setTempOrganizer,
+                '60px'
+              )}
 
-              {event.exhibitItems && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>전시품목</h3>
-                  <p>{event.exhibitItems}</p>
-                </div>
+              {renderEditableField(
+                '주관',
+                event.supervisor,
+                editingSupervisor,
+                tempSupervisor,
+                startEditSupervisor,
+                saveSupervisor,
+                cancelEditSupervisor,
+                setTempSupervisor,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '관람 장소',
+                event.venue + (event.venueHall ? ` - ${event.venueHall}` : ''),
+                editingVenueHall,
+                tempVenueHall,
+                startEditVenueHall,
+                saveVenueHall,
+                cancelEditVenueHall,
+                setTempVenueHall,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '전시품목',
+                event.exhibitItems,
+                editingExhibitItems,
+                tempExhibitItems,
+                startEditExhibitItems,
+                saveExhibitItems,
+                cancelEditExhibitItems,
+                setTempExhibitItems,
+                '80px'
               )}
 
               {event.exhibitProducts && (
@@ -525,55 +1467,88 @@ export function EventDetailPage() {
             <section className="event-section">
               <h2>행사 정보</h2>
               
-              <div className="event-details-grid">
-                <div className="detail-item">
-                  <Clock size={24} />
-                  <div>
-                    <h4>운영 시간</h4>
-                    <p style={{ whiteSpace: 'pre-line' }}>
-                      {formatDateRange()}
-                      {event.operatingHours && `\n${event.operatingHours}`}
-                    </p>
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <DollarSign size={24} />
-                  <div>
-                    <h4>입장료</h4>
-                    <p>{event.admissionFee || '미상'}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: '30px' }}>
-                <h3>행사 장소</h3>
-                <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
-              </div>
-
-              <div style={{ marginTop: '20px' }}>
-                <h3>주최</h3>
-                <p>{event.organizer || '미상'}</p>
-              </div>
-
-              {event.supervisor && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>주관</h3>
-                  <p>{event.supervisor}</p>
-                </div>
+              {renderEditableField(
+                '운영 시간',
+                formatDateRange() + (event.operatingHours ? `\n${event.operatingHours}` : ''),
+                editingOperatingHours,
+                tempOperatingHours,
+                startEditOperatingHours,
+                saveOperatingHours,
+                cancelEditOperatingHours,
+                setTempOperatingHours,
+                '80px'
               )}
 
-              <div style={{ marginTop: '20px' }}>
-                <h3>전시품목</h3>
-                <p>{event.exhibitItems || '미상'}</p>
-              </div>
+              {renderEditableField(
+                '입장료',
+                event.admissionFee || '미상',
+                editingAdmissionFee,
+                tempAdmissionFee,
+                startEditAdmissionFee,
+                saveAdmissionFee,
+                cancelEditAdmissionFee,
+                setTempAdmissionFee,
+                '60px'
+              )}
 
-              {event.description && (
-                <div style={{ marginTop: '40px' }}>
-                  <h3>행사 소개</h3>
-                  <div className="event-theme">
-                    <p>{event.description}</p>
-                  </div>
-                </div>
+              {renderEditableField(
+                '행사 장소',
+                event.venue + (event.venueHall ? ` - ${event.venueHall}` : ''),
+                editingVenueHall,
+                tempVenueHall,
+                startEditVenueHall,
+                saveVenueHall,
+                cancelEditVenueHall,
+                setTempVenueHall,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '주최',
+                event.organizer || '미상',
+                editingOrganizer,
+                tempOrganizer,
+                startEditOrganizer,
+                saveOrganizer,
+                cancelEditOrganizer,
+                setTempOrganizer,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '주관',
+                event.supervisor,
+                editingSupervisor,
+                tempSupervisor,
+                startEditSupervisor,
+                saveSupervisor,
+                cancelEditSupervisor,
+                setTempSupervisor,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '전시품목',
+                event.exhibitItems || '미상',
+                editingExhibitItems,
+                tempExhibitItems,
+                startEditExhibitItems,
+                saveExhibitItems,
+                cancelEditExhibitItems,
+                setTempExhibitItems,
+                '80px'
+              )}
+
+              {renderEditableField(
+                '행사 소개',
+                event.description,
+                editingDescription,
+                tempDescription,
+                startEditDescription,
+                saveDescription,
+                cancelEditDescription,
+                setTempDescription,
+                '120px'
               )}
             </section>
           ) : event.venue === '수원컨벤션센터' ? (
@@ -581,104 +1556,151 @@ export function EventDetailPage() {
             <section className="event-section">
               <h2>행사 정보</h2>
               
-              <div className="event-details-grid">
-                <div className="detail-item">
-                  <Clock size={24} />
-                  <div>
-                    <h4>운영 시간</h4>
-                    <p style={{ whiteSpace: 'pre-line' }}>
-                      {formatDateRange()}
-                      {event.operatingHours && `\n${event.operatingHours}`}
-                    </p>
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <DollarSign size={24} />
-                  <div>
-                    <h4>입장료</h4>
-                    <p>{event.admissionFee || '미상'}</p>
-                  </div>
-                </div>
-              </div>
+              {renderEditableField(
+                '운영 시간',
+                formatDateRange() + (event.operatingHours ? `\n${event.operatingHours}` : ''),
+                editingOperatingHours,
+                tempOperatingHours,
+                startEditOperatingHours,
+                saveOperatingHours,
+                cancelEditOperatingHours,
+                setTempOperatingHours,
+                '80px'
+              )}
 
-              <div style={{ marginTop: '30px' }}>
-                <h3>행사 장소</h3>
-                <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
-              </div>
+              {renderEditableField(
+                '입장료',
+                event.admissionFee || '미상',
+                editingAdmissionFee,
+                tempAdmissionFee,
+                startEditAdmissionFee,
+                saveAdmissionFee,
+                cancelEditAdmissionFee,
+                setTempAdmissionFee,
+                '60px'
+              )}
 
-              <div style={{ marginTop: '20px' }}>
-                <h3>주최주관</h3>
-                <p>{event.organizer || '미상'}</p>
-              </div>
+              {renderEditableField(
+                '행사 장소',
+                event.venue + (event.venueHall ? ` - ${event.venueHall}` : ''),
+                editingVenueHall,
+                tempVenueHall,
+                startEditVenueHall,
+                saveVenueHall,
+                cancelEditVenueHall,
+                setTempVenueHall,
+                '60px'
+              )}
 
-              {event.description && (
-                <div style={{ marginTop: '40px' }}>
-                  <h3>행사 소개</h3>
-                  <div className="event-theme">
-                    <p>{event.description}</p>
-                  </div>
-                </div>
+              {renderEditableField(
+                '주최주관',
+                event.organizer || '미상',
+                editingOrganizer,
+                tempOrganizer,
+                startEditOrganizer,
+                saveOrganizer,
+                cancelEditOrganizer,
+                setTempOrganizer,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '행사 소개',
+                event.description,
+                editingDescription,
+                tempDescription,
+                startEditDescription,
+                saveDescription,
+                cancelEditDescription,
+                setTempDescription,
+                '120px'
               )}
             </section>
           ) : (
             /* COEX and other venues: Description first, then details */
             <section className="event-section">
-              <h2>행사 소개</h2>
-              {event.description ? (
-                <div className="event-theme">
-                  <p>{event.description}</p>
-                </div>
-              ) : (
-                <div className="event-theme">
-                  <p>정보 없음</p>
-                </div>
+              {renderEditableField(
+                '행사 소개',
+                event.description || '정보 없음',
+                editingDescription,
+                tempDescription,
+                startEditDescription,
+                saveDescription,
+                cancelEditDescription,
+                setTempDescription,
+                '120px'
               )}
 
-              <div className="event-details-grid">
-                <div className="detail-item">
-                  <Clock size={24} />
-                  <div>
-                    <h4>운영 시간</h4>
-                    <p style={{ whiteSpace: 'pre-line' }}>
-                      {event.operatingHours || formatDateRange()}
-                    </p>
-                  </div>
-                </div>
-                {event.admissionFee && (
-                  <div className="detail-item">
-                    <DollarSign size={24} />
-                    <div>
-                      <h4>입장료</h4>
-                      <p>{event.admissionFee}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div style={{ marginTop: '30px' }}>
-                <h3>행사 장소</h3>
-                <p>{event.venue}{event.venueHall ? ` - ${event.venueHall}` : ''}</p>
-              </div>
-
-              {event.organizer && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>주최</h3>
-                  <p>{event.organizer}</p>
-                </div>
+              {renderEditableField(
+                '운영 시간',
+                event.operatingHours || formatDateRange(),
+                editingOperatingHours,
+                tempOperatingHours,
+                startEditOperatingHours,
+                saveOperatingHours,
+                cancelEditOperatingHours,
+                setTempOperatingHours,
+                '80px'
               )}
 
-              {event.supervisor && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>주관</h3>
-                  <p>{event.supervisor}</p>
-                </div>
+              {renderEditableField(
+                '입장료',
+                event.admissionFee,
+                editingAdmissionFee,
+                tempAdmissionFee,
+                startEditAdmissionFee,
+                saveAdmissionFee,
+                cancelEditAdmissionFee,
+                setTempAdmissionFee,
+                '60px'
               )}
 
-              {event.exhibitItems && (
-                <div style={{ marginTop: '20px' }}>
-                  <h3>전시품목</h3>
-                  <p>{event.exhibitItems}</p>
-                </div>
+              {renderEditableField(
+                '행사 장소',
+                event.venue + (event.venueHall ? ` - ${event.venueHall}` : ''),
+                editingVenueHall,
+                tempVenueHall,
+                startEditVenueHall,
+                saveVenueHall,
+                cancelEditVenueHall,
+                setTempVenueHall,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '주최',
+                event.organizer,
+                editingOrganizer,
+                tempOrganizer,
+                startEditOrganizer,
+                saveOrganizer,
+                cancelEditOrganizer,
+                setTempOrganizer,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '주관',
+                event.supervisor,
+                editingSupervisor,
+                tempSupervisor,
+                startEditSupervisor,
+                saveSupervisor,
+                cancelEditSupervisor,
+                setTempSupervisor,
+                '60px'
+              )}
+
+              {renderEditableField(
+                '전시품목',
+                event.exhibitItems,
+                editingExhibitItems,
+                tempExhibitItems,
+                startEditExhibitItems,
+                saveExhibitItems,
+                cancelEditExhibitItems,
+                setTempExhibitItems,
+                '80px'
               )}
             </section>
           )}
@@ -686,28 +1708,185 @@ export function EventDetailPage() {
           {/* External Links */}
           <section className="event-section">
             <h2>관련 링크</h2>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', flexDirection: 'column' }}>
               {/* 경주화백컨벤션센터는 HICO 홈페이지 링크 표시 */}
               {event.venue === '경주화백컨벤션센터' ? (
                 <a href="https://www.hico.or.kr/" target="_blank" rel="noopener noreferrer" className="btn-venue-page">
                   <ExternalLink size={20} /> 전시장 홈페이지
                 </a>
               ) : (
-                event.venueEventPageUrl ? (
-                  <a href={event.venueEventPageUrl} target="_blank" rel="noopener noreferrer" className="btn-venue-page">
-                    <ExternalLink size={20} /> 전시장 행사 페이지
-                  </a>
-                ) : (
-                  <div style={{ color: '#999', padding: '10px' }}>
-                    전시장 행사 페이지 정보가 없습니다
+                <div>
+                  {editingVenueUrl ? (
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <input
+                        type="text"
+                        value={tempVenueUrl}
+                        onChange={(e) => setTempVenueUrl(e.target.value)}
+                        placeholder="전시장 행사 페이지 URL"
+                        style={{
+                          padding: '10px',
+                          border: '2px solid #007bff',
+                          borderRadius: '4px',
+                          fontSize: '14px',
+                          minWidth: '300px',
+                          flex: 1
+                        }}
+                      />
+                      <button
+                        onClick={saveVenueUrl}
+                        disabled={saving}
+                        style={{
+                          padding: '10px 16px',
+                          background: '#28a745',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: saving ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
+                      >
+                        <Check size={16} /> 저장
+                      </button>
+                      <button
+                        onClick={cancelEditVenueUrl}
+                        disabled={saving}
+                        style={{
+                          padding: '10px 16px',
+                          background: '#6c757d',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: saving ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
+                      >
+                        <X size={16} /> 취소
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      {event.venueEventPageUrl ? (
+                        <a href={event.venueEventPageUrl} target="_blank" rel="noopener noreferrer" className="btn-venue-page">
+                          <ExternalLink size={20} /> 전시장 행사 페이지
+                        </a>
+                      ) : (
+                        <div style={{ color: '#999', padding: '10px' }}>
+                          전시장 행사 페이지 정보가 없습니다
+                        </div>
+                      )}
+                      {isAdmin && (
+                        <button
+                          onClick={startEditVenueUrl}
+                          style={{
+                            padding: '8px 12px',
+                            background: '#007bff',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            fontSize: '14px'
+                          }}
+                        >
+                          <Edit2 size={14} /> 수정
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <div>
+                {editingWebsiteUrl ? (
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input
+                      type="text"
+                      value={tempWebsiteUrl}
+                      onChange={(e) => setTempWebsiteUrl(e.target.value)}
+                      placeholder="공식 웹사이트 URL"
+                      style={{
+                        padding: '10px',
+                        border: '2px solid #007bff',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        minWidth: '300px',
+                        flex: 1
+                      }}
+                    />
+                    <button
+                      onClick={saveWebsiteUrl}
+                      disabled={saving}
+                      style={{
+                        padding: '10px 16px',
+                        background: '#28a745',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <Check size={16} /> 저장
+                    </button>
+                    <button
+                      onClick={cancelEditWebsiteUrl}
+                      disabled={saving}
+                      style={{
+                        padding: '10px 16px',
+                        background: '#6c757d',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <X size={16} /> 취소
+                    </button>
                   </div>
-                )
-              )}
-              {(event.websiteUrl || event.targetLink) && (
-                <a href={event.websiteUrl || event.targetLink} target="_blank" rel="noopener noreferrer" className="btn-official-website">
-                  <ExternalLink size={20} /> 공식 웹사이트 방문
-                </a>
-              )}
+                ) : (
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    {(event.websiteUrl || event.targetLink) ? (
+                      <a href={event.websiteUrl || event.targetLink} target="_blank" rel="noopener noreferrer" className="btn-official-website">
+                        <ExternalLink size={20} /> 공식 웹사이트 방문
+                      </a>
+                    ) : (
+                      <div style={{ color: '#999', padding: '10px' }}>
+                        공식 웹사이트 정보가 없습니다
+                      </div>
+                    )}
+                    {isAdmin && (
+                      <button
+                        onClick={startEditWebsiteUrl}
+                        style={{
+                          padding: '8px 12px',
+                          background: '#007bff',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          fontSize: '14px'
+                        }}
+                      >
+                        <Edit2 size={14} /> 수정
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </section>
         </div>
@@ -748,6 +1927,147 @@ export function EventDetailPage() {
         </div>
         <p>© 2024 HOKEX MICE Architectural Curator. All rights reserved.</p>
       </footer>
+
+      {/* 변경 이력 모달 */}
+      {showHistory && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}
+          onClick={() => setShowHistory(false)}
+        >
+          <div
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '30px',
+              maxWidth: '800px',
+              width: '100%',
+              maxHeight: '80vh',
+              overflow: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0 }}>변경 이력</h2>
+              <button
+                onClick={() => setShowHistory(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#666'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            {eventHistory.length === 0 ? (
+              <p style={{ textAlign: 'center', color: '#999', padding: '40px 0' }}>
+                변경 이력이 없습니다
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                {eventHistory.map((history) => (
+                  <div
+                    key={history.id}
+                    style={{
+                      border: '1px solid #ddd',
+                      borderRadius: '8px',
+                      padding: '15px',
+                      background: '#f9f9f9'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                      <div>
+                        <strong style={{ fontSize: '16px', color: '#333' }}>
+                          {history.field_name === 'title' && '제목'}
+                          {history.field_name === 'poster' && '포스터'}
+                          {history.field_name === 'startDate' && '시작일'}
+                          {history.field_name === 'endDate' && '종료일'}
+                          {history.field_name === 'venueEventPageUrl' && '전시장 행사 페이지 URL'}
+                          {history.field_name === 'websiteUrl' && '공식 웹사이트 URL'}
+                          {history.field_name === 'description' && '행사 개요'}
+                          {history.field_name === 'organizer' && '주최'}
+                          {history.field_name === 'supervisor' && '주관'}
+                          {history.field_name === 'admissionFee' && '입장료'}
+                          {history.field_name === 'exhibitItems' && '전시품목'}
+                          {history.field_name === 'operatingHours' && '운영시간'}
+                          {history.field_name === 'venueHall' && '행사장소'}
+                          {history.field_name === 'category' && '카테고리'}
+                        </strong>
+                        <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                          {new Date(history.changed_at).toLocaleString('ko-KR')}
+                          {history.user_profiles && ` • ${history.user_profiles.email}`}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleRevert(history.id)}
+                        style={{
+                          padding: '6px 12px',
+                          background: '#ff6b6b',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          fontSize: '12px'
+                        }}
+                      >
+                        <RotateCcw size={14} /> 되돌리기
+                      </button>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>이전 값:</div>
+                        <div style={{ 
+                          padding: '8px', 
+                          background: '#fff', 
+                          borderRadius: '4px', 
+                          fontSize: '14px',
+                          wordBreak: 'break-word',
+                          maxHeight: '100px',
+                          overflow: 'auto'
+                        }}>
+                          {history.old_value || '(없음)'}
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>새 값:</div>
+                        <div style={{ 
+                          padding: '8px', 
+                          background: '#e8f5e9', 
+                          borderRadius: '4px', 
+                          fontSize: '14px',
+                          wordBreak: 'break-word',
+                          maxHeight: '100px',
+                          overflow: 'auto'
+                        }}>
+                          {history.new_value || '(없음)'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

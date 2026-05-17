@@ -1,0 +1,190 @@
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import type { User, Session } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
+
+interface UserProfile {
+  id: string;
+  email: string;
+  is_admin: boolean;
+}
+
+interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  userProfile: UserProfile | null;
+  isAdmin: boolean;
+  adminModeEnabled: boolean;
+  loading: boolean;
+  signInWithGoogle: () => Promise<void>;
+  signInWithKakao: () => Promise<void>;
+  signInWithNaver: () => Promise<void>;
+  signInWithMagicLink: (email: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  toggleAdminMode: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [adminModeEnabled, setAdminModeEnabled] = useState(() => {
+    // localStorage에서 관리자 모드 상태 복원
+    const saved = localStorage.getItem('adminModeEnabled');
+    return saved === 'true';
+  });
+
+  // 사용자 프로필 가져오기
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+
+      return data as UserProfile;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+  };
+
+  // 세션 변경 감지
+  useEffect(() => {
+    // 초기 세션 가져오기
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchUserProfile(session.user.id).then(profile => {
+          setUserProfile(profile);
+          setLoading(false);
+        });
+      } else {
+        setLoading(false);
+      }
+    });
+
+    // 세션 변경 리스너
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchUserProfile(session.user.id).then(profile => {
+          setUserProfile(profile);
+        });
+      } else {
+        setUserProfile(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // 구글 로그인
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/`,
+      },
+    });
+    
+    if (error) {
+      console.error('Error signing in with Google:', error);
+      throw error;
+    }
+  };
+
+  // 카카오 로그인
+  const signInWithKakao = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: {
+        redirectTo: `${window.location.origin}/`,
+      },
+    });
+    
+    if (error) {
+      console.error('Error signing in with Kakao:', error);
+      throw error;
+    }
+  };
+
+  // 네이버 로그인 (커스텀 OAuth 필요)
+  const signInWithNaver = async () => {
+    // TODO: 네이버는 Supabase에서 기본 지원하지 않으므로 커스텀 OAuth 구현 필요
+    console.warn('Naver login not yet implemented');
+    alert('네이버 로그인은 아직 구현되지 않았습니다.');
+  };
+
+  // Magic Link 로그인 (이메일 전용)
+  const signInWithMagicLink = async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+      },
+    });
+    
+    if (error) {
+      console.error('Error sending magic link:', error);
+      throw error;
+    }
+  };
+
+  // 로그아웃
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error);
+      throw error;
+    }
+  };
+
+  // 관리자 모드 토글
+  const toggleAdminMode = () => {
+    setAdminModeEnabled(prev => {
+      const newValue = !prev;
+      localStorage.setItem('adminModeEnabled', String(newValue));
+      return newValue;
+    });
+  };
+
+  const value = {
+    user,
+    session,
+    userProfile,
+    isAdmin: (userProfile?.is_admin ?? false) && adminModeEnabled,
+    adminModeEnabled,
+    loading,
+    signInWithGoogle,
+    signInWithKakao,
+    signInWithNaver,
+    signInWithMagicLink,
+    signOut,
+    toggleAdminMode,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}

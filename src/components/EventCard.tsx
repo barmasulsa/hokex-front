@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import type { EventRecord } from '../types/core';
 import { calculateStatusBadge, calculateDaysUntilStart } from '../utils/badgeCalculator';
 
 interface EventCardProps {
   event: EventRecord;
-  isAdmin: boolean;
   onSave?: (eventId: string) => void;
   onEdit?: (eventId: string, field: string, value: string) => void;
 }
@@ -28,8 +28,9 @@ const DCC_EVENT_POSTER = '/images/dcc-event.png';
 // 수원메쎄 기본 포스터
 const SUWONMESSE_DEFAULT_POSTER = '/images/suwonmesse-default.png';
 
-export function EventCard({ event, isAdmin, onSave, onEdit }: EventCardProps) {
+export function EventCard({ event, onSave, onEdit }: EventCardProps) {
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(event.title);
   

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { EventCard } from '../components/EventCard';
 import { FilterBar } from '../components/FilterBar';
 import { fetchEvents } from '../services/eventService';
+import { useAuth } from '../contexts/AuthContext';
 import type { EventRecord, Venue, FilterCriteria } from '../types/core';
 import { Region, Category, REGION_VENUE_MAP } from '../types/core';
 import { FilterEngine } from '../utils/filterEngine';
@@ -28,11 +29,8 @@ const INDUSTRIES = [
   '기타'
 ];
 
-interface HomePageProps {
-  isAdmin: boolean;
-}
-
-export function HomePage({ isAdmin }: HomePageProps) {
+export function HomePage() {
+  const { isAdmin, userProfile, toggleAdminMode, adminModeEnabled } = useAuth();
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -208,10 +206,39 @@ export function HomePage({ isAdmin }: HomePageProps) {
 
   return (
     <>
-      {/* 관리자 모드 알림 */}
-      {isAdmin && (
-        <div className="admin-notice">
-          ✏️ 관리자 모드: 행사 정보를 클릭하여 수정할 수 있습니다
+      {/* 관리자 모드 토글 */}
+      {userProfile?.is_admin && (
+        <div className="admin-notice" style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          padding: '12px 20px'
+        }}>
+          <span>
+            {isAdmin ? '✏️ 관리자 모드: 행사 정보를 클릭하여 수정할 수 있습니다' : '👀 일반 사용자 모드'}
+          </span>
+          <button
+            onClick={toggleAdminMode}
+            style={{
+              padding: '8px 16px',
+              background: isAdmin ? '#dc3545' : '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              transition: 'all 0.2s'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.opacity = '0.9';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.opacity = '1';
+            }}
+          >
+            {isAdmin ? '관리자 모드 끄기' : '관리자 모드 켜기'}
+          </button>
         </div>
       )}
 
@@ -604,7 +631,6 @@ export function HomePage({ isAdmin }: HomePageProps) {
                 <EventCard
                   key={event.id}
                   event={event}
-                  isAdmin={isAdmin}
                   onSave={handleSave}
                   onEdit={handleEdit}
                 />
