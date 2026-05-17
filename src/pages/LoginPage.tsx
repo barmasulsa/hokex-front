@@ -65,7 +65,7 @@ export function LoginPage() {
 
           <div className="subscriber-notice">
             <p>💡 뉴스레터를 구독한 이메일 주소로 로그인해주세요.</p>
-            <p>아직 구독하지 않으셨나요? <a href="https://stibee.com/api/v1.0/lists/289942/public/subscribe" target="_blank" rel="noopener noreferrer">뉴스레터 구독하기</a></p>
+            <p>아직 구독하지 않으셨나요? <a href="https://page.stibee.com/subscriptions/289942" target="_blank" rel="noopener noreferrer">뉴스레터 구독하기</a></p>
           </div>
 
           <div className="login-footer">
