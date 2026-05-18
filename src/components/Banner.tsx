@@ -37,7 +37,10 @@ export function Banner() {
   // 각 타입별 현재 인덱스
   const [imageIndex, setImageIndex] = useState(0);
   const [youtubeIndex, setYoutubeIndex] = useState(0);
-  const [textIndex, setTextIndex] = useState(0);
+
+  // 모달 상태
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState({ title: '', content: '' });
 
   useEffect(() => {
     async function loadBanners() {
@@ -71,14 +74,27 @@ export function Banner() {
     return () => clearInterval(interval);
   }, [youtubeBanners.length]);
 
-  // 텍스트 배너 자동 슬라이드
+  // 모달 열기
+  const openModal = (title: string, content: string) => {
+    setModalContent({ title, content });
+    setIsModalOpen(true);
+  };
+
+  // 모달 닫기
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  // ESC 키로 모달 닫기
   useEffect(() => {
-    if (textBanners.length <= 1) return;
-    const interval = setInterval(() => {
-      setTextIndex((prev) => (prev + 1) % textBanners.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [textBanners.length]);
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isModalOpen) {
+        closeModal();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isModalOpen]);
 
   if (loading) {
     return (
@@ -204,39 +220,42 @@ export function Banner() {
             <p className="empty-desc">공지사항을 추가하세요</p>
           </div>
         ) : (
-          <>
-            <div className="notice-content">
-              <p className="notice-icon">🎉</p>
-              <p className="notice-text">{textBanners[textIndex].content}</p>
+          <div className="notice-list">
+            <div className="notice-header">
+              <span className="notice-icon">📢</span>
+              <h3 className="notice-header-title">공지사항</h3>
             </div>
-            {textBanners.length > 1 && (
-              <>
-                <button
-                  className="nav-btn prev"
-                  onClick={() => setTextIndex((prev) => (prev - 1 + textBanners.length) % textBanners.length)}
+            <div className="notice-items">
+              {textBanners.map((banner, index) => (
+                <div 
+                  key={banner.id}
+                  className="notice-item"
+                  onClick={() => openModal(banner.title, banner.content)}
                 >
-                  ‹
-                </button>
-                <button
-                  className="nav-btn next"
-                  onClick={() => setTextIndex((prev) => (prev + 1) % textBanners.length)}
-                >
-                  ›
-                </button>
-                <div className="indicators">
-                  {textBanners.map((_, i) => (
-                    <button
-                      key={i}
-                      className={`indicator ${i === textIndex ? 'active' : ''}`}
-                      onClick={() => setTextIndex(i)}
-                    />
-                  ))}
+                  <span className="notice-number">{index + 1}</span>
+                  <span className="notice-item-title">{banner.title}</span>
+                  <span className="notice-badge">N</span>
                 </div>
-              </>
-            )}
-          </>
+              ))}
+            </div>
+          </div>
         )}
       </div>
+
+      {/* 공지사항 모달 */}
+      {isModalOpen && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">{modalContent.title}</h2>
+              <button className="modal-close" onClick={closeModal}>×</button>
+            </div>
+            <div className="modal-body">
+              <p className="modal-text">{modalContent.content}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

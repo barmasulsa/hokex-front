@@ -95,32 +95,94 @@
 
 /* 공지사항 섹션 */
 .notice-section {
-  min-height: 120px;
-  padding: 20px;
-  background: #f8f9fa;
+  min-height: auto;
+  padding: 0;
+  background: white;
 }
 
-.notice-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
+.notice-list {
   width: 100%;
 }
 
-.notice-icon {
-  font-size: 32px;
+.notice-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 24px;
+  border-bottom: 2px solid #f0f0f0;
+  background: #f8f9fa;
+}
+
+.notice-header .notice-icon {
+  font-size: 24px;
   margin: 0;
 }
 
-.notice-text {
-  font-size: 16px;
-  line-height: 1.6;
+.notice-header-title {
+  font-size: 18px;
+  font-weight: 600;
   color: #333;
   margin: 0;
-  font-weight: 500;
-  text-align: center;
+}
+
+.notice-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.notice-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notice-item:last-child {
+  border-bottom: none;
+}
+
+.notice-item:hover {
+  background: #f8f9fa;
+}
+
+.notice-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  background: #5b7fc7;
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.notice-item-title {
   flex: 1;
+  font-size: 15px;
+  color: #333;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notice-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  background: #ff6b6b;
+  color: white;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 4px;
 }
 
 /* 이전/다음 버튼 */
@@ -210,21 +272,34 @@
   }
 
   .notice-section {
-    min-height: 100px;
-    padding: 15px;
+    min-height: auto;
+    padding: 0;
   }
 
-  .notice-content {
-    flex-direction: column;
-    gap: 10px;
+  .notice-header {
+    padding: 16px 20px;
   }
 
-  .notice-icon {
-    font-size: 24px;
+  .notice-header .notice-icon {
+    font-size: 20px;
   }
 
-  .notice-text {
+  .notice-header-title {
+    font-size: 16px;
+  }
+
+  .notice-item {
+    padding: 14px 20px;
+  }
+
+  .notice-item-title {
     font-size: 14px;
+  }
+
+  .notice-number {
+    min-width: 22px;
+    height: 22px;
+    font-size: 11px;
   }
 
   .nav-btn {
@@ -239,5 +314,121 @@
 
   .nav-btn.next {
     right: 10px;
+  }
+}
+
+/* 모달 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  flex: 1;
+  padding-right: 20px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-text {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #555;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 모달 반응형 */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .modal-content {
+    max-height: 90vh;
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+  }
+
+  .modal-title {
+    font-size: 18px;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .modal-text {
+    font-size: 14px;
   }
 }
