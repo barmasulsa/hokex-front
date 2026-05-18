@@ -69,7 +69,7 @@ export function EventDetailPage() {
   
   // 카테고리 편집 상태
   const [editingCategory, setEditingCategory] = useState(false);
-  const [tempCategory, setTempCategory] = useState<'전시' | '회의' | '행사/공연'>('전시');
+  const [tempCategories, setTempCategories] = useState<Array<'전시' | '회의' | '행사/공연'>>([]);
 
   useEffect(() => {
     async function loadEvent() {
@@ -594,18 +594,34 @@ export function EventDetailPage() {
 
   // 카테고리 편집 시작
   const startEditCategory = () => {
-    const currentCategory = Array.isArray(event?.category) ? event.category[0] : event?.category;
-    setTempCategory(currentCategory as '전시' | '회의' | '행사/공연');
+    const currentCategories = Array.isArray(event?.category) ? event.category : [event?.category];
+    setTempCategories(currentCategories as Array<'전시' | '회의' | '행사/공연'>);
     setEditingCategory(true);
+  };
+
+  // 카테고리 추가
+  const addCategory = (category: '전시' | '회의' | '행사/공연') => {
+    if (!tempCategories.includes(category)) {
+      setTempCategories([...tempCategories, category]);
+    }
+  };
+
+  // 카테고리 제거
+  const removeCategory = (category: '전시' | '회의' | '행사/공연') => {
+    if (tempCategories.length > 1) {
+      setTempCategories(tempCategories.filter(c => c !== category));
+    } else {
+      alert('최소 1개의 카테고리는 필요합니다.');
+    }
   };
 
   // 카테고리 저장
   const saveCategory = async () => {
-    if (!event || !id) return;
+    if (!event || !id || tempCategories.length === 0) return;
     setSaving(true);
     try {
-      await updateEvent(id, { category: [tempCategory] as any });
-      setEvent({ ...event, category: [tempCategory] as any });
+      await updateEvent(id, { category: tempCategories as any });
+      setEvent({ ...event, category: tempCategories as any });
       setEditingCategory(false);
       alert('카테고리가 업데이트되었습니다.');
     } catch (error) {
@@ -723,63 +739,119 @@ export function EventDetailPage() {
       <div className="event-hero" style={{ backgroundImage: `url(${posterUrl})` }}>
         <div className="event-hero-overlay"></div>
         <div className="event-hero-content">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             {editingCategory ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <select
-                  value={tempCategory}
-                  onChange={(e) => setTempCategory(e.target.value as '전시' | '회의' | '행사/공연')}
-                  style={{
-                    padding: '8px 12px',
-                    fontSize: '14px',
-                    border: '2px solid #007bff',
-                    borderRadius: '4px',
-                    background: 'white',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <option value="전시">전시</option>
-                  <option value="회의">회의</option>
-                  <option value="행사/공연">행사/공연</option>
-                </select>
-                <button
-                  onClick={saveCategory}
-                  disabled={saving}
-                  style={{
-                    padding: '6px 12px',
-                    background: '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: saving ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <Check size={14} />
-                </button>
-                <button
-                  onClick={cancelEditCategory}
-                  disabled={saving}
-                  style={{
-                    padding: '6px 12px',
-                    background: '#6c757d',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: saving ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <X size={14} />
-                </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(255, 255, 255, 0.95)', padding: '15px', borderRadius: '8px' }}>
+                {/* 현재 선택된 카테고리들 */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {tempCategories.map((cat) => (
+                    <div
+                      key={cat}
+                      style={{
+                        padding: '8px 12px',
+                        background: '#007bff',
+                        color: 'white',
+                        borderRadius: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '14px'
+                      }}
+                    >
+                      {cat}
+                      <button
+                        onClick={() => removeCategory(cat)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'white',
+                          cursor: 'pointer',
+                          padding: '0',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* 카테고리 추가 버튼들 */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {(['전시', '회의', '행사/공연'] as const).map((cat) => (
+                    !tempCategories.includes(cat) && (
+                      <button
+                        key={cat}
+                        onClick={() => addCategory(cat)}
+                        style={{
+                          padding: '6px 12px',
+                          background: '#e9ecef',
+                          color: '#495057',
+                          border: '1px dashed #6c757d',
+                          borderRadius: '20px',
+                          cursor: 'pointer',
+                          fontSize: '13px'
+                        }}
+                      >
+                        + {cat}
+                      </button>
+                    )
+                  ))}
+                </div>
+                
+                {/* 저장/취소 버튼 */}
+                <div style={{ display: 'flex', gap: '8px', marginTop: '5px' }}>
+                  <button
+                    onClick={saveCategory}
+                    disabled={saving || tempCategories.length === 0}
+                    style={{
+                      padding: '8px 16px',
+                      background: '#28a745',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: (saving || tempCategories.length === 0) ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '14px'
+                    }}
+                  >
+                    <Check size={14} />
+                    저장
+                  </button>
+                  <button
+                    onClick={cancelEditCategory}
+                    disabled={saving}
+                    style={{
+                      padding: '8px 16px',
+                      background: '#6c757d',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: saving ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '14px'
+                    }}
+                  >
+                    <X size={14} />
+                    취소
+                  </button>
+                </div>
               </div>
             ) : (
               <>
-                <div className="event-hero-badge">{event.category}</div>
+                {/* 다중 카테고리 배지 표시 */}
+                {Array.isArray(event.category) ? (
+                  event.category.map((cat, index) => (
+                    <div key={`${event.id}-cat-${index}`} className="event-hero-badge">{cat}</div>
+                  ))
+                ) : (
+                  <div className="event-hero-badge">{event.category}</div>
+                )}
                 {isAdmin && (
                   <button
                     onClick={startEditCategory}
