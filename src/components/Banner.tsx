@@ -4,7 +4,6 @@ import type { Banner as BannerType } from '../types/banner';
 import './Banner.css';
 
 export function Banner() {
-  const [banners, setBanners] = useState<BannerType[]>([]);
   const [loading, setLoading] = useState(true);
 
   // 타입별로 배너 분류
@@ -20,7 +19,6 @@ export function Banner() {
   useEffect(() => {
     async function loadBanners() {
       const data = await fetchActiveBanners();
-      setBanners(data);
       
       // 타입별로 분류
       setImageBanners(data.filter(b => b.type === 'image'));
