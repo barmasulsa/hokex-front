@@ -3,12 +3,14 @@
   background: #f8f9fa;
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 20px;
+  margin: 20px 0;
   position: relative;
   min-height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .banner-container.loading {
@@ -56,15 +58,16 @@
 /* 텍스트 배너 */
 .banner-text-wrapper {
   width: 100%;
-  padding: 20px 30px;
+  padding: 10px 20px;
   text-align: center;
 }
 
 .banner-text {
-  font-size: 16px;
-  line-height: 1.6;
+  font-size: 18px;
+  line-height: 1.8;
   color: #333;
   margin: 0;
+  font-weight: 500;
 }
 
 /* 배너 인디케이터 (여러 배너가 있을 때) */
