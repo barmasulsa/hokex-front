@@ -42,11 +42,21 @@ interface VisitRecord {
   count: number;
 }
 
-// 방문 기록 저장 (시간대별)
+// 방문 기록 저장 (시간대별) - 하루에 한 번만 카운트
 export function recordDetailedVisit() {
   const now = new Date();
   const date = now.toISOString().split('T')[0]; // YYYY-MM-DD
   const hour = now.getHours(); // 0-23
+  
+  // 오늘 이미 방문했는지 확인
+  const lastVisitDate = localStorage.getItem('last_visit_date');
+  if (lastVisitDate === date) {
+    // 오늘 이미 방문했으면 카운트하지 않음
+    return;
+  }
+  
+  // 오늘 첫 방문이므로 기록
+  localStorage.setItem('last_visit_date', date);
   
   const records = getVisitRecords();
   

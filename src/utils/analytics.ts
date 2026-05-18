@@ -58,9 +58,20 @@ export interface VisitorStats {
   last30Days: number;
 }
 
-// 로컬 스토리지에 방문 기록 저장
+// 로컬 스토리지에 방문 기록 저장 - 하루에 한 번만 카운트
 export function recordVisit() {
   const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  
+  // 오늘 이미 방문했는지 확인
+  const lastVisitDate = localStorage.getItem('last_visit_date');
+  if (lastVisitDate === today) {
+    // 오늘 이미 방문했으면 카운트하지 않음
+    return;
+  }
+  
+  // 오늘 첫 방문이므로 기록
+  localStorage.setItem('last_visit_date', today);
+  
   const visits = getVisitHistory();
   
   // 오늘 날짜가 없으면 추가
