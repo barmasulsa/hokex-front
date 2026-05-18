@@ -169,6 +169,7 @@ body {
 /* 메인 컨텐츠 래퍼 (사이드바 + 메인) */
 .main-content-wrapper {
   display: flex;
+  align-items: flex-start; /* 사이드바와 배너를 상단에서 정렬 */
   gap: 2rem;
   padding: 2rem;
   max-width: 1600px;
