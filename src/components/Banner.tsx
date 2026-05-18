@@ -5,151 +5,217 @@ import './Banner.css';
 
 export function Banner() {
   const [banners, setBanners] = useState<BannerType[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  // 타입별로 배너 분류
+  const [imageBanners, setImageBanners] = useState<BannerType[]>([]);
+  const [youtubeBanners, setYoutubeBanners] = useState<BannerType[]>([]);
+  const [textBanners, setTextBanners] = useState<BannerType[]>([]);
+
+  // 각 타입별 현재 인덱스
+  const [imageIndex, setImageIndex] = useState(0);
+  const [youtubeIndex, setYoutubeIndex] = useState(0);
+  const [textIndex, setTextIndex] = useState(0);
 
   useEffect(() => {
     async function loadBanners() {
       const data = await fetchActiveBanners();
       setBanners(data);
+      
+      // 타입별로 분류
+      setImageBanners(data.filter(b => b.type === 'image'));
+      setYoutubeBanners(data.filter(b => b.type === 'youtube'));
+      setTextBanners(data.filter(b => b.type === 'text'));
+      
       setLoading(false);
     }
     loadBanners();
   }, []);
 
-  // 배너가 여러 개일 경우 자동 슬라이드
+  // 이미지 배너 자동 슬라이드
   useEffect(() => {
-    if (banners.length <= 1) return;
-
+    if (imageBanners.length <= 1) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % banners.length);
-    }, 5000); // 5초마다 전환
-
+      setImageIndex((prev) => (prev + 1) % imageBanners.length);
+    }, 5000);
     return () => clearInterval(interval);
-  }, [banners.length]);
+  }, [imageBanners.length]);
 
-  // 이전 배너로 이동
-  const handlePrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
-  };
+  // YouTube 배너 자동 슬라이드
+  useEffect(() => {
+    if (youtubeBanners.length <= 1) return;
+    const interval = setInterval(() => {
+      setYoutubeIndex((prev) => (prev + 1) % youtubeBanners.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [youtubeBanners.length]);
 
-  // 다음 배너로 이동
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % banners.length);
-  };
+  // 텍스트 배너 자동 슬라이드
+  useEffect(() => {
+    if (textBanners.length <= 1) return;
+    const interval = setInterval(() => {
+      setTextIndex((prev) => (prev + 1) % textBanners.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [textBanners.length]);
 
   if (loading) {
-    return <div className="banner-container loading">배너를 불러오는 중...</div>;
-  }
-
-  if (banners.length === 0) {
-    // 배너가 없을 때 빈 공간 표시
     return (
-      <div className="banner-container empty">
-        <div className="banner-empty-state">
-          <p className="empty-icon">🎨</p>
-          <p className="empty-title">배너 영역</p>
-          <p className="empty-description">
-            이미지 배너, YouTube 영상, 텍스트 공지를 추가할 수 있습니다
-          </p>
-        </div>
+      <div className="banner-sections">
+        <div className="banner-section loading">로딩 중...</div>
       </div>
     );
   }
 
-  const currentBanner = banners[currentIndex];
-
-  const renderBannerContent = () => {
-    switch (currentBanner.type) {
-      case 'image':
-        return (
-          <div className="banner-image-wrapper">
-            {currentBanner.link_url ? (
-              <a 
-                href={currentBanner.link_url} 
-                target="_blank" 
+  return (
+    <div className="banner-sections">
+      {/* 이미지 배너 섹션 */}
+      <div className="banner-section image-section">
+        {imageBanners.length === 0 ? (
+          <div className="banner-empty">
+            <p className="empty-title">배너 이미지</p>
+            <p className="empty-desc">이미지 배너를 추가하세요</p>
+          </div>
+        ) : (
+          <>
+            {imageBanners[imageIndex].link_url ? (
+              <a
+                href={imageBanners[imageIndex].link_url}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="banner-link"
               >
-                <img 
-                  src={currentBanner.content} 
-                  alt={currentBanner.title}
+                <img
+                  src={imageBanners[imageIndex].content}
+                  alt={imageBanners[imageIndex].title}
                   className="banner-image"
                 />
               </a>
             ) : (
-              <img 
-                src={currentBanner.content} 
-                alt={currentBanner.title}
+              <img
+                src={imageBanners[imageIndex].content}
+                alt={imageBanners[imageIndex].title}
                 className="banner-image"
               />
             )}
+            {imageBanners.length > 1 && (
+              <>
+                <button
+                  className="nav-btn prev"
+                  onClick={() => setImageIndex((prev) => (prev - 1 + imageBanners.length) % imageBanners.length)}
+                >
+                  ‹
+                </button>
+                <button
+                  className="nav-btn next"
+                  onClick={() => setImageIndex((prev) => (prev + 1) % imageBanners.length)}
+                >
+                  ›
+                </button>
+                <div className="indicators">
+                  {imageBanners.map((_, i) => (
+                    <button
+                      key={i}
+                      className={`indicator ${i === imageIndex ? 'active' : ''}`}
+                      onClick={() => setImageIndex(i)}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* YouTube 섹션 */}
+      <div className="banner-section youtube-section">
+        {youtubeBanners.length === 0 ? (
+          <div className="banner-empty">
+            <p className="empty-title">YouTube</p>
+            <p className="empty-desc">YouTube 영상을 추가하세요</p>
           </div>
-        );
+        ) : (
+          <>
+            <div className="youtube-wrapper">
+              <iframe
+                src={`https://www.youtube.com/embed/${youtubeBanners[youtubeIndex].content}`}
+                title={youtubeBanners[youtubeIndex].title}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="youtube-iframe"
+              />
+            </div>
+            {youtubeBanners.length > 1 && (
+              <>
+                <button
+                  className="nav-btn prev"
+                  onClick={() => setYoutubeIndex((prev) => (prev - 1 + youtubeBanners.length) % youtubeBanners.length)}
+                >
+                  ‹
+                </button>
+                <button
+                  className="nav-btn next"
+                  onClick={() => setYoutubeIndex((prev) => (prev + 1) % youtubeBanners.length)}
+                >
+                  ›
+                </button>
+                <div className="indicators">
+                  {youtubeBanners.map((_, i) => (
+                    <button
+                      key={i}
+                      className={`indicator ${i === youtubeIndex ? 'active' : ''}`}
+                      onClick={() => setYoutubeIndex(i)}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </div>
 
-      case 'youtube':
-        return (
-          <div className="banner-youtube-wrapper">
-            <iframe
-              src={`https://www.youtube.com/embed/${currentBanner.content}`}
-              title={currentBanner.title}
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="banner-youtube"
-            />
+      {/* 공지사항 섹션 */}
+      <div className="banner-section notice-section">
+        {textBanners.length === 0 ? (
+          <div className="banner-empty">
+            <p className="empty-title">공지사항</p>
+            <p className="empty-desc">공지사항을 추가하세요</p>
           </div>
-        );
-
-      case 'text':
-        return (
-          <div className="banner-text-wrapper">
-            <p className="banner-text">{currentBanner.content}</p>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div className="banner-container">
-      {renderBannerContent()}
-      
-      {/* 배너가 여러 개일 경우 이전/다음 버튼 표시 */}
-      {banners.length > 1 && (
-        <>
-          <button
-            className="banner-nav-btn banner-prev"
-            onClick={handlePrev}
-            aria-label="이전 배너"
-          >
-            ‹
-          </button>
-          <button
-            className="banner-nav-btn banner-next"
-            onClick={handleNext}
-            aria-label="다음 배너"
-          >
-            ›
-          </button>
-        </>
-      )}
-      
-      {/* 배너가 여러 개일 경우 인디케이터 표시 */}
-      {banners.length > 1 && (
-        <div className="banner-indicators">
-          {banners.map((_, index) => (
-            <button
-              key={index}
-              className={`banner-indicator ${index === currentIndex ? 'active' : ''}`}
-              onClick={() => setCurrentIndex(index)}
-              aria-label={`배너 ${index + 1}로 이동`}
-            />
-          ))}
-        </div>
-      )}
+        ) : (
+          <>
+            <div className="notice-content">
+              <p className="notice-icon">🎉</p>
+              <p className="notice-text">{textBanners[textIndex].content}</p>
+            </div>
+            {textBanners.length > 1 && (
+              <>
+                <button
+                  className="nav-btn prev"
+                  onClick={() => setTextIndex((prev) => (prev - 1 + textBanners.length) % textBanners.length)}
+                >
+                  ‹
+                </button>
+                <button
+                  className="nav-btn next"
+                  onClick={() => setTextIndex((prev) => (prev + 1) % textBanners.length)}
+                >
+                  ›
+                </button>
+                <div className="indicators">
+                  {textBanners.map((_, i) => (
+                    <button
+                      key={i}
+                      className={`indicator ${i === textIndex ? 'active' : ''}`}
+                      onClick={() => setTextIndex(i)}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
