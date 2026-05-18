@@ -5,6 +5,7 @@
   flex-direction: column;
   gap: 15px;
   margin: 0;
+  margin-top: 1.5rem; /* 사이드바 패딩과 상단 정렬 맞추기 */
   padding: 0;
 }
 
@@ -16,7 +17,7 @@
   border-radius: 12px; /* 사이드바와 동일 */
   position: relative;
   overflow: hidden;
-  min-height: 200px;
+  min-height: 200px; /* 최소 높이 설정 */
   display: flex;
   align-items: center;
   justify-content: center;
