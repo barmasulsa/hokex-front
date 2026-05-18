@@ -162,7 +162,7 @@ export function LoginPage() {
           <div className="subscriber-notice">
             <p>💡 뉴스레터를 구독한 이메일 주소로 로그인해주세요.</p>
             <p>아직 구독하지 않으셨나요? <a href="https://page.stibee.com/subscriptions/289942" target="_blank" rel="noopener noreferrer">뉴스레터 구독하기</a></p>
-            <p>비밀번호가 없으신가요? 이메일 링크로 로그인 후 비밀번호를 설정하세요.</p>
+            <p>비밀번호가 없으신가요? 이메일 링크로 로그인 후 비밀번호를 설정하세요. 비밀번호 설정 후에는 이메일 링크 없이 사이트에서 로그인 후 이용 가능합니다.</p>
           </div>
 
           <div className="login-footer">
