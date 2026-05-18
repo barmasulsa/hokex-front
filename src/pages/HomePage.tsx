@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EventCard } from '../components/EventCard';
-import { FilterBar } from '../components/FilterBar';
 import { Banner } from '../components/Banner';
 import { fetchEvents } from '../services/eventService';
 import { useAuth } from '../contexts/AuthContext';
@@ -575,21 +574,6 @@ export function HomePage() {
 
         {/* 오른쪽 메인 영역 */}
         <div className="main-content-area">
-          {/* 필터 바 */}
-          <FilterBar
-            selectedRegion={selectedRegion}
-            selectedVenue={selectedVenue}
-            selectedMonth={selectedMonth}
-            selectedCategory={selectedCategory}
-            selectedIndustries={selectedIndustries}
-            filteredCount={filteredEvents.length}
-            onRegionChange={setSelectedRegion}
-            onVenueChange={setSelectedVenue}
-            onMonthChange={setSelectedMonth}
-            onCategoryChange={setSelectedCategory}
-            onIndustriesChange={setSelectedIndustries}
-          />
-
           {/* 배너 영역 */}
           <Banner />
 
