@@ -1,0 +1,261 @@
+.banner-management-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.page-header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 버튼 스타일 */
+.btn-primary {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s;
+  margin-left: 10px;
+}
+
+.btn-secondary:hover {
+  background: #545b62;
+}
+
+.btn-edit {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  margin-right: 8px;
+  transition: background 0.2s;
+}
+
+.btn-edit:hover {
+  background: #218838;
+}
+
+.btn-delete {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+.btn-delete:hover {
+  background: #c82333;
+}
+
+/* 폼 스타일 */
+.banner-form-container {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 30px;
+  margin-bottom: 40px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.banner-form-container h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.banner-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #555;
+}
+
+.form-control {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.form-control textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.form-group-checkbox {
+  display: flex;
+  align-items: center;
+}
+
+.form-group-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.form-group-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 10px;
+}
+
+/* 배너 목록 */
+.banner-list {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.banner-list h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.banner-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.banner-table thead {
+  background: #f8f9fa;
+}
+
+.banner-table th {
+  padding: 12px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.banner-table td {
+  padding: 12px;
+  font-size: 14px;
+  color: #333;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.content-cell {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.status-badge.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.active:hover {
+  background: #c3e6cb;
+}
+
+.status-badge.inactive {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-badge.inactive:hover {
+  background: #f5c6cb;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .banner-table {
+    font-size: 12px;
+  }
+
+  .banner-table th,
+  .banner-table td {
+    padding: 8px;
+  }
+
+  .btn-edit,
+  .btn-delete {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+}

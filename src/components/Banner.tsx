@@ -28,6 +28,16 @@ export function Banner() {
     return () => clearInterval(interval);
   }, [banners.length]);
 
+  // 이전 배너로 이동
+  const handlePrev = () => {
+    setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
+  };
+
+  // 다음 배너로 이동
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % banners.length);
+  };
+
   if (loading) {
     return <div className="banner-container loading">배너를 불러오는 중...</div>;
   }
@@ -95,6 +105,26 @@ export function Banner() {
   return (
     <div className="banner-container">
       {renderBannerContent()}
+      
+      {/* 배너가 여러 개일 경우 이전/다음 버튼 표시 */}
+      {banners.length > 1 && (
+        <>
+          <button
+            className="banner-nav-btn banner-prev"
+            onClick={handlePrev}
+            aria-label="이전 배너"
+          >
+            ‹
+          </button>
+          <button
+            className="banner-nav-btn banner-next"
+            onClick={handleNext}
+            aria-label="다음 배너"
+          >
+            ›
+          </button>
+        </>
+      )}
       
       {/* 배너가 여러 개일 경우 인디케이터 표시 */}
       {banners.length > 1 && (

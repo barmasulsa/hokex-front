@@ -102,6 +102,41 @@
   height: 12px;
 }
 
+/* 이전/다음 버튼 */
+.banner-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10;
+  padding: 0;
+  line-height: 1;
+}
+
+.banner-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.banner-prev {
+  left: 15px;
+}
+
+.banner-next {
+  right: 15px;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .banner-container {

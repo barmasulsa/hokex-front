@@ -4,6 +4,7 @@ import { HomePage } from './pages/HomePage';
 import { EventDetailPage } from './pages/EventDetailPage';
 import { UserProfilePage } from './pages/UserProfilePage';
 import { LoginPage } from './pages/LoginPage';
+import { BannerManagementPage } from './pages/BannerManagementPage';
 import './App.css';
 
 function AppContent() {
@@ -44,7 +45,10 @@ function AppContent() {
             <>
               <Link to="/profile" className="nav-link">My Profile</Link>
               {isAdmin && (
-                <span className="admin-badge">관리자</span>
+                <>
+                  <span className="admin-badge">관리자</span>
+                  <Link to="/admin/banners" className="nav-link">배너 관리</Link>
+                </>
               )}
               <span className="user-email">{user.email}</span>
               {userProfile?.is_admin && (
@@ -77,6 +81,7 @@ function AppContent() {
         <Route path="/event/:id" element={<EventDetailPage />} />
         <Route path="/profile" element={<UserProfilePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/admin/banners" element={<BannerManagementPage />} />
       </Routes>
     </div>
   );
