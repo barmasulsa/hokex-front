@@ -44,12 +44,8 @@ export function HomePage() {
   });
   const [onlineCount, setOnlineCount] = useState<number>(0);
 
-  // 로그인 체크 - 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/login');
-    }
-  }, [user, authLoading, navigate]);
+  // 홈페이지는 누구나 접근 가능 (로그인 불필요)
+  // 관리자 기능(배너 관리 등)만 로그인 필요
   
   // sessionStorage에서 필터 상태 복원
   const getInitialFilterState = () => {
@@ -307,10 +303,7 @@ export function HomePage() {
     }
   };
 
-  // 인증 로딩 중이거나 사용자가 없으면 아무것도 렌더링하지 않음
-  if (authLoading || !user) {
-    return null;
-  }
+  // 홈페이지는 누구나 볼 수 있음 (로그인 불필요)
 
   return (
     <>
