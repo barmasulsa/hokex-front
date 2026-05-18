@@ -44,8 +44,12 @@ export function HomePage() {
   });
   const [onlineCount, setOnlineCount] = useState<number>(0);
 
-  // 홈페이지는 누구나 접근 가능 (로그인 불필요)
-  // 관리자 기능(배너 관리 등)만 로그인 필요
+  // 로그인 체크 - Stibee 구독자만 홈페이지 이용 가능
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/login');
+    }
+  }, [user, authLoading, navigate]);
   
   // sessionStorage에서 필터 상태 복원
   const getInitialFilterState = () => {
@@ -303,7 +307,10 @@ export function HomePage() {
     }
   };
 
-  // 홈페이지는 누구나 볼 수 있음 (로그인 불필요)
+  // Stibee 구독자만 홈페이지 접근 가능
+  if (authLoading || !user) {
+    return null;
+  }
 
   return (
     <>
