@@ -4,7 +4,8 @@
   display: flex;
   flex-direction: column;
   gap: 15px;
-  margin: 0; /* 사이드바 테두리와 정확히 맞추기 위해 margin 제거 */
+  margin: 0;
+  margin-top: 1.5rem; /* 사이드바 내부 콘텐츠 시작점과 맞추기 */
   padding: 0;
 }
 
