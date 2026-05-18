@@ -4,8 +4,10 @@
   display: flex;
   flex-direction: column;
   gap: 15px;
-  margin: -2px 0 0 0; /* 사이드바 border(2px)만큼 위로 이동 */
+  margin: 0;
   padding: 0;
+  position: sticky;
+  top: 100px; /* 사이드바와 동일한 sticky 위치 */
 }
 
 /* 개별 배너 섹션 - 사이드바와 동일한 스타일 */
@@ -23,10 +25,7 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.08); /* 사이드바와 동일 */
 }
 
-/* 첫 번째 배너 섹션만 상단 마진 추가 */
-.banner-section:first-child {
-  margin-top: -2px; /* 사이드바 border 두께만큼 위로 이동 */
-}
+
 
 .banner-section.loading {
   color: #666;
