@@ -1,3 +1,24 @@
+# Stibee Edge Function 수동 배포 가이드
+
+## 문제 상황
+- `subscribers.some is not a function` 에러 발생
+- Stibee API 응답 구조가 예상과 다름
+
+## 해결 방법: Supabase Dashboard에서 직접 배포
+
+### 1단계: Supabase Dashboard 접속
+1. https://supabase.com/dashboard 접속
+2. 프로젝트 선택 (qmhxnxnaawtjelqlgyig)
+
+### 2단계: Edge Function 수정
+1. 왼쪽 메뉴에서 **Edge Functions** 클릭
+2. `check-stibee-subscriber` 함수 선택
+3. **Edit Function** 버튼 클릭
+
+### 3단계: 코드 복사 & 붙여넣기
+아래 전체 코드를 복사해서 붙여넣으세요:
+
+```typescript
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const corsHeaders = {
@@ -141,3 +162,23 @@ serve(async (req) => {
     )
   }
 })
+```
+
+### 4단계: 배포
+1. **Deploy** 버튼 클릭
+2. 배포 완료 대기 (약 10-30초)
+
+### 5단계: 테스트
+1. 프론트엔드에서 로그인 시도
+2. 브라우저 콘솔에서 로그 확인
+3. Supabase Dashboard > Edge Functions > Logs에서 상세 로그 확인
+
+## 주요 변경사항
+- Stibee API 응답의 다양한 구조를 모두 처리
+- 배열을 찾지 못하면 디버깅 정보 반환
+- 전체 응답을 로그에 출력하여 실제 구조 파악 가능
+
+## 다음 단계
+배포 후 로그인을 시도하면:
+1. Edge Function 로그에서 실제 Stibee API 응답 구조 확인 가능
+2. 필요시 추가 수정 가능
