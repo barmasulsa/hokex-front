@@ -136,8 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     alert('네이버 로그인은 아직 구현되지 않았습니다.');
   };
 
-  // 스티비 구독자 확인 (임시 비활성화)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  /* 스티비 구독자 확인 (임시 비활성화)
   const checkSubscription = async (email: string): Promise<boolean> => {
     try {
       console.log('Checking subscription for:', email);
@@ -163,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
   };
+  */
 
   // 비밀번호 로그인 - 구독자만 허용
   const signInWithPassword = async (email: string, password: string) => {
