@@ -667,6 +667,28 @@ export function HomePage() {
           {/* 배너 영역 */}
           <Banner />
 
+          {/* 방문자 통계 */}
+          <div className="visitor-statistics">
+            <h3 className="stats-title">📊 방문자 통계</h3>
+            <div className="stats-grid">
+              <div className="stat-box">
+                <div className="stat-period">오늘</div>
+                <div className="stat-number">-</div>
+                <div className="stat-unit">명</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-period">7일</div>
+                <div className="stat-number">-</div>
+                <div className="stat-unit">명</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-period">30일</div>
+                <div className="stat-number">-</div>
+                <div className="stat-unit">명</div>
+              </div>
+            </div>
+          </div>
+
           {/* 결과 카운트 배너 */}
           <div className="results-count-banner">
             <p>{filteredEvents.length}개의 행사</p>
