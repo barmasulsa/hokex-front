@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EventCard } from '../components/EventCard';
 import { FilterBar } from '../components/FilterBar';
+import { Banner } from '../components/Banner';
 import { fetchEvents } from '../services/eventService';
 import { useAuth } from '../contexts/AuthContext';
 import type { EventRecord, Venue, FilterCriteria } from '../types/core';
@@ -588,6 +589,9 @@ export function HomePage() {
             onCategoryChange={setSelectedCategory}
             onIndustriesChange={setSelectedIndustries}
           />
+
+          {/* 배너 영역 */}
+          <Banner />
 
           {/* 결과 카운트 배너 */}
           <div className="results-count-banner">
