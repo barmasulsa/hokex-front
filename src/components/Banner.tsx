@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchActiveBanners } from '../services/bannerService';
-import { supabase } from '../services/supabase';
+import { supabase } from '../lib/supabase';
 import type { Banner as BannerType } from '../types/banner';
 import './Banner.css';
 
