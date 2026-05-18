@@ -5,7 +5,7 @@
   flex-direction: column;
   gap: 15px;
   margin: 0;
-  padding: 24px 0 0 0; /* 사이드바 padding과 맞추기 위해 상단 24px */
+  padding: 0; /* flexbox align-items로 정렬 */
 }
 
 /* 개별 배너 섹션 - 사이드바와 동일한 스타일 */
