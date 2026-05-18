@@ -61,10 +61,22 @@ serve(async (req) => {
     }
 
     const stibeeData = await stibeeResponse.json()
-    console.log(`📊 Stibee response received, total subscribers: ${stibeeData.Ok?.length || 0}`)
+    console.log(`📊 Stibee response structure:`, JSON.stringify(stibeeData).substring(0, 200))
 
     // 구독자 목록에서 이메일 검색
-    const subscribers = stibeeData.Ok || []
+    const subscribers = stibeeData.Ok || stibeeData.value || []
+    
+    // subscribers가 배열인지 확인
+    if (!Array.isArray(subscribers)) {
+      console.error('❌ Subscribers is not an array:', typeof subscribers)
+      return new Response(
+        JSON.stringify({ error: 'Invalid Stibee API response format', isSubscriber: false }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log(`📊 Total subscribers: ${subscribers.length}`)
+
     const isSubscriber = subscribers.some((subscriber: any) => {
       const subscriberEmail = subscriber.email?.toLowerCase().trim()
       return subscriberEmail === normalizedEmail

@@ -165,14 +165,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // 비밀번호 로그인 - 구독자만 허용
   const signInWithPassword = async (email: string, password: string) => {
+    // 임시: Stibee API 문제로 인해 체크 비활성화
+    // TODO: Stibee API 문제 해결 후 다시 활성화
+    console.warn('⚠️ Stibee subscription check temporarily disabled');
+    
+    /*
     // 1. 먼저 스티비 구독자인지 확인
     const isSubscriber = await checkSubscription(email);
     
     if (!isSubscriber) {
       throw new Error('SUBSCRIBER_ONLY');
     }
+    */
 
-    // 2. 구독자라면 비밀번호 로그인 진행
+    // 2. 비밀번호 로그인 진행
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
