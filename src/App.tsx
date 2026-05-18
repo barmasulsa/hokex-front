@@ -7,6 +7,7 @@ import { UserProfilePage } from './pages/UserProfilePage';
 import { LoginPage } from './pages/LoginPage';
 import { BannerManagementPage } from './pages/BannerManagementPage';
 import { initGA4, recordVisit } from './utils/analytics';
+import { recordDetailedVisit } from './utils/detailedAnalytics';
 import './App.css';
 
 function AppContent() {
@@ -17,6 +18,7 @@ function AppContent() {
   useEffect(() => {
     initGA4();
     recordVisit();
+    recordDetailedVisit(); // 세부 통계 기록
   }, []);
 
   const handleSignOut = async () => {

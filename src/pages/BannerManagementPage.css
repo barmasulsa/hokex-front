@@ -460,3 +460,300 @@
     flex-direction: column;
   }
 }
+
+/* 통계 탭 스타일 */
+.statistics-tab-content {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stats-summary {
+  margin-bottom: 40px;
+}
+
+.stats-summary h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.stat-card-large {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 25px;
+  color: white;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.stat-card-large:hover {
+  transform: translateY(-2px);
+}
+
+.stat-card-large:nth-child(2) {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-card-large:nth-child(3) {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.stat-card-large:nth-child(4) {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.stat-card-large:nth-child(5) {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.stat-card-large:nth-child(6) {
+  background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+}
+
+.stat-value-large {
+  font-size: 42px;
+  font-weight: 700;
+  margin: 10px 0;
+}
+
+/* 데이터 다운로드 섹션 */
+.stats-actions {
+  margin-bottom: 40px;
+  padding: 25px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.stats-actions h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.download-buttons {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.btn-download {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-download:hover {
+  background: #218838;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+}
+
+/* 상세 통계 뷰 선택 */
+.stats-view-selector {
+  margin-bottom: 30px;
+}
+
+.stats-view-selector h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.view-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.view-btn {
+  background: white;
+  border: 2px solid #ddd;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.view-btn:hover {
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.view-btn.active {
+  background: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+/* 상세 통계 섹션 */
+.stats-detail-section {
+  margin-bottom: 30px;
+}
+
+.stats-detail-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.stats-info-text {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 15px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.stats-table-container {
+  max-height: 600px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.stats-table thead {
+  background: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.stats-table th {
+  padding: 12px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.stats-table td {
+  padding: 12px;
+  font-size: 14px;
+  color: #333;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.stats-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+/* 퍼센티지 바 */
+.percentage-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.percentage-bar {
+  height: 20px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+  transition: width 0.3s;
+  min-width: 2px;
+}
+
+.percentage-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  min-width: 50px;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-value-large {
+    font-size: 32px;
+  }
+
+  .download-buttons {
+    flex-direction: column;
+  }
+
+  .btn-download,
+  .btn-danger {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .view-buttons {
+    flex-direction: column;
+  }
+
+  .view-btn {
+    width: 100%;
+  }
+
+  .stats-table {
+    font-size: 12px;
+  }
+
+  .stats-table th,
+  .stats-table td {
+    padding: 8px;
+  }
+
+  .percentage-bar-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .percentage-bar {
+    width: 100% !important;
+  }
+}

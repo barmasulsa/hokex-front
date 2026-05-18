@@ -2,9 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchAllBanners, createBanner, updateBanner, deleteBanner } from '../services/bannerService';
-import { getVisitorStats, type VisitorStats } from '../utils/analytics';
+import { 
+  getDetailedVisitorStats, 
+  downloadStatsAsCSV, 
+  downloadStatsAsJSON,
+  clearAllStats,
+  type DetailedVisitorStats 
+} from '../utils/detailedAnalytics';
 import type { Banner, BannerType } from '../types/banner';
 import './BannerManagementPage.css';
+
+type ManagementTab = 'image' | 'youtube' | 'text' | 'statistics';
 
 export function BannerManagementPage() {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -14,12 +22,9 @@ export function BannerManagementPage() {
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [activeTab, setActiveTab] = useState<BannerType>('image'); // 탭 상태
-  const [visitorStats, setVisitorStats] = useState<VisitorStats>({
-    today: 0,
-    last7Days: 0,
-    last30Days: 0
-  });
+  const [activeTab, setActiveTab] = useState<ManagementTab>('image'); // 탭 상태
+  const [detailedStats, setDetailedStats] = useState<DetailedVisitorStats | null>(null);
+  const [statsView, setStatsView] = useState<'daily' | 'hourly' | 'yearly'>('daily');
 
   // 새 배너 폼 상태
   const [formData, setFormData] = useState({
@@ -46,13 +51,13 @@ export function BannerManagementPage() {
 
   // 방문자 통계 가져오기
   useEffect(() => {
-    const stats = getVisitorStats();
-    setVisitorStats(stats);
+    const detailed = getDetailedVisitorStats();
+    setDetailedStats(detailed);
     
     // 1분마다 통계 업데이트
     const interval = setInterval(() => {
-      const updatedStats = getVisitorStats();
-      setVisitorStats(updatedStats);
+      const updatedDetailed = getDetailedVisitorStats();
+      setDetailedStats(updatedDetailed);
     }, 60000); // 60초
     
     return () => clearInterval(interval);
@@ -76,6 +81,25 @@ export function BannerManagementPage() {
       is_active: true,
       display_order: banners.filter(b => b.type === type).length
     });
+  };
+
+  const handleDownloadCSV = () => {
+    if (detailedStats) {
+      downloadStatsAsCSV(detailedStats);
+    }
+  };
+
+  const handleDownloadJSON = () => {
+    if (detailedStats) {
+      downloadStatsAsJSON(detailedStats);
+    }
+  };
+
+  const handleClearStats = () => {
+    if (clearAllStats()) {
+      const detailed = getDetailedVisitorStats();
+      setDetailedStats(detailed);
+    }
   };
 
   const handleEdit = (banner: Banner) => {
@@ -248,7 +272,9 @@ export function BannerManagementPage() {
   }
 
   // 타입별 배너 필터링
-  const filteredBanners = banners.filter(b => b.type === activeTab);
+  const filteredBanners = activeTab !== 'statistics' 
+    ? banners.filter(b => b.type === activeTab)
+    : [];
 
   return (
     <div className="banner-management-page">
@@ -256,11 +282,8 @@ export function BannerManagementPage() {
         <h1>배너 관리</h1>
       </div>
 
-      <div className="management-layout">
-        {/* 왼쪽: 배너 관리 */}
-        <div className="banner-management-section">
-          {/* 탭 네비게이션 */}
-          <div className="banner-tabs">
+      {/* 탭 네비게이션 */}
+      <div className="banner-tabs">
         <button
           className={`tab-btn ${activeTab === 'image' ? 'active' : ''}`}
           onClick={() => setActiveTab('image')}
@@ -279,11 +302,235 @@ export function BannerManagementPage() {
         >
           공지사항
         </button>
+        <button
+          className={`tab-btn ${activeTab === 'statistics' ? 'active' : ''}`}
+          onClick={() => setActiveTab('statistics')}
+        >
+          📊 방문자 통계
+        </button>
       </div>
 
+      {/* 통계 탭 */}
+      {activeTab === 'statistics' && detailedStats && (
+        <div className="statistics-tab-content">
+          {/* 요약 통계 */}
+          <div className="stats-summary">
+            <h2>요약 통계</h2>
+            <div className="stats-grid">
+              <div className="stat-card-large">
+                <div className="stat-label">총 방문 수</div>
+                <div className="stat-value-large">{detailedStats.totalVisits.toLocaleString()}</div>
+                <div className="stat-desc">
+                  {detailedStats.firstVisitDate && `${detailedStats.firstVisitDate}부터`}
+                </div>
+              </div>
+              <div className="stat-card-large">
+                <div className="stat-label">오늘</div>
+                <div className="stat-value-large">{detailedStats.today.toLocaleString()}</div>
+                <div className="stat-desc">명 방문</div>
+              </div>
+              <div className="stat-card-large">
+                <div className="stat-label">어제</div>
+                <div className="stat-value-large">{detailedStats.yesterday.toLocaleString()}</div>
+                <div className="stat-desc">명 방문</div>
+              </div>
+              <div className="stat-card-large">
+                <div className="stat-label">최근 7일</div>
+                <div className="stat-value-large">{detailedStats.last7Days.toLocaleString()}</div>
+                <div className="stat-desc">명 방문</div>
+              </div>
+              <div className="stat-card-large">
+                <div className="stat-label">최근 30일</div>
+                <div className="stat-value-large">{detailedStats.last30Days.toLocaleString()}</div>
+                <div className="stat-desc">명 방문</div>
+              </div>
+              <div className="stat-card-large">
+                <div className="stat-label">최근 1년</div>
+                <div className="stat-value-large">{detailedStats.last365Days.toLocaleString()}</div>
+                <div className="stat-desc">명 방문</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 데이터 다운로드 */}
+          <div className="stats-actions">
+            <h3>데이터 다운로드</h3>
+            <div className="download-buttons">
+              <button className="btn-download" onClick={handleDownloadCSV}>
+                📥 CSV 다운로드
+              </button>
+              <button className="btn-download" onClick={handleDownloadJSON}>
+                📥 JSON 다운로드
+              </button>
+              <button className="btn-danger" onClick={handleClearStats}>
+                🗑️ 통계 데이터 초기화
+              </button>
+            </div>
+          </div>
+
+          {/* 상세 통계 뷰 선택 */}
+          <div className="stats-view-selector">
+            <h3>상세 통계</h3>
+            <div className="view-buttons">
+              <button
+                className={`view-btn ${statsView === 'hourly' ? 'active' : ''}`}
+                onClick={() => setStatsView('hourly')}
+              >
+                시간대별 (오늘)
+              </button>
+              <button
+                className={`view-btn ${statsView === 'daily' ? 'active' : ''}`}
+                onClick={() => setStatsView('daily')}
+              >
+                일별 (최근 30일)
+              </button>
+              <button
+                className={`view-btn ${statsView === 'yearly' ? 'active' : ''}`}
+                onClick={() => setStatsView('yearly')}
+              >
+                일별 (최근 1년)
+              </button>
+            </div>
+          </div>
+
+          {/* 시간대별 통계 */}
+          {statsView === 'hourly' && (
+            <div className="stats-detail-section">
+              <h3>오늘 시간대별 방문</h3>
+              <div className="stats-table-container">
+                <table className="stats-table">
+                  <thead>
+                    <tr>
+                      <th>시간</th>
+                      <th>방문 수</th>
+                      <th>비율</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detailedStats.hourlyToday.map((h) => {
+                      const percentage = detailedStats.today > 0 
+                        ? ((h.count / detailedStats.today) * 100).toFixed(1)
+                        : '0.0';
+                      return (
+                        <tr key={h.hour}>
+                          <td>{h.hour}시</td>
+                          <td>{h.count.toLocaleString()}</td>
+                          <td>
+                            <div className="percentage-bar-container">
+                              <div 
+                                className="percentage-bar" 
+                                style={{ width: `${percentage}%` }}
+                              />
+                              <span className="percentage-text">{percentage}%</span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 일별 통계 (최근 30일) */}
+          {statsView === 'daily' && (
+            <div className="stats-detail-section">
+              <h3>최근 30일 일별 방문</h3>
+              <div className="stats-table-container">
+                <table className="stats-table">
+                  <thead>
+                    <tr>
+                      <th>날짜</th>
+                      <th>방문 수</th>
+                      <th>비율</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detailedStats.dailyLast30Days.slice().reverse().map((d) => {
+                      const maxCount = Math.max(...detailedStats.dailyLast30Days.map(x => x.count));
+                      const percentage = maxCount > 0 
+                        ? ((d.count / maxCount) * 100).toFixed(1)
+                        : '0.0';
+                      return (
+                        <tr key={d.date}>
+                          <td>{d.date}</td>
+                          <td>{d.count.toLocaleString()}</td>
+                          <td>
+                            <div className="percentage-bar-container">
+                              <div 
+                                className="percentage-bar" 
+                                style={{ width: `${percentage}%` }}
+                              />
+                              <span className="percentage-text">{percentage}%</span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 일별 통계 (최근 1년) */}
+          {statsView === 'yearly' && (
+            <div className="stats-detail-section">
+              <h3>최근 1년 일별 방문</h3>
+              <p className="stats-info-text">
+                총 {detailedStats.dailyLast365Days.length}일 중 방문이 있었던 날: {' '}
+                {detailedStats.dailyLast365Days.filter(d => d.count > 0).length}일
+              </p>
+              <div className="stats-table-container">
+                <table className="stats-table">
+                  <thead>
+                    <tr>
+                      <th>날짜</th>
+                      <th>방문 수</th>
+                      <th>비율</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detailedStats.dailyLast365Days
+                      .slice()
+                      .reverse()
+                      .filter(d => d.count > 0) // 방문이 있었던 날만 표시
+                      .map((d) => {
+                        const maxCount = Math.max(...detailedStats.dailyLast365Days.map(x => x.count));
+                        const percentage = maxCount > 0 
+                          ? ((d.count / maxCount) * 100).toFixed(1)
+                          : '0.0';
+                        return (
+                          <tr key={d.date}>
+                            <td>{d.date}</td>
+                            <td>{d.count.toLocaleString()}</td>
+                            <td>
+                              <div className="percentage-bar-container">
+                                <div 
+                                  className="percentage-bar" 
+                                  style={{ width: `${percentage}%` }}
+                                />
+                                <span className="percentage-text">{percentage}%</span>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 배너 관리 섹션 (기존 코드) */}
+      {activeTab !== 'statistics' && (
+        <div className="banner-management-section">
       {/* 새 배너 추가 버튼 */}
       <div className="add-banner-section">
-        <button className="btn-primary" onClick={() => handleCreate(activeTab)}>
+        <button className="btn-primary" onClick={() => handleCreate(activeTab as BannerType)}>
           {activeTab === 'image' && '+ 이미지 배너 추가'}
           {activeTab === 'youtube' && '+ 유튜브 추가'}
           {activeTab === 'text' && '+ 공지사항 추가'}
@@ -494,33 +741,7 @@ export function BannerManagementPage() {
         )}
       </div>
         </div>
-
-        {/* 오른쪽: 방문자 통계 */}
-        <div className="statistics-section">
-          <h2>방문자 통계</h2>
-          <div className="stats-cards">
-            <div className="stat-card">
-              <div className="stat-label">오늘</div>
-              <div className="stat-value">{visitorStats.today.toLocaleString()}</div>
-              <div className="stat-desc">명 방문</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">최근 7일</div>
-              <div className="stat-value">{visitorStats.last7Days.toLocaleString()}</div>
-              <div className="stat-desc">명 방문</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">최근 30일</div>
-              <div className="stat-value">{visitorStats.last30Days.toLocaleString()}</div>
-              <div className="stat-desc">명 방문</div>
-            </div>
-          </div>
-          <div className="stats-info">
-            <p>📊 방문자 통계는 로컬 스토리지 기반으로 집계됩니다.</p>
-            <p>더 정확한 통계를 위해 Google Analytics 4를 설정할 수 있습니다.</p>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
