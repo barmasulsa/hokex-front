@@ -97,12 +97,12 @@ export function LoginPage() {
         <div className="login-content">
           <h2>로그인</h2>
           <p className="login-description">
-            HOKEX는 뉴스레터 구독자 전용 서비스입니다.
+            HOKEX는 카페인판다 뉴스레터 구독자 전용 서비스입니다.
           </p>
 
           <form onSubmit={handlePasswordLogin} className="login-form">
             <div className="form-group">
-              <label htmlFor="email">이메일</label>
+              <label htmlFor="email">구독 이메일</label>
               <input
                 type="email"
                 id="email"
