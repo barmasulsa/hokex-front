@@ -4,7 +4,7 @@ import { EventCard } from '../components/EventCard';
 import { Banner } from '../components/Banner';
 import { fetchEvents } from '../services/eventService';
 import { useAuth } from '../contexts/AuthContext';
-import type { EventRecord, Venue, FilterCriteria } from '../types/core';
+import type { EventRecord, Venue } from '../types/core';
 import { Region, Category, REGION_VENUE_MAP } from '../types/core';
 import { FilterEngine } from '../utils/filterEngine';
 
@@ -60,9 +60,9 @@ export function HomePage() {
   
   // 필터 상태
   const [selectedRegion, setSelectedRegion] = useState<Region | '전체'>(initialState?.selectedRegion || '전체');
-  const [selectedVenue, setSelectedVenue] = useState<Venue | '전체'>(initialState?.selectedVenue || '전체');
+  const [selectedVenues, setSelectedVenues] = useState<Venue[]>(initialState?.selectedVenues || []); // 배열로 변경
   const [selectedMonth, setSelectedMonth] = useState<string | '전체'>(initialState?.selectedMonth || '전체');
-  const [selectedCategory, setSelectedCategory] = useState<Category | '전체'>(initialState?.selectedCategory || '전체');
+  const [selectedCategories, setSelectedCategories] = useState<Category[]>(initialState?.selectedCategories || []); // 배열로 변경
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>(initialState?.selectedIndustries || []);
   const [searchQuery, setSearchQuery] = useState<string>(initialState?.searchQuery || '');
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(initialState?.dateRange || null);
@@ -107,9 +107,9 @@ export function HomePage() {
   useEffect(() => {
     const filterState = {
       selectedRegion,
-      selectedVenue,
+      selectedVenues, // 변경
       selectedMonth,
-      selectedCategory,
+      selectedCategories, // 변경
       selectedIndustries,
       searchQuery,
       dateRange,
@@ -117,31 +117,79 @@ export function HomePage() {
       showCurrentOnly
     };
     sessionStorage.setItem('homeFilterState', JSON.stringify(filterState));
-  }, [selectedRegion, selectedVenue, selectedMonth, selectedCategory, selectedIndustries, searchQuery, dateRange, expandedRegion, showCurrentOnly]);
+  }, [selectedRegion, selectedVenues, selectedMonth, selectedCategories, selectedIndustries, searchQuery, dateRange, expandedRegion, showCurrentOnly]);
 
   useEffect(() => {
-    const criteria: FilterCriteria = {
-      region: selectedRegion,
-      venue: selectedVenue,
-      month: selectedMonth,
-      category: selectedCategory,
-      industries: selectedIndustries.length > 0 ? selectedIndustries : undefined,
-    };
-
     console.log('[HomePage] Filtering with:', {
-      venue: selectedVenue,
+      venues: selectedVenues,
+      categories: selectedCategories,
       month: selectedMonth,
       showCurrentOnly,
       dateRange,
       totalEvents: events.length
     });
 
-    // showCurrentOnly가 true이고 날짜 범위가 설정되지 않았을 때만 과거 행사 필터링
-    let processed = (showCurrentOnly && !dateRange)
-      ? FilterEngine.process(events, criteria)
-      : FilterEngine.applyFilters(events, criteria);
+    // 기본 필터링 (과거 행사 제외)
+    let processed = events;
     
-    console.log('[HomePage] After initial filter:', processed.length);
+    // showCurrentOnly가 true이고 날짜 범위가 설정되지 않았을 때만 과거 행사 필터링
+    if (showCurrentOnly && !dateRange) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      processed = processed.filter(event => {
+        const eventEnd = new Date(event.endDate);
+        eventEnd.setHours(0, 0, 0, 0);
+        return eventEnd >= today;
+      });
+    }
+    
+    console.log('[HomePage] After showCurrentOnly filter:', processed.length);
+    
+    // 지역 필터링
+    if (selectedRegion !== '전체') {
+      processed = processed.filter(event => event.region === selectedRegion);
+    }
+    
+    // 다중 venue 필터링
+    if (selectedVenues.length > 0) {
+      processed = processed.filter(event => selectedVenues.includes(event.venue as Venue));
+    }
+    
+    console.log('[HomePage] After venue filter:', processed.length);
+    
+    // 월 필터링
+    if (selectedMonth !== '전체') {
+      processed = processed.filter(event => {
+        const eventStart = new Date(event.startDate).toISOString().substring(0, 7); // YYYY-MM
+        const eventEnd = new Date(event.endDate).toISOString().substring(0, 7);
+        return eventStart <= selectedMonth && eventEnd >= selectedMonth;
+      });
+    }
+    
+    // 다중 category 필터링
+    if (selectedCategories.length > 0) {
+      processed = processed.filter(event => {
+        if (!event.category) return false;
+        const eventCategories: string[] = Array.isArray(event.category) ? event.category : [event.category];
+        return eventCategories.some((cat: string) => selectedCategories.includes(cat as Category));
+      });
+    }
+    
+    console.log('[HomePage] After category filter:', processed.length);
+    
+    // 전시품목 필터링
+    if (selectedIndustries.length > 0) {
+      processed = processed.filter(event => {
+        if (!event.exhibitItems) return false;
+        // exhibitItems는 string 타입이므로 배열로 변환
+        const items: string[] = Array.isArray(event.exhibitItems) 
+          ? event.exhibitItems 
+          : [event.exhibitItems];
+        return items.some((item: string) => selectedIndustries.includes(item));
+      });
+    }
+    
+    console.log('[HomePage] After industry filter:', processed.length);
     
     // 날짜 범위 필터링
     if (dateRange) {
@@ -150,17 +198,14 @@ export function HomePage() {
       processed = processed.filter(event => {
         const eventStart = new Date(event.startDate);
         const eventEnd = new Date(event.endDate);
-        // 행사 기간이 선택한 날짜 범위와 겹치는지 확인
         return eventStart <= endDate && eventEnd >= startDate;
       });
-      // 날짜 범위 설정 시 정렬
       processed = FilterEngine.sortByStartDate(processed);
     } else if (!showCurrentOnly) {
-      // "전체" 선택 시 정렬
       processed = FilterEngine.sortByStartDate(processed);
     }
     
-    // 검색어 필터링 (행사명만)
+    // 검색어 필터링
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       processed = processed.filter(event => 
@@ -170,23 +215,15 @@ export function HomePage() {
     
     console.log('[HomePage] Final filtered:', processed.length);
     
-    // ID 기준으로 중복 제거 (같은 행사가 여러 품목으로 중복 표시되는 것 방지)
+    // ID 기준으로 중복 제거
     const uniqueEvents = Array.from(
       new Map(processed.map(event => [event.id, event])).values()
     );
     
     console.log('[HomePage] After deduplication:', uniqueEvents.length);
     
-    // 엑스코 6월 이후 확인
-    if (selectedVenue === '엑스코' || selectedVenue === '전체') {
-      const excoAfterMay = uniqueEvents.filter(e => 
-        e.venue === '엑스코' && e.startDate >= new Date('2026-06-01')
-      );
-      console.log('[HomePage] EXCO after May in final:', excoAfterMay.length);
-    }
-    
     setFilteredEvents(uniqueEvents);
-  }, [events, selectedRegion, selectedVenue, selectedMonth, selectedCategory, selectedIndustries, searchQuery, dateRange, showCurrentOnly]);
+  }, [events, selectedRegion, selectedVenues, selectedMonth, selectedCategories, selectedIndustries, searchQuery, dateRange, showCurrentOnly]);
 
   const handleSave = (eventId: string) => {
     setEvents(prev => prev.map(event => 
@@ -203,6 +240,26 @@ export function HomePage() {
         : event
     ));
     console.log(`Edited event ${eventId}: ${field} = ${value}`);
+  };
+
+  const handleVenueToggle = (venue: Venue) => {
+    if (selectedVenues.includes(venue)) {
+      // 이미 선택된 경우 제거
+      setSelectedVenues(selectedVenues.filter(v => v !== venue));
+    } else {
+      // 선택되지 않은 경우 추가
+      setSelectedVenues([...selectedVenues, venue]);
+    }
+  };
+
+  const handleCategoryToggle = (category: Category) => {
+    if (selectedCategories.includes(category)) {
+      // 이미 선택된 경우 제거
+      setSelectedCategories(selectedCategories.filter(c => c !== category));
+    } else {
+      // 선택되지 않은 경우 추가
+      setSelectedCategories([...selectedCategories, category]);
+    }
   };
 
   const handleIndustryToggle = (industry: string) => {
@@ -432,15 +489,35 @@ export function HomePage() {
 
           {/* 지역 섹션 (아코디언) */}
           <div className="sidebar-section">
-            <h3 className="sidebar-title">지역</h3>
+            <div className="sidebar-title-row">
+              <h3 className="sidebar-title">
+                지역
+                {selectedVenues.length > 0 && (
+                  <span className="selected-count-inline"> ({selectedVenues.length})</span>
+                )}
+              </h3>
+              {selectedVenues.length > 0 && (
+                <button 
+                  className="reset-btn-sidebar"
+                  onClick={() => {
+                    setSelectedVenues([]);
+                    setSelectedRegion('전체');
+                    setExpandedRegion(null);
+                  }}
+                  title="초기화"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
             <div className="region-accordion">
               {/* 전체 버튼 */}
               <div className="accordion-item">
                 <button
-                  className={`accordion-header ${selectedRegion === '전체' && selectedVenue === '전체' ? 'expanded' : ''}`}
+                  className={`accordion-header ${selectedRegion === '전체' && selectedVenues.length === 0 ? 'expanded' : ''}`}
                   onClick={() => {
                     setSelectedRegion('전체');
-                    setSelectedVenue('전체');
+                    setSelectedVenues([]);
                     setExpandedRegion(null);
                   }}
                 >
@@ -475,11 +552,8 @@ export function HomePage() {
                         {venues.map((venue) => (
                           <button
                             key={venue}
-                            className={`venue-btn ${selectedVenue === venue ? 'active' : ''}`}
-                            onClick={() => {
-                              setSelectedVenue(venue);
-                              setSelectedRegion(region);
-                            }}
+                            className={`venue-btn ${selectedVenues.includes(venue) ? 'active' : ''}`}
+                            onClick={() => handleVenueToggle(venue)}
                           >
                             {venue}
                           </button>
@@ -494,33 +568,49 @@ export function HomePage() {
 
           {/* 행사 카테고리 섹션 */}
           <div className="sidebar-section">
-            <h3 className="sidebar-title">행사 카테고리</h3>
+            <div className="sidebar-title-row">
+              <h3 className="sidebar-title">
+                행사 카테고리
+                {selectedCategories.length > 0 && (
+                  <span className="selected-count-inline"> ({selectedCategories.length})</span>
+                )}
+              </h3>
+              {selectedCategories.length > 0 && (
+                <button 
+                  className="reset-btn-sidebar"
+                  onClick={() => setSelectedCategories([])}
+                  title="초기화"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
             <div className="category-container" data-version="v2">
               {/* 전체 버튼 (첫 번째 줄) */}
               <button
-                className={`filter-btn-sidebar ${selectedCategory === '전체' ? 'active' : ''}`}
-                onClick={() => setSelectedCategory('전체')}
+                className={`filter-btn-sidebar ${selectedCategories.length === 0 ? 'active' : ''}`}
+                onClick={() => setSelectedCategories([])}
               >
                 전체
               </button>
               
-              {/* 나머지 카테고리 버튼 (두 번째 줄) */}
+              {/* 나머지 카테고리 버튼 (두 번째 줄) - 다중 선택 가능 */}
               <div className="category-buttons-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                 <button
-                  className={`filter-btn-sidebar ${selectedCategory === '전시' ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory('전시')}
+                  className={`filter-btn-sidebar ${selectedCategories.includes('전시') ? 'active' : ''}`}
+                  onClick={() => handleCategoryToggle('전시')}
                 >
                   전시
                 </button>
                 <button
-                  className={`filter-btn-sidebar ${selectedCategory === '회의' ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory('회의')}
+                  className={`filter-btn-sidebar ${selectedCategories.includes('회의') ? 'active' : ''}`}
+                  onClick={() => handleCategoryToggle('회의')}
                 >
                   회의
                 </button>
                 <button
-                  className={`filter-btn-sidebar ${selectedCategory === '행사/공연' ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory('행사/공연')}
+                  className={`filter-btn-sidebar ${selectedCategories.includes('행사/공연') ? 'active' : ''}`}
+                  onClick={() => handleCategoryToggle('행사/공연')}
                 >
                   행사/공연
                 </button>
