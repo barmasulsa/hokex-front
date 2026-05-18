@@ -115,13 +115,13 @@ export function LoginPage() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="password">비밀번호</label>
+              <label htmlFor="password">호켁스 비밀번호</label>
               <input
                 type="password"
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="비밀번호"
+                placeholder="호켁스 비밀번호"
                 required
                 disabled={isSubmitting}
               />
@@ -131,7 +131,7 @@ export function LoginPage() {
                 onClick={handleForgotPassword}
                 disabled={isSubmitting}
               >
-                비밀번호를 잊으셨나요?
+                비밀번호 설정(첫 로그인 후 가능) 및 찾기
               </button>
             </div>
 

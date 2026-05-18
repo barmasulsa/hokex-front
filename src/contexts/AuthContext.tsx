@@ -136,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     alert('네이버 로그인은 아직 구현되지 않았습니다.');
   };
 
-  /* 스티비 구독자 확인 (임시 비활성화)
+  // 스티비 구독자 확인
   const checkSubscription = async (email: string): Promise<boolean> => {
     try {
       console.log('Checking subscription for:', email);
@@ -145,8 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: { email },
       });
 
-      console.log('Edge Function response:', { data, error });
-      console.log('Raw Stibee data:', data?.rawData); // 디버깅용
+      console.log('Edge Function response:', data);
 
       if (error) {
         console.error('Error checking subscription:', error);
@@ -162,21 +161,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
   };
-  */
 
   // 비밀번호 로그인 - 구독자만 허용
   const signInWithPassword = async (email: string, password: string) => {
-    // 임시: Stibee 체크 비활성화 (API 응답 구조 확인 필요)
-    console.warn('⚠️ Stibee subscription check temporarily disabled');
-    
-    /*
     // 1. 먼저 스티비 구독자인지 확인
     const isSubscriber = await checkSubscription(email);
     
     if (!isSubscriber) {
       throw new Error('SUBSCRIBER_ONLY');
     }
-    */
 
     // 2. 비밀번호 로그인 진행
     const { error } = await supabase.auth.signInWithPassword({
@@ -192,17 +185,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // 비밀번호 재설정 이메일 전송 - 구독자만 허용
   const resetPassword = async (email: string) => {
-    // 임시: Stibee 체크 비활성화 (API 응답 구조 확인 필요)
-    console.warn('⚠️ Stibee subscription check temporarily disabled');
-    
-    /*
     // 1. 먼저 스티비 구독자인지 확인
     const isSubscriber = await checkSubscription(email);
     
     if (!isSubscriber) {
       throw new Error('SUBSCRIBER_ONLY');
     }
-    */
 
     // 비밀번호 재설정 이메일 전송
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -217,17 +205,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Magic Link 로그인 (이메일 전용) - 구독자만 허용
   const signInWithMagicLink = async (email: string) => {
-    // 임시: Stibee 체크 비활성화 (API 응답 구조 확인 필요)
-    console.warn('⚠️ Stibee subscription check temporarily disabled');
-    
-    /*
     // 1. 먼저 스티비 구독자인지 확인
     const isSubscriber = await checkSubscription(email);
     
     if (!isSubscriber) {
       throw new Error('SUBSCRIBER_ONLY');
     }
-    */
 
     // Magic Link 전송
     const { error } = await supabase.auth.signInWithOtp({
