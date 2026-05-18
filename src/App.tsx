@@ -1,15 +1,23 @@
 import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { HomePage } from './pages/HomePage';
 import { EventDetailPage } from './pages/EventDetailPage';
 import { UserProfilePage } from './pages/UserProfilePage';
 import { LoginPage } from './pages/LoginPage';
 import { BannerManagementPage } from './pages/BannerManagementPage';
+import { initGA4, recordVisit } from './utils/analytics';
 import './App.css';
 
 function AppContent() {
   const { user, isAdmin, loading, signOut, userProfile, toggleAdminMode } = useAuth();
   const navigate = useNavigate();
+
+  // GA4 초기화 및 방문 기록
+  useEffect(() => {
+    initGA4();
+    recordVisit();
+  }, []);
 
   const handleSignOut = async () => {
     try {

@@ -4,6 +4,7 @@ import { EventCard } from '../components/EventCard';
 import { Banner } from '../components/Banner';
 import { fetchEvents } from '../services/eventService';
 import { useAuth } from '../contexts/AuthContext';
+import { getVisitorStats, type VisitorStats } from '../utils/analytics';
 import type { EventRecord, Venue } from '../types/core';
 import { Region, Category, REGION_VENUE_MAP } from '../types/core';
 import { FilterEngine } from '../utils/filterEngine';
@@ -35,6 +36,11 @@ export function HomePage() {
   const navigate = useNavigate();
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [visitorStats, setVisitorStats] = useState<VisitorStats>({
+    today: 0,
+    last7Days: 0,
+    last30Days: 0
+  });
 
   // 로그인 체크 - 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트
   useEffect(() => {
@@ -82,6 +88,20 @@ export function HomePage() {
       setLoading(false);
     }
     loadEvents();
+  }, []);
+
+  // 방문자 통계 가져오기
+  useEffect(() => {
+    const stats = getVisitorStats();
+    setVisitorStats(stats);
+    
+    // 1분마다 통계 업데이트
+    const interval = setInterval(() => {
+      const updatedStats = getVisitorStats();
+      setVisitorStats(updatedStats);
+    }, 60000); // 60초
+    
+    return () => clearInterval(interval);
   }, []);
 
   // 스크롤 위치 복원 (데이터 로딩 완료 후)
@@ -702,17 +722,17 @@ export function HomePage() {
             <div className="stats-sidebar-cards">
               <div className="stats-sidebar-card">
                 <div className="stats-sidebar-label">오늘</div>
-                <div className="stats-sidebar-value">-</div>
+                <div className="stats-sidebar-value">{visitorStats.today.toLocaleString()}</div>
                 <div className="stats-sidebar-unit">명 방문</div>
               </div>
               <div className="stats-sidebar-card">
                 <div className="stats-sidebar-label">최근 7일</div>
-                <div className="stats-sidebar-value">-</div>
+                <div className="stats-sidebar-value">{visitorStats.last7Days.toLocaleString()}</div>
                 <div className="stats-sidebar-unit">명 방문</div>
               </div>
               <div className="stats-sidebar-card">
                 <div className="stats-sidebar-label">최근 30일</div>
-                <div className="stats-sidebar-value">-</div>
+                <div className="stats-sidebar-value">{visitorStats.last30Days.toLocaleString()}</div>
                 <div className="stats-sidebar-unit">명 방문</div>
               </div>
             </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchAllBanners, createBanner, updateBanner, deleteBanner } from '../services/bannerService';
+import { getVisitorStats, type VisitorStats } from '../utils/analytics';
 import type { Banner, BannerType } from '../types/banner';
 import './BannerManagementPage.css';
 
@@ -14,6 +15,11 @@ export function BannerManagementPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState<BannerType>('image'); // 탭 상태
+  const [visitorStats, setVisitorStats] = useState<VisitorStats>({
+    today: 0,
+    last7Days: 0,
+    last30Days: 0
+  });
 
   // 새 배너 폼 상태
   const [formData, setFormData] = useState({
@@ -36,6 +42,20 @@ export function BannerManagementPage() {
   // 배너 목록 로드
   useEffect(() => {
     loadBanners();
+  }, []);
+
+  // 방문자 통계 가져오기
+  useEffect(() => {
+    const stats = getVisitorStats();
+    setVisitorStats(stats);
+    
+    // 1분마다 통계 업데이트
+    const interval = setInterval(() => {
+      const updatedStats = getVisitorStats();
+      setVisitorStats(updatedStats);
+    }, 60000); // 60초
+    
+    return () => clearInterval(interval);
   }, []);
 
   const loadBanners = async () => {
@@ -481,23 +501,23 @@ export function BannerManagementPage() {
           <div className="stats-cards">
             <div className="stat-card">
               <div className="stat-label">오늘</div>
-              <div className="stat-value">-</div>
+              <div className="stat-value">{visitorStats.today.toLocaleString()}</div>
               <div className="stat-desc">명 방문</div>
             </div>
             <div className="stat-card">
               <div className="stat-label">최근 7일</div>
-              <div className="stat-value">-</div>
+              <div className="stat-value">{visitorStats.last7Days.toLocaleString()}</div>
               <div className="stat-desc">명 방문</div>
             </div>
             <div className="stat-card">
               <div className="stat-label">최근 30일</div>
-              <div className="stat-value">-</div>
+              <div className="stat-value">{visitorStats.last30Days.toLocaleString()}</div>
               <div className="stat-desc">명 방문</div>
             </div>
           </div>
           <div className="stats-info">
-            <p>📊 Google Analytics 4를 설정하면 실시간 방문자 통계를 확인할 수 있습니다.</p>
-            <p>설정 방법은 개발자에게 문의하세요.</p>
+            <p>📊 방문자 통계는 로컬 스토리지 기반으로 집계됩니다.</p>
+            <p>더 정확한 통계를 위해 Google Analytics 4를 설정할 수 있습니다.</p>
           </div>
         </div>
       </div>
