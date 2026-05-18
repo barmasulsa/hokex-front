@@ -771,6 +771,11 @@ body {
   color: white;
 }
 
+.stats-sidebar-card-online {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important;
+  box-shadow: 0 4px 12px rgba(67, 233, 123, 0.3);
+}
+
 .stats-sidebar-card:nth-child(2) {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
@@ -779,17 +784,50 @@ body {
   background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
 
+.stats-sidebar-card:nth-child(4) {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
 .stats-sidebar-label {
   font-size: 12px;
   font-weight: 500;
   opacity: 0.9;
   margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.online-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
 }
 
 .stats-sidebar-value {
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 2px;
+}
+
+.stats-sidebar-value-online {
+  font-size: 36px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .stats-sidebar-unit {

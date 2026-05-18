@@ -5,6 +5,7 @@ import { Banner } from '../components/Banner';
 import { fetchEvents } from '../services/eventService';
 import { useAuth } from '../contexts/AuthContext';
 import { getVisitorStats, type VisitorStats } from '../utils/analytics';
+import { PresenceManager } from '../utils/onlinePresence';
 import type { EventRecord, Venue } from '../types/core';
 import { Region, Category, REGION_VENUE_MAP } from '../types/core';
 import { FilterEngine } from '../utils/filterEngine';
@@ -41,6 +42,7 @@ export function HomePage() {
     last7Days: 0,
     last30Days: 0
   });
+  const [onlineCount, setOnlineCount] = useState<number>(0);
 
   // 로그인 체크 - 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트
   useEffect(() => {
@@ -102,6 +104,21 @@ export function HomePage() {
     }, 60000); // 60초
     
     return () => clearInterval(interval);
+  }, []);
+
+  // 현재 접속 인원 추적 (Supabase Realtime)
+  useEffect(() => {
+    const presenceManager = new PresenceManager();
+    
+    // Presence 시작
+    presenceManager.start((count) => {
+      setOnlineCount(count);
+    });
+    
+    // 컴포넌트 언마운트 시 정리
+    return () => {
+      presenceManager.stop();
+    };
   }, []);
 
   // 스크롤 위치 복원 (데이터 로딩 완료 후)
@@ -720,6 +737,14 @@ export function HomePage() {
           <div className="stats-sidebar-section">
             <h3 className="stats-sidebar-title">📊 방문자 통계</h3>
             <div className="stats-sidebar-cards">
+              <div className="stats-sidebar-card stats-sidebar-card-online">
+                <div className="stats-sidebar-label">
+                  <span className="online-indicator"></span>
+                  현재 접속
+                </div>
+                <div className="stats-sidebar-value stats-sidebar-value-online">{onlineCount.toLocaleString()}</div>
+                <div className="stats-sidebar-unit">명 온라인</div>
+              </div>
               <div className="stats-sidebar-card">
                 <div className="stats-sidebar-label">오늘</div>
                 <div className="stats-sidebar-value">{visitorStats.today.toLocaleString()}</div>
