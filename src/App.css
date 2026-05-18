@@ -542,7 +542,6 @@ body {
 .main-content-area {
   flex: 1;
   min-width: 0;
-  padding-top: 1.5rem; /* 사이드바와 동일한 상단 패딩 */
 }
 
 /* 필터 바 */
