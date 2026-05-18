@@ -6,8 +6,7 @@
   gap: 15px;
   margin: 0;
   padding: 0;
-  position: sticky;
-  top: 100px; /* 사이드바와 동일한 sticky 위치 */
+  /* sticky 제거 - 일반 플로우로 배치 */
 }
 
 /* 개별 배너 섹션 - 사이드바와 동일한 스타일 */
