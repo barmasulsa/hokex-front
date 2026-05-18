@@ -1,6 +1,6 @@
 // 현재 접속 인원 추적 유틸리티 (Supabase Realtime)
 
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 // 세션 ID 생성 또는 가져오기
@@ -122,8 +122,8 @@ export function subscribeToOnlineUsers(
 
 // Presence 관리 클래스
 export class PresenceManager {
-  private heartbeatInterval: NodeJS.Timeout | null = null;
-  private cleanupInterval: NodeJS.Timeout | null = null;
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+  private cleanupInterval: ReturnType<typeof setInterval> | null = null;
   private channel: RealtimeChannel | null = null;
   
   // 시작
@@ -180,12 +180,7 @@ export class PresenceManager {
   }
   
   private handleBeforeUnload = () => {
-    // 동기적으로 세션 삭제 (navigator.sendBeacon 사용)
-    const sessionId = getSessionId();
-    const url = `${supabase.supabaseUrl}/rest/v1/online_users?session_id=eq.${sessionId}`;
-    
-    navigator.sendBeacon(url, JSON.stringify({
-      method: 'DELETE'
-    }));
+    // 페이지 종료 시 세션 삭제 시도 (비동기이지만 최선을 다함)
+    removePresence();
   };
 }
