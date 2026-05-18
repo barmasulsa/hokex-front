@@ -5,6 +5,7 @@ import { HomePage } from './pages/HomePage';
 import { EventDetailPage } from './pages/EventDetailPage';
 import { UserProfilePage } from './pages/UserProfilePage';
 import { LoginPage } from './pages/LoginPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { BannerManagementPage } from './pages/BannerManagementPage';
 import { initGA4, recordVisit } from './utils/analytics';
 import { recordDetailedVisit } from './utils/detailedAnalytics';
@@ -91,6 +92,7 @@ function AppContent() {
         <Route path="/event/:id" element={<EventDetailPage />} />
         <Route path="/profile" element={<UserProfilePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/admin/banners" element={<BannerManagementPage />} />
       </Routes>
     </div>
