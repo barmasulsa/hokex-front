@@ -277,7 +277,7 @@ export function HomePage() {
 
   return (
     <>
-      {/* 메인 컨텐츠 영역 (사이드바 + 행사 그리드) */}
+      {/* 메인 컨텐츠 영역 (사이드바 + 행사 그리드 + 통계 사이드바) */}
       <div className="main-content-wrapper">
         {/* 왼쪽 사이드바 - 기간 + 검색 필터 */}
         <aside className="filter-sidebar">
@@ -667,28 +667,6 @@ export function HomePage() {
           {/* 배너 영역 */}
           <Banner />
 
-          {/* 방문자 통계 */}
-          <div className="visitor-statistics">
-            <h3 className="stats-title">📊 방문자 통계</h3>
-            <div className="stats-grid">
-              <div className="stat-box">
-                <div className="stat-period">오늘</div>
-                <div className="stat-number">-</div>
-                <div className="stat-unit">명</div>
-              </div>
-              <div className="stat-box">
-                <div className="stat-period">7일</div>
-                <div className="stat-number">-</div>
-                <div className="stat-unit">명</div>
-              </div>
-              <div className="stat-box">
-                <div className="stat-period">30일</div>
-                <div className="stat-number">-</div>
-                <div className="stat-unit">명</div>
-              </div>
-            </div>
-          </div>
-
           {/* 결과 카운트 배너 */}
           <div className="results-count-banner">
             <p>{filteredEvents.length}개의 행사</p>
@@ -716,6 +694,30 @@ export function HomePage() {
             )}
           </div>
         </div>
+
+        {/* 오른쪽 사이드바 - 방문자 통계 */}
+        <aside className="stats-sidebar">
+          <div className="stats-sidebar-section">
+            <h3 className="stats-sidebar-title">📊 방문자 통계</h3>
+            <div className="stats-sidebar-cards">
+              <div className="stats-sidebar-card">
+                <div className="stats-sidebar-label">오늘</div>
+                <div className="stats-sidebar-value">-</div>
+                <div className="stats-sidebar-unit">명 방문</div>
+              </div>
+              <div className="stats-sidebar-card">
+                <div className="stats-sidebar-label">최근 7일</div>
+                <div className="stats-sidebar-value">-</div>
+                <div className="stats-sidebar-unit">명 방문</div>
+              </div>
+              <div className="stats-sidebar-card">
+                <div className="stats-sidebar-label">최근 30일</div>
+                <div className="stats-sidebar-value">-</div>
+                <div className="stats-sidebar-unit">명 방문</div>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
     </>
   );
