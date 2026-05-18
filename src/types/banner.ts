@@ -9,6 +9,7 @@ export interface Banner {
   link_url?: string; // 이미지 배너 클릭 시 이동할 URL
   is_active: boolean;
   display_order: number;
+  view_count?: number; // 공지사항 조회수
   created_at: string;
   updated_at: string;
 }

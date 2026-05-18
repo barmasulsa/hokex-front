@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchActiveBanners } from '../services/bannerService';
+import { supabase } from '../services/supabase';
 import type { Banner as BannerType } from '../types/banner';
 import './Banner.css';
 
@@ -74,10 +75,17 @@ export function Banner() {
     return () => clearInterval(interval);
   }, [youtubeBanners.length]);
 
-  // 모달 열기
-  const openModal = (title: string, content: string) => {
+  // 모달 열기 및 조회수 증가
+  const openModal = async (bannerId: string, title: string, content: string) => {
     setModalContent({ title, content });
     setIsModalOpen(true);
+
+    // 조회수 증가
+    try {
+      await supabase.rpc('increment_banner_view_count', { banner_id: parseInt(bannerId) });
+    } catch (error) {
+      console.error('Failed to increment view count:', error);
+    }
   };
 
   // 모달 닫기
@@ -230,7 +238,7 @@ export function Banner() {
                 <div 
                   key={banner.id}
                   className="notice-item"
-                  onClick={() => openModal(banner.title, banner.content)}
+                  onClick={() => openModal(banner.id, banner.title, banner.content)}
                 >
                   <span className="notice-number">{index + 1}</span>
                   <span className="notice-item-title">{banner.title}</span>

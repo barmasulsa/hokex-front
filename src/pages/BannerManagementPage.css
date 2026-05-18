@@ -341,3 +341,122 @@
   font-size: 13px;
   color: #666;
 }
+
+/* 레이아웃: 왼쪽 배너 관리, 오른쪽 통계 */
+.management-layout {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 30px;
+  align-items: start;
+}
+
+.banner-management-section {
+  min-width: 0; /* 그리드 오버플로우 방지 */
+}
+
+/* 방문자 통계 섹션 */
+.statistics-section {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 25px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 20px;
+}
+
+.statistics-section h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.stats-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  padding: 20px;
+  color: white;
+  text-align: center;
+}
+
+.stat-card:nth-child(2) {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-card:nth-child(3) {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.stat-desc {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.stats-info {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 15px;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.stats-info p {
+  margin: 0 0 8px 0;
+}
+
+.stats-info p:last-child {
+  margin-bottom: 0;
+}
+
+/* 조회수 셀 스타일 */
+.view-count-cell {
+  font-weight: 600;
+  color: #007bff;
+}
+
+/* 반응형: 작은 화면에서는 세로 배치 */
+@media (max-width: 1024px) {
+  .management-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .statistics-section {
+    position: static;
+  }
+
+  .stats-cards {
+    flex-direction: row;
+  }
+
+  .stat-card {
+    flex: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-cards {
+    flex-direction: column;
+  }
+}

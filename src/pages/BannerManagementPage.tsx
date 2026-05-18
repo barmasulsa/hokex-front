@@ -236,8 +236,11 @@ export function BannerManagementPage() {
         <h1>배너 관리</h1>
       </div>
 
-      {/* 탭 네비게이션 */}
-      <div className="banner-tabs">
+      <div className="management-layout">
+        {/* 왼쪽: 배너 관리 */}
+        <div className="banner-management-section">
+          {/* 탭 네비게이션 */}
+          <div className="banner-tabs">
         <button
           className={`tab-btn ${activeTab === 'image' ? 'active' : ''}`}
           onClick={() => setActiveTab('image')}
@@ -412,6 +415,7 @@ export function BannerManagementPage() {
                 <th>순서</th>
                 <th>제목</th>
                 <th>내용</th>
+                {activeTab === 'text' && <th>조회수</th>}
                 {activeTab === 'image' && <th>링크 URL</th>}
                 <th>상태</th>
                 <th>작업</th>
@@ -431,6 +435,11 @@ export function BannerManagementPage() {
                       banner.content.substring(0, 30) + (banner.content.length > 30 ? '...' : '')
                     )}
                   </td>
+                  {activeTab === 'text' && (
+                    <td className="view-count-cell">
+                      {(banner as any).view_count || 0}
+                    </td>
+                  )}
                   {activeTab === 'image' && (
                     <td className="content-cell">
                       {banner.link_url ? (
@@ -463,6 +472,34 @@ export function BannerManagementPage() {
             </tbody>
           </table>
         )}
+      </div>
+        </div>
+
+        {/* 오른쪽: 방문자 통계 */}
+        <div className="statistics-section">
+          <h2>방문자 통계</h2>
+          <div className="stats-cards">
+            <div className="stat-card">
+              <div className="stat-label">오늘</div>
+              <div className="stat-value">-</div>
+              <div className="stat-desc">명 방문</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">최근 7일</div>
+              <div className="stat-value">-</div>
+              <div className="stat-desc">명 방문</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">최근 30일</div>
+              <div className="stat-value">-</div>
+              <div className="stat-desc">명 방문</div>
+            </div>
+          </div>
+          <div className="stats-info">
+            <p>📊 Google Analytics 4를 설정하면 실시간 방문자 통계를 확인할 수 있습니다.</p>
+            <p>설정 방법은 개발자에게 문의하세요.</p>
+          </div>
+        </div>
       </div>
     </div>
   );
