@@ -31,7 +31,7 @@ const INDUSTRIES = [
 ];
 
 export function HomePage() {
-  const { user, loading: authLoading, isAdmin, userProfile, toggleAdminMode } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
