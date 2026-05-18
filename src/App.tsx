@@ -7,7 +7,7 @@ import { LoginPage } from './pages/LoginPage';
 import './App.css';
 
 function AppContent() {
-  const { user, isAdmin, loading, signOut } = useAuth();
+  const { user, isAdmin, loading, signOut, userProfile, toggleAdminMode } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -47,6 +47,15 @@ function AppContent() {
                 <span className="admin-badge">관리자</span>
               )}
               <span className="user-email">{user.email}</span>
+              {userProfile?.is_admin && (
+                <button
+                  onClick={toggleAdminMode}
+                  className="admin-toggle-btn"
+                  title={isAdmin ? '관리자 모드 끄기' : '관리자 모드 켜기'}
+                >
+                  {isAdmin ? '✏️' : '👀'}
+                </button>
+              )}
               <button 
                 className="logout-btn"
                 onClick={handleSignOut}

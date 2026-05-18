@@ -220,42 +220,6 @@ export function HomePage() {
 
   return (
     <>
-      {/* 관리자 모드 토글 */}
-      {userProfile?.is_admin && (
-        <div className="admin-notice" style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          padding: '12px 20px'
-        }}>
-          <span>
-            {isAdmin ? '✏️ 관리자 모드: 행사 정보를 클릭하여 수정할 수 있습니다' : '👀 일반 사용자 모드'}
-          </span>
-          <button
-            onClick={toggleAdminMode}
-            style={{
-              padding: '8px 16px',
-              background: isAdmin ? '#dc3545' : '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '600',
-              transition: 'all 0.2s'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.opacity = '0.9';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.opacity = '1';
-            }}
-          >
-            {isAdmin ? '관리자 모드 끄기' : '관리자 모드 켜기'}
-          </button>
-        </div>
-      )}
-
       {/* 메인 컨텐츠 영역 (사이드바 + 행사 그리드) */}
       <div className="main-content-wrapper">
         {/* 왼쪽 사이드바 - 기간 + 검색 필터 */}
