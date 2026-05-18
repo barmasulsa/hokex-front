@@ -43,7 +43,18 @@ export function Banner() {
   }
 
   if (banners.length === 0) {
-    return null; // 배너가 없으면 아무것도 표시하지 않음
+    // 배너가 없을 때 빈 공간 표시
+    return (
+      <div className="banner-container empty">
+        <div className="banner-empty-state">
+          <p className="empty-icon">🎨</p>
+          <p className="empty-title">배너 영역</p>
+          <p className="empty-description">
+            이미지 배너, YouTube 영상, 텍스트 공지를 추가할 수 있습니다
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const currentBanner = banners[currentIndex];

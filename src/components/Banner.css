@@ -5,7 +5,7 @@
   overflow: hidden;
   margin: 20px 0;
   position: relative;
-  min-height: 120px;
+  min-height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16,6 +16,35 @@
 .banner-container.loading {
   color: #666;
   font-size: 14px;
+}
+
+.banner-container.empty {
+  background: white;
+  border: 2px dashed #ddd;
+  min-height: 200px;
+}
+
+.banner-empty-state {
+  text-align: center;
+  color: #999;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.empty-description {
+  font-size: 14px;
+  color: #999;
+  line-height: 1.5;
 }
 
 /* 이미지 배너 */
