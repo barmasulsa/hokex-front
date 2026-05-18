@@ -13,6 +13,7 @@ export function BannerManagementPage() {
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState<BannerType>('image'); // 탭 상태
 
   // 새 배너 폼 상태
   const [formData, setFormData] = useState({
@@ -44,16 +45,16 @@ export function BannerManagementPage() {
     setLoading(false);
   };
 
-  const handleCreate = () => {
+  const handleCreate = (type: BannerType) => {
     setIsCreating(true);
     setEditingBanner(null);
     setFormData({
-      type: 'image',
+      type: type,
       title: '',
       content: '',
       link_url: '',
       is_active: true,
-      display_order: banners.length
+      display_order: banners.filter(b => b.type === type).length
     });
   };
 
@@ -226,32 +227,57 @@ export function BannerManagementPage() {
     return null;
   }
 
+  // 타입별 배너 필터링
+  const filteredBanners = banners.filter(b => b.type === activeTab);
+
   return (
     <div className="banner-management-page">
       <div className="page-header">
         <h1>배너 관리</h1>
-        <button className="btn-primary" onClick={handleCreate}>
-          새 배너 추가
+      </div>
+
+      {/* 탭 네비게이션 */}
+      <div className="banner-tabs">
+        <button
+          className={`tab-btn ${activeTab === 'image' ? 'active' : ''}`}
+          onClick={() => setActiveTab('image')}
+        >
+          이미지 배너
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'youtube' ? 'active' : ''}`}
+          onClick={() => setActiveTab('youtube')}
+        >
+          유튜브
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'text' ? 'active' : ''}`}
+          onClick={() => setActiveTab('text')}
+        >
+          공지사항
+        </button>
+      </div>
+
+      {/* 새 배너 추가 버튼 */}
+      <div className="add-banner-section">
+        <button className="btn-primary" onClick={() => handleCreate(activeTab)}>
+          {activeTab === 'image' && '+ 이미지 배너 추가'}
+          {activeTab === 'youtube' && '+ 유튜브 추가'}
+          {activeTab === 'text' && '+ 공지사항 추가'}
         </button>
       </div>
 
       {/* 배너 폼 */}
       {(isCreating || editingBanner) && (
         <div className="banner-form-container">
-          <h2>{isCreating ? '새 배너 추가' : '배너 수정'}</h2>
+          <h2>
+            {isCreating ? '새 ' : ''}
+            {formData.type === 'image' && '이미지 배너'}
+            {formData.type === 'youtube' && '유튜브'}
+            {formData.type === 'text' && '공지사항'}
+            {isCreating ? ' 추가' : ' 수정'}
+          </h2>
           <form onSubmit={handleSubmit} className="banner-form">
-            <div className="form-group">
-              <label>배너 타입</label>
-              <select
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value as BannerType })}
-                className="form-control"
-              >
-                <option value="image">이미지</option>
-                <option value="youtube">YouTube</option>
-                <option value="text">텍스트 공지</option>
-              </select>
-            </div>
 
             <div className="form-group">
               <label>제목</label>
@@ -370,40 +396,52 @@ export function BannerManagementPage() {
 
       {/* 배너 목록 */}
       <div className="banner-list">
-        <h2>배너 목록</h2>
+        <h2>
+          {activeTab === 'image' && '이미지 배너 목록'}
+          {activeTab === 'youtube' && '유튜브 목록'}
+          {activeTab === 'text' && '공지사항 목록'}
+        </h2>
         {loading ? (
           <p>로딩 중...</p>
-        ) : banners.length === 0 ? (
+        ) : filteredBanners.length === 0 ? (
           <p>등록된 배너가 없습니다.</p>
         ) : (
           <table className="banner-table">
             <thead>
               <tr>
                 <th>순서</th>
-                <th>타입</th>
                 <th>제목</th>
                 <th>내용</th>
+                {activeTab === 'image' && <th>링크 URL</th>}
                 <th>상태</th>
                 <th>작업</th>
               </tr>
             </thead>
             <tbody>
-              {banners.map((banner) => (
+              {filteredBanners.map((banner) => (
                 <tr key={banner.id}>
                   <td>{banner.display_order}</td>
-                  <td>
-                    {banner.type === 'image' && '이미지'}
-                    {banner.type === 'youtube' && 'YouTube'}
-                    {banner.type === 'text' && '텍스트'}
-                  </td>
                   <td>{banner.title}</td>
                   <td className="content-cell">
-                    {banner.type === 'text' ? (
+                    {banner.type === 'image' && banner.content.startsWith('data:') ? (
+                      <span>업로드된 이미지</span>
+                    ) : banner.type === 'text' ? (
                       banner.content.substring(0, 50) + (banner.content.length > 50 ? '...' : '')
                     ) : (
                       banner.content.substring(0, 30) + (banner.content.length > 30 ? '...' : '')
                     )}
                   </td>
+                  {activeTab === 'image' && (
+                    <td className="content-cell">
+                      {banner.link_url ? (
+                        <a href={banner.link_url} target="_blank" rel="noopener noreferrer">
+                          {banner.link_url.substring(0, 30)}...
+                        </a>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+                  )}
                   <td>
                     <button
                       className={`status-badge ${banner.is_active ? 'active' : 'inactive'}`}
