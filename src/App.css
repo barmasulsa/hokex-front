@@ -171,7 +171,7 @@ body {
   display: flex;
   align-items: flex-start; /* 사이드바와 배너를 상단에서 정렬 */
   gap: 2rem;
-  padding: 2rem;
+  padding: 15px 2rem 2rem 2rem; /* 상단 15px, 좌우하단 2rem */
   max-width: 1600px;
   margin: 0 auto;
 }
