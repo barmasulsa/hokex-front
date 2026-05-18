@@ -259,3 +259,49 @@
     font-size: 12px;
   }
 }
+
+/* 이미지 업로드 관련 스타일 */
+.upload-status {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #007bff;
+}
+
+.image-preview {
+  margin-top: 15px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #f8f9fa;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 300px;
+  display: block;
+  margin: 0 auto 10px;
+  border-radius: 4px;
+}
+
+.btn-remove-image {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  display: block;
+  margin: 0 auto;
+  transition: background 0.2s;
+}
+
+.btn-remove-image:hover {
+  background: #c82333;
+}
+
+.form-help-text {
+  margin: 10px 0 5px;
+  font-size: 13px;
+  color: #666;
+}

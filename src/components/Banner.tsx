@@ -3,6 +3,29 @@ import { fetchActiveBanners } from '../services/bannerService';
 import type { Banner as BannerType } from '../types/banner';
 import './Banner.css';
 
+// YouTube URL에서 비디오 ID 추출
+const extractYoutubeId = (url: string): string => {
+  // 이미 ID만 있는 경우
+  if (url.length === 11 && !url.includes('/') && !url.includes('?')) {
+    return url;
+  }
+
+  // 다양한 YouTube URL 형식 지원
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+
+  return url; // 추출 실패 시 원본 반환
+};
+
 export function Banner() {
   const [loading, setLoading] = useState(true);
 
@@ -136,7 +159,7 @@ export function Banner() {
           <>
             <div className="youtube-wrapper">
               <iframe
-                src={`https://www.youtube.com/embed/${youtubeBanners[youtubeIndex].content}`}
+                src={`https://www.youtube.com/embed/${extractYoutubeId(youtubeBanners[youtubeIndex].content)}`}
                 title={youtubeBanners[youtubeIndex].title}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

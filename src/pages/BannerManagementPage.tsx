@@ -12,6 +12,7 @@ export function BannerManagementPage() {
   const [loading, setLoading] = useState(true);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   // 새 배너 폼 상태
   const [formData, setFormData] = useState({
@@ -82,6 +83,68 @@ export function BannerManagementPage() {
     });
   };
 
+  // YouTube URL에서 비디오 ID 추출
+  const extractYoutubeId = (url: string): string => {
+    // 이미 ID만 있는 경우
+    if (url.length === 11 && !url.includes('/') && !url.includes('?')) {
+      return url;
+    }
+
+    // 다양한 YouTube URL 형식 지원
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+      /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+    ];
+
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+
+    return url; // 추출 실패 시 원본 반환
+  };
+
+  // 이미지 파일 업로드 처리
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 이미지 파일 검증
+    if (!file.type.startsWith('image/')) {
+      alert('이미지 파일만 업로드할 수 있습니다.');
+      return;
+    }
+
+    // 파일 크기 제한 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('파일 크기는 5MB 이하여야 합니다.');
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      // Base64로 변환하여 content에 저장
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setFormData({ ...formData, content: base64String });
+        setUploading(false);
+      };
+      reader.onerror = () => {
+        alert('이미지 업로드에 실패했습니다.');
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Image upload error:', error);
+      alert('이미지 업로드 중 오류가 발생했습니다.');
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -90,11 +153,17 @@ export function BannerManagementPage() {
       return;
     }
 
+    // YouTube 타입인 경우 비디오 ID 추출
+    let content = formData.content;
+    if (formData.type === 'youtube') {
+      content = extractYoutubeId(formData.content);
+    }
+
     if (isCreating) {
       const newBanner = await createBanner({
         type: formData.type,
         title: formData.title,
-        content: formData.content,
+        content: content,
         link_url: formData.link_url || undefined,
         is_active: formData.is_active,
         display_order: formData.display_order
@@ -111,7 +180,7 @@ export function BannerManagementPage() {
       const updated = await updateBanner(editingBanner.id, {
         type: formData.type,
         title: formData.title,
-        content: formData.content,
+        content: content,
         link_url: formData.link_url || undefined,
         is_active: formData.is_active,
         display_order: formData.display_order
@@ -197,8 +266,8 @@ export function BannerManagementPage() {
 
             <div className="form-group">
               <label>
-                {formData.type === 'image' && '이미지 URL'}
-                {formData.type === 'youtube' && 'YouTube 동영상 ID'}
+                {formData.type === 'image' && '이미지'}
+                {formData.type === 'youtube' && 'YouTube URL'}
                 {formData.type === 'text' && '공지 내용'}
               </label>
               {formData.type === 'text' ? (
@@ -209,17 +278,45 @@ export function BannerManagementPage() {
                   rows={4}
                   placeholder="공지 내용을 입력하세요"
                 />
+              ) : formData.type === 'image' ? (
+                <>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="form-control"
+                    disabled={uploading}
+                  />
+                  {uploading && <p className="upload-status">업로드 중...</p>}
+                  {formData.content && !uploading && (
+                    <div className="image-preview">
+                      <img src={formData.content} alt="미리보기" />
+                      <button
+                        type="button"
+                        className="btn-remove-image"
+                        onClick={() => setFormData({ ...formData, content: '' })}
+                      >
+                        이미지 제거
+                      </button>
+                    </div>
+                  )}
+                  <p className="form-help-text">또는 이미지 URL을 직접 입력:</p>
+                  <input
+                    type="text"
+                    value={formData.content.startsWith('data:') ? '' : formData.content}
+                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                    className="form-control"
+                    placeholder="https://example.com/image.jpg"
+                    disabled={uploading || formData.content.startsWith('data:')}
+                  />
+                </>
               ) : (
                 <input
                   type="text"
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                   className="form-control"
-                  placeholder={
-                    formData.type === 'image'
-                      ? 'https://example.com/image.jpg'
-                      : 'dQw4w9WgXcQ (YouTube URL의 v= 뒤 부분)'
-                  }
+                  placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ 또는 dQw4w9WgXcQ"
                 />
               )}
             </div>
