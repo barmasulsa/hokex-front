@@ -170,15 +170,15 @@ body {
 .main-content-wrapper {
   display: flex;
   align-items: flex-start; /* 사이드바와 배너를 상단에서 정렬 */
-  gap: 2rem;
-  padding: 15px 2rem 2rem 2rem; /* 상단 15px, 좌우하단 2rem */
-  max-width: 1600px;
+  gap: 1.5rem;
+  padding: 15px 0 2rem 0; /* 좌우 패딩 제거 - 사이드바를 화면 끝으로 */
+  max-width: 100%; /* 화면 전체 너비 사용 */
   margin: 0 auto;
 }
 
 /* 왼쪽 사이드바 - 3개 카테고리 버튼 (전시, 회의, 행사/공연) */
 .filter-sidebar {
-  width: 300px;
+  width: 300px; /* 원래대로 복원 */
   flex-shrink: 0;
   background: white;
   padding: 1.5rem;
@@ -190,6 +190,7 @@ body {
   max-height: calc(100vh - 120px);
   overflow-y: auto;
   overflow-x: hidden;
+  margin-left: 1rem; /* 왼쪽 여백 추가 */
 }
 
 .filter-sidebar::-webkit-scrollbar {
@@ -714,13 +715,14 @@ body {
 
 /* 오른쪽 사이드바 - 방문자 통계 */
 .stats-sidebar {
-  width: 280px;
+  width: 280px; /* 원래대로 복원 */
   flex-shrink: 0;
   position: sticky;
   top: 100px;
   z-index: 20;
   max-height: calc(100vh - 120px);
   overflow-y: auto;
+  margin-right: 1rem; /* 오른쪽 여백 추가 */
 }
 
 .stats-sidebar::-webkit-scrollbar {
@@ -813,7 +815,7 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
-  max-width: 1600px;
+  max-width: 100%; /* 제한 없음 */
   margin: 0 auto;
   background: white;
 }
@@ -2073,7 +2075,7 @@ body {
 /* 반응형 - 태블릿 */
 @media (max-width: 1200px) {
   .main-content-wrapper {
-    gap: 1.5rem;
+    gap: 1rem;
   }
 
   .filter-sidebar {
