@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>방문자 통계 DB 테스트</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>방문자 통계 DB 테스트</h1>
+  <button onclick="testInsert()">1. DB에 테스트 데이터 삽입</button>
+  <button onclick="testRead()">2. DB에서 데이터 읽기</button>
+  <button onclick="testTable()">3. 테이블 존재 확인</button>
+  <pre id="result"></pre>
+
+  <script>
+    // Supabase 클라이언트 초기화 (환경 변수를 실제 값으로 교체하세요)
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    const log = (msg) => {
+      const result = document.getElementById('result');
+      result.textContent += msg + '\n';
+      console.log(msg);
+    };
+
+    async function testTable() {
+      document.getElementById('result').textContent = '';
+      log('=== 테이블 존재 확인 ===');
+      
+      try {
+        const { data, error } = await supabase
+          .from('visitor_stats')
+          .select('*')
+          .limit(1);
+        
+        if (error) {
+          log('❌ 에러: ' + error.message);
+          log('테이블이 없거나 RLS 정책 문제일 수 있습니다.');
+        } else {
+          log('✅ 테이블 존재 확인됨');
+          log('데이터 개수: ' + (data?.length || 0));
+        }
+      } catch (err) {
+        log('❌ 예외 발생: ' + err.message);
+      }
+    }
+
+    async function testInsert() {
+      document.getElementById('result').textContent = '';
+      log('=== DB에 테스트 데이터 삽입 ===');
+      
+      const now = new Date();
+      const date = now.toISOString().split('T')[0];
+      const hour = now.getHours();
+      
+      log(`날짜: ${date}, 시간: ${hour}`);
+      
+      try {
+        // UPSERT 시도
+        const { data, error } = await supabase
+          .from('visitor_stats')
+          .upsert(
+            {
+              visit_date: date,
+              visit_hour: hour,
+              visit_count: 1
+            },
+            {
+              onConflict: 'visit_date,visit_hour',
+              ignoreDuplicates: false
+            }
+          )
+          .select();
+        
+        if (error) {
+          log('❌ UPSERT 에러: ' + error.message);
+          log('에러 코드: ' + error.code);
+          log('에러 상세: ' + JSON.stringify(error, null, 2));
+          
+          // INSERT 시도
+          log('\n=== INSERT 시도 ===');
+          const { data: insertData, error: insertError } = await supabase
+            .from('visitor_stats')
+            .insert({
+              visit_date: date,
+              visit_hour: hour,
+              visit_count: 1
+            })
+            .select();
+          
+          if (insertError) {
+            log('❌ INSERT 에러: ' + insertError.message);
+          } else {
+            log('✅ INSERT 성공!');
+            log('데이터: ' + JSON.stringify(insertData, null, 2));
+          }
+        } else {
+          log('✅ UPSERT 성공!');
+          log('데이터: ' + JSON.stringify(data, null, 2));
+        }
+      } catch (err) {
+        log('❌ 예외 발생: ' + err.message);
+        log('스택: ' + err.stack);
+      }
+    }
+
+    async function testRead() {
+      document.getElementById('result').textContent = '';
+      log('=== DB에서 데이터 읽기 ===');
+      
+      try {
+        const { data, error } = await supabase
+          .from('visitor_stats')
+          .select('*')
+          .order('visit_date', { ascending: false })
+          .limit(10);
+        
+        if (error) {
+          log('❌ 읽기 에러: ' + error.message);
+        } else {
+          log('✅ 읽기 성공!');
+          log(`총 ${data.length}개 데이터:`);
+          data.forEach(row => {
+            log(`  - ${row.visit_date} ${row.visit_hour}시: ${row.visit_count}명`);
+          });
+        }
+      } catch (err) {
+        log('❌ 예외 발생: ' + err.message);
+      }
+    }
+  </script>
+
+  <hr>
+  <h2>사용 방법</h2>
+  <ol>
+    <li>위 스크립트에서 <code>YOUR_SUPABASE_URL</code>과 <code>YOUR_SUPABASE_ANON_KEY</code>를 실제 값으로 교체</li>
+    <li>브라우저에서 이 HTML 파일 열기</li>
+    <li>버튼 클릭하여 테스트</li>
+  </ol>
+  
+  <h3>환경 변수 찾는 방법</h3>
+  <p>hokex-front/.env 파일에서:</p>
+  <pre>
+VITE_SUPABASE_URL=https://xxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJxxx...
+  </pre>
+</body>
+</html>

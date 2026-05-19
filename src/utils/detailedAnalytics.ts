@@ -138,6 +138,55 @@ async function recordToDBAsync(date: string, hour: number) {
   }
 }
 
+// 기존 localStorage 데이터를 DB로 마이그레이션
+export async function migrateOldDataToDB() {
+  try {
+    // 기존 visitor_history 데이터 가져오기
+    const oldData = localStorage.getItem('visitor_history');
+    if (!oldData) {
+      console.log('마이그레이션할 기존 데이터가 없습니다.');
+      return { success: true, migrated: 0 };
+    }
+    
+    const visits: Record<string, number> = JSON.parse(oldData);
+    let migratedCount = 0;
+    
+    // 각 날짜별 데이터를 DB에 저장
+    for (const [date, count] of Object.entries(visits)) {
+      if (count > 0) {
+        // 시간대는 알 수 없으므로 12시(정오)로 설정
+        const { error } = await supabase
+          .from('visitor_stats')
+          .upsert(
+            {
+              visit_date: date,
+              visit_hour: 12,
+              visit_count: count
+            },
+            {
+              onConflict: 'visit_date,visit_hour',
+              ignoreDuplicates: false
+            }
+          );
+        
+        if (!error) {
+          migratedCount++;
+        }
+      }
+    }
+    
+    console.log(`마이그레이션 완료: ${migratedCount}개 날짜 데이터 저장됨`);
+    
+    // 마이그레이션 완료 표시
+    localStorage.setItem('visitor_data_migrated', 'true');
+    
+    return { success: true, migrated: migratedCount };
+  } catch (err) {
+    console.error('마이그레이션 실패:', err);
+    return { success: false, migrated: 0, error: err };
+  }
+}
+
 // 방문 기록 가져오기
 function getVisitRecords(): VisitRecord[] {
   const stored = localStorage.getItem(STORAGE_KEY);

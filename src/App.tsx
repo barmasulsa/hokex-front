@@ -20,6 +20,18 @@ function AppContent() {
     initGA4();
     recordVisit();
     recordDetailedVisit(); // 세부 통계 기록
+    
+    // 기존 localStorage 데이터를 DB로 마이그레이션 (한 번만 실행)
+    const migrated = localStorage.getItem('visitor_data_migrated');
+    if (!migrated) {
+      import('./utils/detailedAnalytics').then(({ migrateOldDataToDB }) => {
+        migrateOldDataToDB().then(result => {
+          if (result.success) {
+            console.log(`방문자 통계 마이그레이션 완료: ${result.migrated}개 날짜`);
+          }
+        });
+      });
+    }
   }, []);
 
   const handleSignOut = async () => {
