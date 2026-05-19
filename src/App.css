@@ -1644,7 +1644,7 @@ body {
 
 .profile-header {
   max-width: 1200px;
-  margin: 0 auto 40px;
+  margin: 85px auto 40px; /* 85px = 100px(사이드바 top) - 15px(wrapper padding) */
   background: white;
   border-radius: 16px;
   padding: 40px;
