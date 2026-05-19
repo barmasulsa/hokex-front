@@ -25,6 +25,7 @@ export function BannerManagementPage() {
   const [activeTab, setActiveTab] = useState<ManagementTab>('image'); // 탭 상태
   const [detailedStats, setDetailedStats] = useState<DetailedVisitorStats | null>(null);
   const [statsView, setStatsView] = useState<'daily' | 'hourly' | 'yearly'>('daily');
+  const [loadingLatestStats, setLoadingLatestStats] = useState(false);
 
   // 새 배너 폼 상태
   const [formData, setFormData] = useState({
@@ -112,6 +113,20 @@ export function BannerManagementPage() {
     if (restored) {
       const detailed = await getDetailedVisitorStats();
       setDetailedStats(detailed);
+    }
+  };
+
+  const handleLoadLatestStats = async () => {
+    setLoadingLatestStats(true);
+    try {
+      const detailed = await getDetailedVisitorStats();
+      setDetailedStats(detailed);
+      alert('최신 통계를 불러왔습니다.');
+    } catch (err) {
+      console.error('최신 통계 로드 실패:', err);
+      alert('최신 통계 로드에 실패했습니다.');
+    } finally {
+      setLoadingLatestStats(false);
     }
   };
 
@@ -369,6 +384,13 @@ export function BannerManagementPage() {
           <div className="stats-actions">
             <h3>데이터 관리</h3>
             <div className="download-buttons">
+              <button 
+                className="btn-primary" 
+                onClick={handleLoadLatestStats}
+                disabled={loadingLatestStats}
+              >
+                {loadingLatestStats ? '⏳ 로딩 중...' : '🔄 최신 통계 보기'}
+              </button>
               <button className="btn-download" onClick={handleDownloadCSV}>
                 📥 CSV 다운로드
               </button>
@@ -382,6 +404,9 @@ export function BannerManagementPage() {
                 🗑️ 통계 데이터 초기화
               </button>
             </div>
+            <p className="stats-info-note">
+              💡 통계는 30분마다 자동 업데이트됩니다. 최신 데이터를 즉시 확인하려면 "🔄 최신 통계 보기" 버튼을 클릭하세요.
+            </p>
             <p className="stats-warning">
               ⚠️ 초기화 시 자동으로 백업됩니다. 실수로 삭제해도 복구 가능합니다.
             </p>

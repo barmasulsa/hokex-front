@@ -1,5 +1,6 @@
 // 방문자 통계 캐시 업데이트 Edge Function
-// 5분마다 Supabase Cron으로 실행
+// 30분마다: 오늘 방문자 수만 업데이트
+// 새벽 4시: 전체 통계 업데이트
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -20,15 +21,82 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // 요청 파라미터 확인 (type: 'today' 또는 'full')
+    let updateType = 'full'; // 기본값: 전체 업데이트
+    
+    if (req.method === 'POST') {
+      try {
+        const body = await req.json();
+        updateType = body.type || 'full';
+      } catch {
+        // JSON 파싱 실패 시 기본값 사용
+      }
+    }
+
     const now = new Date();
     const today = now.toISOString().split('T')[0];
+
     
-    // 어제
+    if (updateType === 'today') {
+      // 30분마다: 오늘 방문자 수만 업데이트
+      const { data: todayRecords, error: todayError } = await supabase
+        .from('visitor_stats')
+        .select('visit_count')
+        .eq('visit_date', today);
+
+      if (todayError) {
+        throw todayError;
+      }
+
+      const todayCount = todayRecords?.reduce((sum, r) => sum + r.visit_count, 0) || 0;
+
+      // 캐시에서 기존 데이터 가져오기
+      const { data: existingCache } = await supabase
+        .from('visitor_stats_cache')
+        .select('*')
+        .eq('cache_key', 'summary')
+        .single();
+
+      // 오늘 방문자 수만 업데이트
+      const { error: updateError } = await supabase
+        .from('visitor_stats_cache')
+        .upsert({
+          cache_key: 'summary',
+          today: todayCount,
+          yesterday: existingCache?.yesterday || 0,
+          last_7_days: existingCache?.last_7_days || 0,
+          last_30_days: existingCache?.last_30_days || 0,
+          last_365_days: existingCache?.last_365_days || 0,
+          total_visits: existingCache?.total_visits || 0,
+          first_visit_date: existingCache?.first_visit_date || null,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'cache_key'
+        });
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          type: 'today',
+          stats: { today: todayCount },
+          updated_at: new Date().toISOString()
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
+    // 새벽 4시: 전체 통계 업데이트
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
     
-    // 기준 날짜들
     const sevenDaysAgo = new Date(now);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
@@ -118,6 +186,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
+        type: 'full',
         stats: {
           today: todayCount,
           yesterday: yesterdayCount,
