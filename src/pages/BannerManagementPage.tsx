@@ -51,13 +51,16 @@ export function BannerManagementPage() {
 
   // 방문자 통계 가져오기
   useEffect(() => {
-    const detailed = getDetailedVisitorStats();
-    setDetailedStats(detailed);
+    const loadStats = async () => {
+      const detailed = await getDetailedVisitorStats();
+      setDetailedStats(detailed);
+    };
+    
+    loadStats();
     
     // 1분마다 통계 업데이트
     const interval = setInterval(() => {
-      const updatedDetailed = getDetailedVisitorStats();
-      setDetailedStats(updatedDetailed);
+      loadStats();
     }, 60000); // 60초
     
     return () => clearInterval(interval);
@@ -95,9 +98,9 @@ export function BannerManagementPage() {
     }
   };
 
-  const handleClearStats = () => {
+  const handleClearStats = async () => {
     if (clearAllStats()) {
-      const detailed = getDetailedVisitorStats();
+      const detailed = await getDetailedVisitorStats();
       setDetailedStats(detailed);
     }
   };

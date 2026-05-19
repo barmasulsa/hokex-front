@@ -1,4 +1,5 @@
 // 관리자용 세부 방문자 통계 유틸리티
+import { createClient } from '@supabase/supabase-js';
 
 export interface HourlyVisit {
   hour: number; // 0-23
@@ -42,6 +43,11 @@ interface VisitRecord {
   count: number;
 }
 
+// Supabase 클라이언트 초기화
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 // 방문 기록 저장 (시간대별) - 하루에 한 번만 카운트
 export function recordDetailedVisit() {
   const now = new Date();
@@ -58,9 +64,8 @@ export function recordDetailedVisit() {
   // 오늘 첫 방문이므로 기록
   localStorage.setItem('last_visit_date', date);
   
+  // localStorage에 저장 (즉시, 동기)
   const records = getVisitRecords();
-  
-  // 해당 날짜와 시간의 기록 찾기
   const key = `${date}-${hour}`;
   const existingIndex = records.findIndex(r => `${r.date}-${r.hour}` === key);
   
@@ -76,6 +81,61 @@ export function recordDetailedVisit() {
   const filteredRecords = records.filter(r => new Date(r.date) >= oneYearAgo);
   
   localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredRecords));
+  
+  // DB에 비동기 저장 (백그라운드, await 없음)
+  recordToDBAsync(date, hour).catch(err => {
+    console.log('방문 통계 DB 저장 실패 (무시):', err.message);
+  });
+}
+
+// DB에 비동기로 저장 (사용자는 기다리지 않음)
+async function recordToDBAsync(date: string, hour: number) {
+  try {
+    // UPSERT: 같은 날짜/시간이면 count 증가, 없으면 새로 생성
+    const { error } = await supabase
+      .from('visitor_stats')
+      .upsert(
+        {
+          visit_date: date,
+          visit_hour: hour,
+          visit_count: 1
+        },
+        {
+          onConflict: 'visit_date,visit_hour',
+          ignoreDuplicates: false
+        }
+      );
+    
+    if (error) {
+      // UPSERT가 실패하면 기존 데이터 조회 후 업데이트
+      const { data: existing } = await supabase
+        .from('visitor_stats')
+        .select('visit_count')
+        .eq('visit_date', date)
+        .eq('visit_hour', hour)
+        .single();
+      
+      if (existing) {
+        await supabase
+          .from('visitor_stats')
+          .update({ visit_count: existing.visit_count + 1 })
+          .eq('visit_date', date)
+          .eq('visit_hour', hour);
+      } else {
+        // 새로 삽입
+        await supabase
+          .from('visitor_stats')
+          .insert({
+            visit_date: date,
+            visit_hour: hour,
+            visit_count: 1
+          });
+      }
+    }
+  } catch (err) {
+    // 에러 무시 (통계만 누락, 사이트는 정상)
+    console.log('DB 저장 실패:', err);
+  }
 }
 
 // 방문 기록 가져오기
@@ -84,9 +144,8 @@ function getVisitRecords(): VisitRecord[] {
   return stored ? JSON.parse(stored) : [];
 }
 
-// 세부 통계 계산
-export function getDetailedVisitorStats(): DetailedVisitorStats {
-  const records = getVisitRecords();
+// 세부 통계 계산 (DB 기반)
+export async function getDetailedVisitorStats(): Promise<DetailedVisitorStats> {
   const now = new Date();
   const today = now.toISOString().split('T')[0];
   
@@ -98,108 +157,170 @@ export function getDetailedVisitorStats(): DetailedVisitorStats {
   // 기준 날짜들
   const sevenDaysAgo = new Date(now);
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
   
   const thirtyDaysAgo = new Date(now);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
   
   const oneYearAgo = new Date(now);
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  const oneYearAgoStr = oneYearAgo.toISOString().split('T')[0];
   
-  // 기본 통계 계산
-  let todayCount = 0;
-  let yesterdayCount = 0;
-  let last7DaysCount = 0;
-  let last30DaysCount = 0;
-  let last365DaysCount = 0;
-  let totalVisits = 0;
-  
-  // 시간대별 통계 (오늘)
+  try {
+    // DB에서 최근 1년 데이터 조회
+    const { data: records, error } = await supabase
+      .from('visitor_stats')
+      .select('visit_date, visit_hour, visit_count')
+      .gte('visit_date', oneYearAgoStr)
+      .order('visit_date', { ascending: true });
+    
+    if (error) {
+      console.error('DB 조회 실패:', error);
+      // 에러 시 빈 통계 반환
+      return getEmptyStats();
+    }
+    
+    // 기본 통계 계산
+    let todayCount = 0;
+    let yesterdayCount = 0;
+    let last7DaysCount = 0;
+    let last30DaysCount = 0;
+    let last365DaysCount = 0;
+    let totalVisits = 0;
+    
+    // 시간대별 통계 (오늘)
+    const hourlyToday: HourlyVisit[] = Array.from({ length: 24 }, (_, i) => ({
+      hour: i,
+      count: 0
+    }));
+    
+    // 일별 통계 맵
+    const dailyMap = new Map<string, number>();
+    
+    records?.forEach(record => {
+      const recordDate = record.visit_date;
+      const count = record.visit_count;
+      totalVisits += count;
+      
+      // 오늘
+      if (recordDate === today) {
+        todayCount += count;
+        hourlyToday[record.visit_hour].count += count;
+      }
+      
+      // 어제
+      if (recordDate === yesterdayStr) {
+        yesterdayCount += count;
+      }
+      
+      // 최근 7일
+      if (recordDate >= sevenDaysAgoStr) {
+        last7DaysCount += count;
+      }
+      
+      // 최근 30일
+      if (recordDate >= thirtyDaysAgoStr) {
+        last30DaysCount += count;
+        const current = dailyMap.get(recordDate) || 0;
+        dailyMap.set(recordDate, current + count);
+      }
+      
+      // 최근 1년
+      last365DaysCount += count;
+      if (!dailyMap.has(recordDate)) {
+        dailyMap.set(recordDate, count);
+      } else {
+        dailyMap.set(recordDate, dailyMap.get(recordDate)! + count);
+      }
+    });
+    
+    // 일별 통계 배열로 변환 (최근 30일)
+    const dailyLast30Days: DailyVisit[] = [];
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      dailyLast30Days.push({
+        date: dateStr,
+        count: dailyMap.get(dateStr) || 0
+      });
+    }
+    
+    // 일별 통계 배열로 변환 (최근 1년)
+    const dailyLast365Days: DailyVisit[] = [];
+    for (let i = 364; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      dailyLast365Days.push({
+        date: dateStr,
+        count: dailyMap.get(dateStr) || 0
+      });
+    }
+    
+    // 첫 방문 날짜
+    const firstVisitDate = records && records.length > 0
+      ? records[0].visit_date
+      : null;
+    
+    return {
+      today: todayCount,
+      yesterday: yesterdayCount,
+      last7Days: last7DaysCount,
+      last30Days: last30DaysCount,
+      last365Days: last365DaysCount,
+      hourlyToday,
+      dailyLast30Days,
+      dailyLast365Days,
+      totalVisits,
+      firstVisitDate
+    };
+  } catch (err) {
+    console.error('통계 조회 중 에러:', err);
+    return getEmptyStats();
+  }
+}
+
+// 빈 통계 반환 (에러 시)
+function getEmptyStats(): DetailedVisitorStats {
   const hourlyToday: HourlyVisit[] = Array.from({ length: 24 }, (_, i) => ({
     hour: i,
     count: 0
   }));
   
-  // 일별 통계 맵
-  const dailyMap = new Map<string, number>();
-  
-  records.forEach(record => {
-    const recordDate = new Date(record.date);
-    totalVisits += record.count;
-    
-    // 오늘
-    if (record.date === today) {
-      todayCount += record.count;
-      hourlyToday[record.hour].count += record.count;
-    }
-    
-    // 어제
-    if (record.date === yesterdayStr) {
-      yesterdayCount += record.count;
-    }
-    
-    // 최근 7일
-    if (recordDate >= sevenDaysAgo) {
-      last7DaysCount += record.count;
-    }
-    
-    // 최근 30일
-    if (recordDate >= thirtyDaysAgo) {
-      last30DaysCount += record.count;
-      const current = dailyMap.get(record.date) || 0;
-      dailyMap.set(record.date, current + record.count);
-    }
-    
-    // 최근 1년
-    if (recordDate >= oneYearAgo) {
-      last365DaysCount += record.count;
-      if (!dailyMap.has(record.date)) {
-        dailyMap.set(record.date, record.count);
-      }
-    }
-  });
-  
-  // 일별 통계 배열로 변환 (최근 30일)
+  const now = new Date();
   const dailyLast30Days: DailyVisit[] = [];
   for (let i = 29; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
-    const dateStr = date.toISOString().split('T')[0];
     dailyLast30Days.push({
-      date: dateStr,
-      count: dailyMap.get(dateStr) || 0
+      date: date.toISOString().split('T')[0],
+      count: 0
     });
   }
   
-  // 일별 통계 배열로 변환 (최근 1년)
   const dailyLast365Days: DailyVisit[] = [];
   for (let i = 364; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
-    const dateStr = date.toISOString().split('T')[0];
     dailyLast365Days.push({
-      date: dateStr,
-      count: dailyMap.get(dateStr) || 0
+      date: date.toISOString().split('T')[0],
+      count: 0
     });
   }
   
-  // 첫 방문 날짜
-  const firstVisitDate = records.length > 0
-    ? records.reduce((earliest, record) => {
-        return record.date < earliest ? record.date : earliest;
-      }, records[0].date)
-    : null;
-  
   return {
-    today: todayCount,
-    yesterday: yesterdayCount,
-    last7Days: last7DaysCount,
-    last30Days: last30DaysCount,
-    last365Days: last365DaysCount,
+    today: 0,
+    yesterday: 0,
+    last7Days: 0,
+    last30Days: 0,
+    last365Days: 0,
     hourlyToday,
     dailyLast30Days,
     dailyLast365Days,
-    totalVisits,
-    firstVisitDate
+    totalVisits: 0,
+    firstVisitDate: null
   };
 }
 
