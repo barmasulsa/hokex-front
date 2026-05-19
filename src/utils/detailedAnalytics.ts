@@ -452,13 +452,101 @@ export function downloadStatsAsJSON(stats: DetailedVisitorStats) {
   document.body.removeChild(link);
 }
 
-// 통계 데이터 초기화 (관리자 전용)
-export function clearAllStats() {
-  if (confirm('모든 방문자 통계 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem('visitor_history'); // 기존 통계도 삭제
-    alert('모든 통계 데이터가 삭제되었습니다.');
-    return true;
+// 통계 데이터 백업 (삭제 전 자동 백업)
+function backupStatsToLocalStorage() {
+  const timestamp = new Date().toISOString();
+  const backup = {
+    timestamp,
+    visitor_history_detailed: localStorage.getItem(STORAGE_KEY),
+    visitor_history: localStorage.getItem('visitor_history'),
+    last_visit_date: localStorage.getItem('last_visit_date')
+  };
+  
+  localStorage.setItem('visitor_stats_backup', JSON.stringify(backup));
+  return backup;
+}
+
+// 백업에서 복구
+export function restoreStatsFromBackup() {
+  const backupStr = localStorage.getItem('visitor_stats_backup');
+  if (!backupStr) {
+    alert('복구할 백업 데이터가 없습니다.');
+    return false;
   }
-  return false;
+  
+  try {
+    const backup = JSON.parse(backupStr);
+    
+    if (backup.visitor_history_detailed) {
+      localStorage.setItem(STORAGE_KEY, backup.visitor_history_detailed);
+    }
+    if (backup.visitor_history) {
+      localStorage.setItem('visitor_history', backup.visitor_history);
+    }
+    if (backup.last_visit_date) {
+      localStorage.setItem('last_visit_date', backup.last_visit_date);
+    }
+    
+    const backupDate = new Date(backup.timestamp).toLocaleString('ko-KR');
+    alert(`백업 데이터가 복구되었습니다.\n백업 시간: ${backupDate}`);
+    return true;
+  } catch (err) {
+    console.error('복구 실패:', err);
+    alert('백업 데이터 복구에 실패했습니다.');
+    return false;
+  }
+}
+
+// 통계 데이터 초기화 (관리자 전용)
+export async function clearAllStats() {
+  // 1단계: 첫 번째 확인
+  if (!confirm('⚠️ 경고: 모든 방문자 통계 데이터를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')) {
+    return false;
+  }
+  
+  // 2단계: 두 번째 확인 (실수 방지)
+  const confirmText = prompt(
+    '정말로 삭제하시겠습니까?\n\n삭제하려면 "삭제"를 입력하세요.\n\n(삭제 전 자동으로 백업됩니다)'
+  );
+  
+  if (confirmText !== '삭제') {
+    alert('삭제가 취소되었습니다.');
+    return false;
+  }
+  
+  try {
+    // 3단계: 자동 백업
+    const backup = backupStatsToLocalStorage();
+    console.log('백업 완료:', backup.timestamp);
+    
+    // 4단계: localStorage 삭제
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('visitor_history');
+    localStorage.removeItem('last_visit_date');
+    
+    // 5단계: DB 삭제 (선택적)
+    const deleteDB = confirm('DB에 저장된 통계 데이터도 삭제하시겠습니까?\n\n(권장하지 않음: DB 데이터는 유지하는 것이 좋습니다)');
+    
+    if (deleteDB) {
+      const { error } = await supabase
+        .from('visitor_stats')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // 모든 데이터 삭제
+      
+      if (error) {
+        console.error('DB 삭제 실패:', error);
+        alert('localStorage는 삭제되었지만 DB 삭제에 실패했습니다.\n\n백업에서 복구할 수 있습니다.');
+      } else {
+        alert('모든 통계 데이터가 삭제되었습니다.\n\n백업에서 복구할 수 있습니다.');
+      }
+    } else {
+      alert('localStorage 통계 데이터가 삭제되었습니다.\n(DB 데이터는 유지됨)\n\n백업에서 복구할 수 있습니다.');
+    }
+    
+    return true;
+  } catch (err) {
+    console.error('삭제 중 에러:', err);
+    alert('삭제 중 오류가 발생했습니다.');
+    return false;
+  }
 }

@@ -99,7 +99,17 @@ export function BannerManagementPage() {
   };
 
   const handleClearStats = async () => {
-    if (clearAllStats()) {
+    const cleared = await clearAllStats();
+    if (cleared) {
+      const detailed = await getDetailedVisitorStats();
+      setDetailedStats(detailed);
+    }
+  };
+
+  const handleRestoreStats = async () => {
+    const { restoreStatsFromBackup } = await import('../utils/detailedAnalytics');
+    const restored = restoreStatsFromBackup();
+    if (restored) {
       const detailed = await getDetailedVisitorStats();
       setDetailedStats(detailed);
     }
@@ -357,7 +367,7 @@ export function BannerManagementPage() {
 
           {/* 데이터 다운로드 */}
           <div className="stats-actions">
-            <h3>데이터 다운로드</h3>
+            <h3>데이터 관리</h3>
             <div className="download-buttons">
               <button className="btn-download" onClick={handleDownloadCSV}>
                 📥 CSV 다운로드
@@ -365,10 +375,16 @@ export function BannerManagementPage() {
               <button className="btn-download" onClick={handleDownloadJSON}>
                 📥 JSON 다운로드
               </button>
+              <button className="btn-secondary" onClick={handleRestoreStats}>
+                ♻️ 백업에서 복구
+              </button>
               <button className="btn-danger" onClick={handleClearStats}>
                 🗑️ 통계 데이터 초기화
               </button>
             </div>
+            <p className="stats-warning">
+              ⚠️ 초기화 시 자동으로 백업됩니다. 실수로 삭제해도 복구 가능합니다.
+            </p>
           </div>
 
           {/* 상세 통계 뷰 선택 */}
