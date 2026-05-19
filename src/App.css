@@ -166,6 +166,17 @@ body {
   font-weight: 500;
 }
 
+/* 
+ * ============================================
+ * 레이아웃 기준점 (LAYOUT BASELINE)
+ * ============================================
+ * 모든 페이지의 콘텐츠 시작 위치: 상단에서 100px
+ * - 사이드바: top: 100px (sticky)
+ * - 프로필 헤더: margin-top: 85px (100px - 15px wrapper padding)
+ * - 기타 페이지: 동일한 기준 적용
+ * ============================================
+ */
+
 /* 메인 컨텐츠 래퍼 (사이드바 + 메인) */
 .main-content-wrapper {
   display: flex;
@@ -185,7 +196,7 @@ body {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   position: sticky;
-  top: 100px;
+  top: 100px; /* 레이아웃 기준점: 모든 페이지 콘텐츠 시작 위치 */
   z-index: 20;
   max-height: calc(100vh - 120px);
   overflow-y: auto;
@@ -1644,7 +1655,7 @@ body {
 
 .profile-header {
   max-width: 1200px;
-  margin: 85px auto 40px; /* 85px = 100px(사이드바 top) - 15px(wrapper padding) */
+  margin: 85px auto 40px; /* 85px = 레이아웃 기준점 100px - wrapper padding 15px */
   background: white;
   border-radius: 16px;
   padding: 40px;
