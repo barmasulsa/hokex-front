@@ -4,7 +4,7 @@ import { EventCard } from '../components/EventCard';
 import { Banner } from '../components/Banner';
 import { fetchEvents } from '../services/eventService';
 import { useAuth } from '../contexts/AuthContext';
-import { getVisitorStats, type VisitorStats } from '../utils/analytics';
+import { getCachedVisitorStats } from '../utils/detailedAnalytics';
 import { PresenceManager } from '../utils/onlinePresence';
 import type { EventRecord, Venue } from '../types/core';
 import { Region, Category, REGION_VENUE_MAP } from '../types/core';
@@ -37,7 +37,7 @@ export function HomePage() {
   const navigate = useNavigate();
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [visitorStats, setVisitorStats] = useState<VisitorStats>({
+  const [visitorStats, setVisitorStats] = useState({
     today: 0,
     last7Days: 0,
     last30Days: 0
@@ -92,15 +92,18 @@ export function HomePage() {
     loadEvents();
   }, []);
 
-  // 방문자 통계 가져오기
+  // 방문자 통계 가져오기 (캐시 사용 - 빠름)
   useEffect(() => {
-    const stats = getVisitorStats();
-    setVisitorStats(stats);
+    const loadStats = async () => {
+      const stats = await getCachedVisitorStats();
+      setVisitorStats(stats);
+    };
     
-    // 1분마다 통계 업데이트
+    loadStats();
+    
+    // 1분마다 통계 업데이트 (캐시에서 읽기만 하므로 빠름)
     const interval = setInterval(() => {
-      const updatedStats = getVisitorStats();
-      setVisitorStats(updatedStats);
+      loadStats();
     }, 60000); // 60초
     
     return () => clearInterval(interval);

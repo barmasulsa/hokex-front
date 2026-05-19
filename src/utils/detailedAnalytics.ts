@@ -193,6 +193,31 @@ function getVisitRecords(): VisitRecord[] {
   return stored ? JSON.parse(stored) : [];
 }
 
+// 캐시된 통계 가져오기 (빠름, 5분마다 업데이트)
+export async function getCachedVisitorStats(): Promise<{ today: number; last7Days: number; last30Days: number }> {
+  try {
+    const { data, error } = await supabase
+      .from('visitor_stats_cache')
+      .select('today, last_7_days, last_30_days')
+      .eq('cache_key', 'summary')
+      .single();
+    
+    if (error || !data) {
+      console.error('캐시 조회 실패:', error);
+      return { today: 0, last7Days: 0, last30Days: 0 };
+    }
+    
+    return {
+      today: data.today,
+      last7Days: data.last_7_days,
+      last30Days: data.last_30_days
+    };
+  } catch (err) {
+    console.error('캐시 조회 중 에러:', err);
+    return { today: 0, last7Days: 0, last30Days: 0 };
+  }
+}
+
 // 세부 통계 계산 (DB 기반)
 export async function getDetailedVisitorStats(): Promise<DetailedVisitorStats> {
   const now = new Date();
