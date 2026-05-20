@@ -68,7 +68,7 @@ export function HomePage() {
   
   // 필터 상태
   const [selectedRegion, setSelectedRegion] = useState<Region | '전체'>(initialState?.selectedRegion || '전체');
-  const [selectedVenues, setSelectedVenues] = useState<Venue[]>(initialState?.selectedVenues || []); // 배열로 변경
+  const [selectedVenue, setSelectedVenue] = useState<Venue | null>(initialState?.selectedVenue || null); // 단일 선택으로 변경
   const [selectedMonth, setSelectedMonth] = useState<string | '전체'>(initialState?.selectedMonth || '전체');
   const [selectedCategories, setSelectedCategories] = useState<Category[]>(initialState?.selectedCategories || []); // 배열로 변경
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>(initialState?.selectedIndustries || []);
@@ -147,7 +147,7 @@ export function HomePage() {
   useEffect(() => {
     const filterState = {
       selectedRegion,
-      selectedVenues, // 변경
+      selectedVenue, // 변경
       selectedMonth,
       selectedCategories, // 변경
       selectedIndustries,
@@ -157,11 +157,11 @@ export function HomePage() {
       showCurrentOnly
     };
     sessionStorage.setItem('homeFilterState', JSON.stringify(filterState));
-  }, [selectedRegion, selectedVenues, selectedMonth, selectedCategories, selectedIndustries, searchQuery, dateRange, expandedRegion, showCurrentOnly]);
+  }, [selectedRegion, selectedVenue, selectedMonth, selectedCategories, selectedIndustries, searchQuery, dateRange, expandedRegion, showCurrentOnly]);
 
   useEffect(() => {
     console.log('[HomePage] Filtering with:', {
-      venues: selectedVenues,
+      venue: selectedVenue,
       categories: selectedCategories,
       month: selectedMonth,
       showCurrentOnly,
@@ -190,9 +190,9 @@ export function HomePage() {
       processed = processed.filter(event => event.region === selectedRegion);
     }
     
-    // 다중 venue 필터링
-    if (selectedVenues.length > 0) {
-      processed = processed.filter(event => selectedVenues.includes(event.venue as Venue));
+    // 단일 venue 필터링
+    if (selectedVenue) {
+      processed = processed.filter(event => event.venue === selectedVenue);
     }
     
     console.log('[HomePage] After venue filter:', processed.length);
@@ -263,7 +263,7 @@ export function HomePage() {
     console.log('[HomePage] After deduplication:', uniqueEvents.length);
     
     setFilteredEvents(uniqueEvents);
-  }, [events, selectedRegion, selectedVenues, selectedMonth, selectedCategories, selectedIndustries, searchQuery, dateRange, showCurrentOnly]);
+  }, [events, selectedRegion, selectedVenue, selectedMonth, selectedCategories, selectedIndustries, searchQuery, dateRange, showCurrentOnly]);
 
   const handleSave = (eventId: string) => {
     setEvents(prev => prev.map(event => 
@@ -282,14 +282,9 @@ export function HomePage() {
     console.log(`Edited event ${eventId}: ${field} = ${value}`);
   };
 
-  const handleVenueToggle = (venue: Venue) => {
-    if (selectedVenues.includes(venue)) {
-      // 이미 선택된 경우 제거
-      setSelectedVenues(selectedVenues.filter(v => v !== venue));
-    } else {
-      // 선택되지 않은 경우 추가
-      setSelectedVenues([...selectedVenues, venue]);
-    }
+  const handleVenueClick = (venue: Venue) => {
+    // 이미 선택된 venue를 다시 클릭하면 해제, 아니면 선택
+    setSelectedVenue(selectedVenue === venue ? null : venue);
   };
 
   const handleCategoryToggle = (category: Category) => {
@@ -532,15 +527,15 @@ export function HomePage() {
             <div className="sidebar-title-row">
               <h3 className="sidebar-title">
                 지역
-                {selectedVenues.length > 0 && (
-                  <span className="selected-count-inline"> ({selectedVenues.length})</span>
+                {selectedVenue && (
+                  <span className="selected-count-inline"> (1)</span>
                 )}
               </h3>
-              {selectedVenues.length > 0 && (
+              {selectedVenue && (
                 <button 
                   className="reset-btn-sidebar"
                   onClick={() => {
-                    setSelectedVenues([]);
+                    setSelectedVenue(null);
                     setSelectedRegion('전체');
                     setExpandedRegion(null);
                   }}
@@ -554,10 +549,10 @@ export function HomePage() {
               {/* 전체 버튼 */}
               <div className="accordion-item">
                 <button
-                  className={`accordion-header ${selectedRegion === '전체' && selectedVenues.length === 0 ? 'expanded' : ''}`}
+                  className={`accordion-header ${selectedRegion === '전체' && !selectedVenue ? 'expanded' : ''}`}
                   onClick={() => {
                     setSelectedRegion('전체');
-                    setSelectedVenues([]);
+                    setSelectedVenue(null);
                     setExpandedRegion(null);
                   }}
                 >
@@ -570,6 +565,9 @@ export function HomePage() {
                 const venues = REGION_VENUE_MAP[region];
                 const isExpanded = expandedRegion === region;
                 const hasVenues = venues.length > 0;
+                
+                // 해당 지역의 전시장이 선택되었는지 확인
+                const isRegionVenueSelected = selectedVenue && venues.includes(selectedVenue);
                 
                 return (
                   <div key={region} className="accordion-item">
@@ -589,11 +587,23 @@ export function HomePage() {
                     </button>
                     {isExpanded && hasVenues && (
                       <div className="accordion-content">
+                        {/* 지역 전체 옵션 - 선택된 venue가 없을 때만 파란색 */}
+                        <button
+                          className={`venue-btn ${!selectedVenue && selectedRegion === region ? 'active' : ''}`}
+                          onClick={() => {
+                            setSelectedRegion(region);
+                            setSelectedVenue(null);
+                          }}
+                        >
+                          {region} (전체)
+                        </button>
+                        
+                        {/* 개별 전시장 옵션 - 선택된 venue일 때만 파란색 */}
                         {venues.map((venue) => (
                           <button
                             key={venue}
-                            className={`venue-btn ${selectedVenues.includes(venue) ? 'active' : ''}`}
-                            onClick={() => handleVenueToggle(venue)}
+                            className={`venue-btn ${selectedVenue === venue ? 'active' : ''}`}
+                            onClick={() => handleVenueClick(venue)}
                           >
                             {venue}
                           </button>
