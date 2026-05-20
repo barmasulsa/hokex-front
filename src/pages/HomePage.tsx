@@ -566,9 +566,6 @@ export function HomePage() {
                 const isExpanded = expandedRegion === region;
                 const hasVenues = venues.length > 0;
                 
-                // 해당 지역의 전시장이 선택되었는지 확인
-                const isRegionVenueSelected = selectedVenue && venues.includes(selectedVenue);
-                
                 return (
                   <div key={region} className="accordion-item">
                     <button
