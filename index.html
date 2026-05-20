@@ -1,16 +1,28 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>hokex-front</title>
+    <title>HOKEX - 전시회 정보 플랫폼</title>
+    <meta name="description" content="국내 주요 전시장의 전시회 정보를 한눈에 확인하세요" />
     
     <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4SHZ77PG3Y"></script>
     <script>
-      // GA4 측정 ID를 환경 변수에서 가져옵니다
-      window.GA4_MEASUREMENT_ID = '%VITE_GA4_MEASUREMENT_ID%';
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-4SHZ77PG3Y');
     </script>
+    
+    <!-- Google Search Console 소유권 확인 (메타 태그 방식) -->
+    <!-- 실제 배포 시 Google Search Console에서 제공하는 content 값으로 교체하세요 -->
+    <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE_HERE" />
+    
+    <!-- Naver Search Adviser 소유권 확인 (메타 태그 방식) -->
+    <!-- 실제 배포 시 네이버 서치어드바이저에서 제공하는 content 값으로 교체하세요 -->
+    <meta name="naver-site-verification" content="YOUR_NAVER_VERIFICATION_CODE_HERE" />
   </head>
   <body>
     <div id="root"></div>
