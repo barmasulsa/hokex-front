@@ -8,6 +8,7 @@ interface EventCardProps {
   event: EventRecord;
   onSave?: (eventId: string) => void;
   onEdit?: (eventId: string, field: string, value: string) => void;
+  onDelete?: (eventId: string) => void;
 }
 
 // 기본 포스터 이미지
@@ -28,11 +29,12 @@ const DCC_EVENT_POSTER = '/images/dcc-event.png';
 // 수원메쎄 기본 포스터
 const SUWONMESSE_DEFAULT_POSTER = '/images/suwonmesse-default.png';
 
-export function EventCard({ event, onSave, onEdit }: EventCardProps) {
+export function EventCard({ event, onSave, onEdit, onDelete }: EventCardProps) {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(event.title);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const badge = calculateStatusBadge(event);
   const daysUntilStart = calculateDaysUntilStart(event);
@@ -233,6 +235,24 @@ export function EventCard({ event, onSave, onEdit }: EventCardProps) {
 
         <div className="card-footer">
           <span className="card-venue">{event.venue}</span>
+          {isAdmin && onDelete && (
+            <button
+              className="delete-event-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (showDeleteConfirm) {
+                  onDelete(event.id);
+                  setShowDeleteConfirm(false);
+                } else {
+                  setShowDeleteConfirm(true);
+                  setTimeout(() => setShowDeleteConfirm(false), 3000);
+                }
+              }}
+              title={showDeleteConfirm ? "클릭하여 삭제 확인" : "행사 삭제"}
+            >
+              {showDeleteConfirm ? '✓ 삭제 확인' : '🗑️'}
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { fetchEvents } from '../services/eventService';
 import { useAuth } from '../contexts/AuthContext';
 import { getCachedVisitorStats } from '../utils/detailedAnalytics';
 import { PresenceManager } from '../utils/onlinePresence';
+import { supabase } from '../lib/supabase';
 import type { EventRecord, Venue } from '../types/core';
 import { Region, Category, REGION_VENUE_MAP } from '../types/core';
 import { FilterEngine } from '../utils/filterEngine';
@@ -33,10 +34,11 @@ const INDUSTRIES = [
 ];
 
 export function HomePage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [visitorStats, setVisitorStats] = useState({
     today: 0,
     last7Days: 0,
@@ -271,6 +273,37 @@ export function HomePage() {
         ? { ...event, isSaved: !event.isSaved }
         : event
     ));
+  };
+
+  const handleDelete = async (eventId: string) => {
+    if (!isAdmin) {
+      alert('관리자만 삭제할 수 있습니다.');
+      return;
+    }
+
+    // 2단계 확인
+    const firstConfirm = confirm('정말 이 행사를 삭제하시겠습니까?\n\n삭제된 행사는 관리자 페이지에서 복구할 수 있습니다.');
+    if (!firstConfirm) return;
+
+    const secondConfirm = confirm('⚠️ 최종 확인\n\n정말로 삭제하시겠습니까?');
+    if (!secondConfirm) return;
+
+    try {
+      // 소프트 삭제: deleted_at에 현재 시간 기록
+      const { error } = await supabase
+        .from('events')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', eventId);
+
+      if (error) throw error;
+
+      // 로컬 상태에서도 제거
+      setEvents(prev => prev.filter(event => event.id !== eventId));
+      alert('✓ 행사가 삭제되었습니다.\n\n관리자 페이지에서 복구할 수 있습니다.');
+    } catch (error: any) {
+      console.error('삭제 실패:', error);
+      alert('❌ 행사 삭제에 실패했습니다:\n' + error.message);
+    }
   };
 
   const handleEdit = (eventId: string, field: string, value: string) => {
@@ -717,6 +750,15 @@ export function HomePage() {
           {/* 결과 카운트 배너 */}
           <div className="results-count-banner">
             <p>{filteredEvents.length}개의 행사</p>
+            {isAdmin && (
+              <button 
+                className="admin-add-event-btn"
+                onClick={() => setShowAddModal(true)}
+                title="행사 추가"
+              >
+                + 행사 추가
+              </button>
+            )}
           </div>
 
           {/* 행사 그리드 */}
@@ -736,6 +778,7 @@ export function HomePage() {
                   event={event}
                   onSave={handleSave}
                   onEdit={handleEdit}
+                  onDelete={isAdmin ? handleDelete : undefined}
                 />
               ))
             )}
@@ -774,6 +817,286 @@ export function HomePage() {
           </div>
         </aside>
       </div>
+
+      {/* 행사 추가 모달 */}
+      {showAddModal && isAdmin && (
+        <AddEventModal
+          onClose={() => setShowAddModal(false)}
+          onSuccess={async () => {
+            setShowAddModal(false);
+            // 행사 목록 새로고침
+            const data = await fetchEvents();
+            setEvents(data);
+          }}
+        />
+      )}
     </>
+  );
+}
+
+// 행사 추가 모달 컴포넌트
+function AddEventModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+  const [formData, setFormData] = useState({
+    title: '',
+    venue: '',
+    venue_hall: '',
+    region: '수도권',
+    category: ['전시'],
+    start_date: '',
+    end_date: '',
+    organizer: '',
+    poster_url: '',
+    venue_event_page_url: '',
+    description: '',
+    operating_hours: '',
+    website_url: ''
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  // 전시장 선택 시 지역 자동 설정
+  const handleVenueChange = (venue: string) => {
+    let region = '수도권';
+    
+    // 지역 자동 매핑
+    if (['코엑스', '코엑스 마곡', 'aT센터', '세텍'].includes(venue)) {
+      region = '수도권';
+    } else if (['킨텍스', '수원컨벤션센터', '수원메쎄', '송도컨벤시아'].includes(venue)) {
+      region = '수도권';
+    } else if (['대전컨벤션센터', '청주오스코'].includes(venue)) {
+      region = '대전/충청';
+    } else if (['김대중컨벤션센터', '군산새만금컨벤션센터'].includes(venue)) {
+      region = '광주/전남';
+    } else if (['벡스코', '엑스코', '창원컨벤션센터', '유에코', '경주화백컨벤션센터', '구미코'].includes(venue)) {
+      region = '부산/경남';
+    } else if (venue === '제주국제컨벤션센터') {
+      region = '제주';
+    }
+    
+    setFormData({ ...formData, venue, region });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.title || !formData.venue || !formData.start_date || !formData.end_date) {
+      alert('필수 항목을 모두 입력해주세요.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      // day_string 계산
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      const start = new Date(formData.start_date);
+      const end = new Date(formData.end_date);
+      const dayString = formData.start_date === formData.end_date
+        ? days[start.getDay()]
+        : `${days[start.getDay()]}~${days[end.getDay()]}`;
+
+      const { error } = await supabase
+        .from('events')
+        .insert({
+          ...formData,
+          day_string: dayString,
+          industry: '기타',
+          supervisor: null,
+          contact: null
+        });
+
+      if (error) throw error;
+
+      alert('행사가 추가되었습니다.');
+      onSuccess();
+    } catch (error: any) {
+      console.error('행사 추가 실패:', error);
+      alert('행사 추가에 실패했습니다: ' + error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content add-event-modal" onClick={(e) => e.stopPropagation()}>
+        <h2>행사 추가</h2>
+        <form onSubmit={handleSubmit} className="add-event-form">
+          <div className="form-group">
+            <label>행사명 *</label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>전시장 *</label>
+              <select
+                value={formData.venue}
+                onChange={(e) => handleVenueChange(e.target.value)}
+                required
+              >
+                <option value="">전시장 선택</option>
+                <optgroup label="서울">
+                  <option value="코엑스">코엑스</option>
+                  <option value="코엑스 마곡">코엑스 마곡</option>
+                  <option value="aT센터">aT센터</option>
+                  <option value="세텍">세텍</option>
+                </optgroup>
+                <optgroup label="수도권">
+                  <option value="킨텍스">킨텍스</option>
+                  <option value="수원컨벤션센터">수원컨벤션센터</option>
+                  <option value="수원메쎄">수원메쎄</option>
+                  <option value="송도컨벤시아">송도컨벤시아</option>
+                </optgroup>
+                <optgroup label="대전/충청">
+                  <option value="대전컨벤션센터">대전컨벤션센터</option>
+                  <option value="청주오스코">청주오스코</option>
+                </optgroup>
+                <optgroup label="광주/전남">
+                  <option value="김대중컨벤션센터">김대중컨벤션센터</option>
+                  <option value="군산새만금컨벤션센터">군산새만금컨벤션센터</option>
+                </optgroup>
+                <optgroup label="부산/경남">
+                  <option value="벡스코">벡스코</option>
+                  <option value="엑스코">엑스코</option>
+                  <option value="창원컨벤션센터">창원컨벤션센터</option>
+                  <option value="유에코">유에코</option>
+                  <option value="경주화백컨벤션센터">경주화백컨벤션센터</option>
+                  <option value="구미코">구미코</option>
+                </optgroup>
+                <optgroup label="제주">
+                  <option value="제주국제컨벤션센터">제주국제컨벤션센터</option>
+                </optgroup>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>홀</label>
+              <input
+                type="text"
+                value={formData.venue_hall}
+                onChange={(e) => setFormData({ ...formData, venue_hall: e.target.value })}
+                placeholder="예: Hall A"
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>지역 (자동 설정)</label>
+              <input
+                type="text"
+                value={formData.region}
+                readOnly
+                style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
+              />
+            </div>
+            <div className="form-group">
+              <label>카테고리 *</label>
+              <select
+                value={formData.category[0]}
+                onChange={(e) => setFormData({ ...formData, category: [e.target.value] })}
+                required
+              >
+                <option value="전시">전시</option>
+                <option value="회의">회의</option>
+                <option value="행사/공연">행사/공연</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>시작일 *</label>
+              <input
+                type="date"
+                value={formData.start_date}
+                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>종료일 *</label>
+              <input
+                type="date"
+                value={formData.end_date}
+                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>주최/주관</label>
+            <input
+              type="text"
+              value={formData.organizer}
+              onChange={(e) => setFormData({ ...formData, organizer: e.target.value })}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>포스터 URL</label>
+            <input
+              type="url"
+              value={formData.poster_url}
+              onChange={(e) => setFormData({ ...formData, poster_url: e.target.value })}
+              placeholder="https://..."
+            />
+          </div>
+
+          <div className="form-group">
+            <label>행사 페이지 URL</label>
+            <input
+              type="url"
+              value={formData.venue_event_page_url}
+              onChange={(e) => setFormData({ ...formData, venue_event_page_url: e.target.value })}
+              placeholder="https://..."
+            />
+          </div>
+
+          <div className="form-group">
+            <label>웹사이트 URL</label>
+            <input
+              type="url"
+              value={formData.website_url}
+              onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
+              placeholder="https://..."
+            />
+          </div>
+
+          <div className="form-group">
+            <label>운영시간</label>
+            <input
+              type="text"
+              value={formData.operating_hours}
+              onChange={(e) => setFormData({ ...formData, operating_hours: e.target.value })}
+              placeholder="예: 10:00 ~ 18:00"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>설명</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              rows={4}
+            />
+          </div>
+
+          <div className="modal-actions">
+            <button type="button" onClick={onClose} className="cancel-btn">
+              취소
+            </button>
+            <button type="submit" className="submit-btn" disabled={submitting}>
+              {submitting ? '추가 중...' : '추가'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
