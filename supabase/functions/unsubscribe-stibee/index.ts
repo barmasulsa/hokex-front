@@ -27,7 +27,8 @@ serve(async (req) => {
 
     console.log('Unsubscribing email:', email);
 
-    // 1. Stibee API로 구독 해지
+    // 1. Stibee API로 구독 해지 (DELETE 메서드 사용)
+    // Stibee API는 DELETE 요청 시 body에 이메일 배열을 전달
     const stibeeResponse = await fetch(
       `https://api.stibee.com/v1/lists/${STIBEE_LIST_ID}/subscribers`,
       {
@@ -36,20 +37,27 @@ serve(async (req) => {
           'AccessToken': STIBEE_API_KEY!,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          subscribers: [{ email }]
-        }),
+        body: JSON.stringify([email]), // 이메일 배열로 전달
       }
     );
 
+    console.log('Stibee API response status:', stibeeResponse.status);
+    
     if (!stibeeResponse.ok) {
       const errorText = await stibeeResponse.text();
-      console.error('Stibee API error:', errorText);
-      throw new Error(`Stibee API error: ${stibeeResponse.status}`);
+      console.error('Stibee API error response:', errorText);
+      console.error('Stibee API error status:', stibeeResponse.status);
+      
+      // 404는 이미 삭제된 경우일 수 있으므로 계속 진행
+      if (stibeeResponse.status !== 404) {
+        throw new Error(`Stibee API error: ${stibeeResponse.status} - ${errorText}`);
+      } else {
+        console.log('Subscriber not found in Stibee (404), continuing with account deletion...');
+      }
+    } else {
+      const stibeeData = await stibeeResponse.json();
+      console.log('Stibee unsubscribe response:', JSON.stringify(stibeeData));
     }
-
-    const stibeeData = await stibeeResponse.json();
-    console.log('Stibee unsubscribe response:', stibeeData);
 
     // 2. Supabase에서 사용자 데이터 삭제
     const supabaseClient = createClient(
