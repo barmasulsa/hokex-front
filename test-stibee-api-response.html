@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stibee API 응답 구조 테스트</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+    .input-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #555;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 4px;
+      border-left: 4px solid #4CAF50;
+    }
+    .error {
+      border-left-color: #f44336;
+      background: #ffebee;
+    }
+    .info {
+      background: #e3f2fd;
+      border-left-color: #2196F3;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+    }
+    pre {
+      background: #263238;
+      color: #aed581;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .summary {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 4px;
+    }
+    .summary h3 {
+      margin-top: 0;
+      color: #856404;
+    }
+    .summary ul {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+    .summary li {
+      margin: 5px 0;
+      color: #856404;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Stibee API 응답 구조 테스트</h1>
+    <p class="subtitle">Stibee API가 실제로 어떤 구조로 응답하는지 확인합니다</p>
+
+    <div class="info">
+      <strong>📌 이 테스트의 목적:</strong><br>
+      Edge Function이 구독자를 10명만 가져오는 이유를 파악하기 위해 Stibee API의 실제 응답 구조를 확인합니다.
+    </div>
+
+    <div class="input-group">
+      <label for="apiKey">Stibee API Key:</label>
+      <input type="text" id="apiKey" placeholder="Stibee API 키를 입력하세요">
+    </div>
+
+    <div class="input-group">
+      <label for="listId">Stibee List ID:</label>
+      <input type="text" id="listId" placeholder="Stibee 리스트 ID를 입력하세요">
+    </div>
+
+    <button onclick="testStibeeAPI()">API 응답 확인</button>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    async function testStibeeAPI() {
+      const apiKey = document.getElementById('apiKey').value.trim();
+      const listId = document.getElementById('listId').value.trim();
+      const resultDiv = document.getElementById('result');
+
+      if (!apiKey || !listId) {
+        resultDiv.innerHTML = '<div class="result error"><strong>❌ 오류:</strong> API Key와 List ID를 모두 입력해주세요.</div>';
+        return;
+      }
+
+      resultDiv.innerHTML = '<div class="result"><strong>⏳ 테스트 중...</strong> Stibee API를 호출하고 있습니다.</div>';
+
+      try {
+        // 첫 번째 페이지만 테스트 (offset=0, limit=10)
+        const url = `https://api.stibee.com/v1/lists/${listId}/subscribers?offset=0&limit=10`;
+        
+        console.log('🔗 API URL:', url);
+
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'AccessToken': apiKey,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        console.log('📡 Response Status:', response.status);
+        console.log('📡 Response Headers:', [...response.headers.entries()]);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          resultDiv.innerHTML = `
+            <div class="result error">
+              <h3>❌ API 호출 실패</h3>
+              <p><strong>상태 코드:</strong> ${response.status}</p>
+              <p><strong>에러 메시지:</strong></p>
+              <pre>${errorText}</pre>
+              <div class="summary">
+                <h3>💡 해결 방법:</h3>
+                <ul>
+                  <li><strong>401 Unauthorized:</strong> API Key가 잘못되었습니다. Stibee 대시보드에서 확인하세요.</li>
+                  <li><strong>404 Not Found:</strong> List ID가 잘못되었습니다. Stibee 대시보드에서 확인하세요.</li>
+                  <li><strong>403 Forbidden:</strong> API Key에 해당 리스트 접근 권한이 없습니다.</li>
+                </ul>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        const data = await response.json();
+        console.log('📊 Response Data:', data);
+
+        // 응답 구조 분석
+        let subscribers = [];
+        let responseStructure = '';
+
+        if (Array.isArray(data)) {
+          subscribers = data;
+          responseStructure = 'Array (직접 배열)';
+        } else if (data.Value && Array.isArray(data.Value)) {
+          subscribers = data.Value;
+          responseStructure = 'data.Value';
+        } else if (data.value && Array.isArray(data.value)) {
+          subscribers = data.value;
+          responseStructure = 'data.value';
+        } else if (data.data && Array.isArray(data.data)) {
+          subscribers = data.data;
+          responseStructure = 'data.data';
+        } else if (data.subscribers && Array.isArray(data.subscribers)) {
+          subscribers = data.subscribers;
+          responseStructure = 'data.subscribers';
+        } else {
+          responseStructure = '알 수 없는 구조';
+        }
+
+        // 전체 구독자 수 확인 (total 필드)
+        const totalCount = data.total || data.Total || data.totalCount || data.TotalCount || '알 수 없음';
+
+        resultDiv.innerHTML = `
+          <div class="result">
+            <h3>✅ API 호출 성공</h3>
+            
+            <div class="summary">
+              <h3>📊 응답 구조 분석:</h3>
+              <ul>
+                <li><strong>응답 구조:</strong> ${responseStructure}</li>
+                <li><strong>이번 페이지 구독자 수:</strong> ${subscribers.length}명</li>
+                <li><strong>전체 구독자 수 (total):</strong> ${totalCount}명</li>
+              </ul>
+            </div>
+
+            <h4>📄 전체 응답 JSON:</h4>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+
+            ${subscribers.length > 0 ? `
+              <h4>👤 첫 번째 구독자 예시:</h4>
+              <pre>${JSON.stringify(subscribers[0], null, 2)}</pre>
+            ` : ''}
+
+            <div class="summary">
+              <h3>🔧 Edge Function 수정 필요 여부:</h3>
+              <ul>
+                ${responseStructure === '알 수 없는 구조' ? 
+                  '<li><strong>⚠️ 예상치 못한 응답 구조입니다.</strong> Edge Function 코드를 수정해야 합니다.</li>' :
+                  '<li>✅ Edge Function이 이 구조를 지원합니다.</li>'
+                }
+                ${subscribers.length === 0 ? 
+                  '<li><strong>⚠️ 구독자가 0명입니다.</strong> List ID가 올바른지 확인하세요.</li>' :
+                  `<li>✅ 구독자 ${subscribers.length}명을 정상적으로 가져왔습니다.</li>`
+                }
+                ${totalCount !== '알 수 없음' && totalCount > 10 ?
+                  `<li><strong>📌 전체 구독자는 ${totalCount}명입니다.</strong> Edge Function이 페이지네이션을 통해 모두 가져와야 합니다.</li>` :
+                  ''
+                }
+              </ul>
+            </div>
+          </div>
+        `;
+
+      } catch (error) {
+        console.error('❌ Error:', error);
+        resultDiv.innerHTML = `
+          <div class="result error">
+            <h3>❌ 오류 발생</h3>
+            <p><strong>에러 메시지:</strong></p>
+            <pre>${error.message}</pre>
+            <div class="summary">
+              <h3>💡 가능한 원인:</h3>
+              <ul>
+                <li>네트워크 연결 문제</li>
+                <li>CORS 정책 문제 (브라우저에서 직접 호출 시)</li>
+                <li>Stibee API 서버 문제</li>
+              </ul>
+            </div>
+          </div>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>

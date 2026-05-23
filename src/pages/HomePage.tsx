@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EventCard } from '../components/EventCard';
 import { Banner } from '../components/Banner';
-import { fetchEvents } from '../services/eventService';
+import { fetchEvents, fetchSavedEventIds, toggleSaveEvent } from '../services/eventService';
 import { useAuth } from '../contexts/AuthContext';
 import { getCachedVisitorStats } from '../utils/detailedAnalytics';
 import { PresenceManager } from '../utils/onlinePresence';
@@ -88,11 +88,27 @@ export function HomePage() {
     async function loadEvents() {
       setLoading(true);
       const data = await fetchEvents();
-      setEvents(data);
+      
+      // 사용자가 로그인되어 있으면 저장된 행사 ID 가져오기
+      if (user) {
+        const savedIds = await fetchSavedEventIds(user.id);
+        const savedIdsSet = new Set(savedIds);
+        
+        // isSaved 플래그 설정
+        const eventsWithSaved = data.map(event => ({
+          ...event,
+          isSaved: savedIdsSet.has(event.id)
+        }));
+        
+        setEvents(eventsWithSaved);
+      } else {
+        setEvents(data);
+      }
+      
       setLoading(false);
     }
     loadEvents();
-  }, []);
+  }, [user]);
 
   // 방문자 통계 가져오기 (캐시 사용 - 빠름)
   useEffect(() => {
@@ -267,12 +283,34 @@ export function HomePage() {
     setFilteredEvents(uniqueEvents);
   }, [events, selectedRegion, selectedVenue, selectedMonth, selectedCategories, selectedIndustries, searchQuery, dateRange, showCurrentOnly]);
 
-  const handleSave = (eventId: string) => {
+  const handleSave = async (eventId: string) => {
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
+    // 낙관적 업데이트 (UI 즉시 반영)
     setEvents(prev => prev.map(event => 
       event.id === eventId 
         ? { ...event, isSaved: !event.isSaved }
         : event
     ));
+
+    // DB에 저장/취소
+    try {
+      const isSaved = await toggleSaveEvent(user.id, eventId);
+      console.log(`Event ${eventId} ${isSaved ? 'saved' : 'unsaved'}`);
+    } catch (error) {
+      console.error('Error toggling save:', error);
+      // 실패 시 원래 상태로 되돌리기
+      setEvents(prev => prev.map(event => 
+        event.id === eventId 
+          ? { ...event, isSaved: !event.isSaved }
+          : event
+      ));
+      alert('저장에 실패했습니다. 다시 시도해주세요.');
+    }
   };
 
   const handleDelete = async (eventId: string) => {

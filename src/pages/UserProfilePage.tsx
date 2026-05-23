@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { mockEvents } from '../data/mockEvents';
+import { fetchSavedEvents } from '../services/eventService';
+import type { EventRecord } from '../types/core';
 import { Heart, Bell, Shield, Mail, User as UserIcon, Key } from 'lucide-react';
 
 export function UserProfilePage() {
@@ -15,6 +16,10 @@ export function UserProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   
+  // 저장된 행사 목록
+  const [savedEvents, setSavedEvents] = useState<EventRecord[]>([]);
+  const [loadingSavedEvents, setLoadingSavedEvents] = useState(true);
+  
   // Notification settings
   const [eventReminders, setEventReminders] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);
@@ -23,8 +28,19 @@ export function UserProfilePage() {
   // Interest tags
   const [interests] = useState(['Architectural Design', 'MICE Logistics', 'Smart Venues']);
 
-  // Saved events
-  const savedEvents = mockEvents.filter(e => e.isSaved).slice(0, 2);
+  // 저장된 행사 가져오기
+  useEffect(() => {
+    async function loadSavedEvents() {
+      if (!user) return;
+      
+      setLoadingSavedEvents(true);
+      const events = await fetchSavedEvents(user.id);
+      setSavedEvents(events.slice(0, 6)); // 최대 6개만 표시
+      setLoadingSavedEvents(false);
+    }
+    
+    loadSavedEvents();
+  }, [user]);
 
   const handleSaveAccount = () => {
     alert('계정 정보가 저장되었습니다');
@@ -293,21 +309,27 @@ export function UserProfilePage() {
           <section className="profile-section">
             <div className="section-header">
               <h2><Heart size={24} /> Saved/Favorite Events</h2>
-              <p className="section-subtitle">Events you're tracking for the 2024 season</p>
+              <p className="section-subtitle">저장한 행사 목록</p>
               <Link to="/" className="view-all-link">View All</Link>
             </div>
             <div className="saved-events-grid">
-              {savedEvents.length === 0 ? (
+              {loadingSavedEvents ? (
+                <p>저장된 행사를 불러오는 중...</p>
+              ) : savedEvents.length === 0 ? (
                 <p>저장된 행사가 없습니다</p>
               ) : (
                 savedEvents.map(event => (
                   <Link key={event.id} to={`/event/${event.id}`} className="saved-event-card">
-                    <img src={event.poster} alt={event.title} />
+                    {event.poster && (
+                      <img src={event.poster} alt={event.title} referrerPolicy="no-referrer" />
+                    )}
                     <button className="saved-event-heart">
                       <Heart size={20} fill="currentColor" />
                     </button>
                     <div className="saved-event-info">
-                      <span className="saved-event-category">{event.category}</span>
+                      <span className="saved-event-category">
+                        {Array.isArray(event.category) ? event.category[0] : event.category}
+                      </span>
                       <span className="saved-event-date">
                         {event.startDate.toISOString().slice(5, 10).replace('-', '.')}
                       </span>

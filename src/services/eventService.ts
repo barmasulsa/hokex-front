@@ -119,7 +119,8 @@ export async function fetchSavedEvents(userId: string) {
       event_id,
       events (*)
     `)
-    .eq('user_id', userId);
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching saved events:', error);
@@ -127,6 +128,58 @@ export async function fetchSavedEvents(userId: string) {
   }
 
   return data.map((item: any) => mapSupabaseEventToEventRecord(item.events));
+}
+
+// 사용자의 저장된 행사 ID 목록 가져오기 (빠른 조회용)
+export async function fetchSavedEventIds(userId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('saved_events')
+    .select('event_id')
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error fetching saved event IDs:', error);
+    return [];
+  }
+
+  return data.map((item: any) => item.event_id);
+}
+
+// 행사 저장/찜하기 토글
+export async function toggleSaveEvent(userId: string, eventId: string): Promise<boolean> {
+  // 먼저 이미 저장되어 있는지 확인
+  const { data: existing } = await supabase
+    .from('saved_events')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('event_id', eventId)
+    .single();
+
+  if (existing) {
+    // 이미 저장되어 있으면 삭제 (찜 취소)
+    const { error } = await supabase
+      .from('saved_events')
+      .delete()
+      .eq('user_id', userId)
+      .eq('event_id', eventId);
+
+    if (error) {
+      console.error('Error unsaving event:', error);
+      return false;
+    }
+    return false; // 찜 취소됨
+  } else {
+    // 저장되어 있지 않으면 추가 (찜하기)
+    const { error } = await supabase
+      .from('saved_events')
+      .insert({ user_id: userId, event_id: eventId });
+
+    if (error) {
+      console.error('Error saving event:', error);
+      return false;
+    }
+    return true; // 찜함
+  }
 }
 
 // 행사 저장/찜하기
