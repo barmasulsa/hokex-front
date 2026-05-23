@@ -190,6 +190,77 @@ export function UserProfilePage() {
         {/* Main Content */}
         <div className="profile-main">
 
+          {/* Saved Events */}
+          <section className="profile-section">
+            <div className="section-header">
+              <h2><Heart size={24} /> Saved/Favorite Events</h2>
+              <p className="section-subtitle">
+                저장한 행사 목록 ({savedEvents.length}개)
+              </p>
+            </div>
+            <div className="saved-events-grid">
+              {loadingSavedEvents ? (
+                <p>저장된 행사를 불러오는 중...</p>
+              ) : savedEvents.length === 0 ? (
+                <p>저장된 행사가 없습니다</p>
+              ) : (
+                currentEvents.map(event => (
+                  <Link key={event.id} to={`/event/${event.id}`} className="saved-event-card">
+                    {event.poster && (
+                      <img src={event.poster} alt={event.title} referrerPolicy="no-referrer" />
+                    )}
+                    <button className="saved-event-heart">
+                      <Heart size={20} fill="currentColor" />
+                    </button>
+                    <div className="saved-event-info">
+                      <span className="saved-event-category">
+                        {Array.isArray(event.category) ? event.category[0] : event.category}
+                      </span>
+                      <span className="saved-event-date">
+                        {event.startDate.toISOString().slice(5, 10).replace('-', '.')}
+                      </span>
+                      <h3>{event.title}</h3>
+                      <p><span style={{ marginRight: '4px' }}>📍</span>{event.venue}, {event.region}</p>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+            
+            {/* 페이지네이션 */}
+            {!loadingSavedEvents && savedEvents.length > eventsPerPage && (
+              <div className="pagination">
+                <button
+                  className="pagination-btn"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  ‹ 이전
+                </button>
+                
+                <div className="pagination-numbers">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                      onClick={() => handlePageChange(page)}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                
+                <button
+                  className="pagination-btn"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  다음 ›
+                </button>
+              </div>
+            )}
+          </section>
+
           {/* 닉네임 설정 폼 */}
           {isSettingNickname && (
             <section className="profile-section" style={{ marginBottom: '24px' }}>
@@ -368,77 +439,6 @@ export function UserProfilePage() {
               </div>
             </section>
           )}
-
-          {/* Saved Events */}
-          <section className="profile-section">
-            <div className="section-header">
-              <h2><Heart size={24} /> Saved/Favorite Events</h2>
-              <p className="section-subtitle">
-                저장한 행사 목록 ({savedEvents.length}개)
-              </p>
-            </div>
-            <div className="saved-events-grid">
-              {loadingSavedEvents ? (
-                <p>저장된 행사를 불러오는 중...</p>
-              ) : savedEvents.length === 0 ? (
-                <p>저장된 행사가 없습니다</p>
-              ) : (
-                currentEvents.map(event => (
-                  <Link key={event.id} to={`/event/${event.id}`} className="saved-event-card">
-                    {event.poster && (
-                      <img src={event.poster} alt={event.title} referrerPolicy="no-referrer" />
-                    )}
-                    <button className="saved-event-heart">
-                      <Heart size={20} fill="currentColor" />
-                    </button>
-                    <div className="saved-event-info">
-                      <span className="saved-event-category">
-                        {Array.isArray(event.category) ? event.category[0] : event.category}
-                      </span>
-                      <span className="saved-event-date">
-                        {event.startDate.toISOString().slice(5, 10).replace('-', '.')}
-                      </span>
-                      <h3>{event.title}</h3>
-                      <p><span style={{ marginRight: '4px' }}>📍</span>{event.venue}, {event.region}</p>
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
-            
-            {/* 페이지네이션 */}
-            {!loadingSavedEvents && savedEvents.length > eventsPerPage && (
-              <div className="pagination">
-                <button
-                  className="pagination-btn"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  ‹ 이전
-                </button>
-                
-                <div className="pagination-numbers">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <button
-                      key={page}
-                      className={`pagination-number ${currentPage === page ? 'active' : ''}`}
-                      onClick={() => handlePageChange(page)}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                </div>
-                
-                <button
-                  className="pagination-btn"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  다음 ›
-                </button>
-              </div>
-            )}
-          </section>
 
           {/* Account Settings */}
           <section className="profile-section">
