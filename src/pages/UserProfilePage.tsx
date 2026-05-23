@@ -19,6 +19,8 @@ export function UserProfilePage() {
   // 저장된 행사 목록
   const [savedEvents, setSavedEvents] = useState<EventRecord[]>([]);
   const [loadingSavedEvents, setLoadingSavedEvents] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const eventsPerPage = 4;
   
   // Notification settings
   const [eventReminders, setEventReminders] = useState(true);
@@ -35,12 +37,24 @@ export function UserProfilePage() {
       
       setLoadingSavedEvents(true);
       const events = await fetchSavedEvents(user.id);
-      setSavedEvents(events.slice(0, 6)); // 최대 6개만 표시
+      setSavedEvents(events); // 전체 저장
       setLoadingSavedEvents(false);
     }
     
     loadSavedEvents();
   }, [user]);
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(savedEvents.length / eventsPerPage);
+  const startIndex = (currentPage - 1) * eventsPerPage;
+  const endIndex = startIndex + eventsPerPage;
+  const currentEvents = savedEvents.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // 페이지 변경 시 스크롤을 섹션 상단으로 이동
+    document.querySelector('.profile-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const handleSaveAccount = () => {
     alert('계정 정보가 저장되었습니다');
@@ -309,8 +323,9 @@ export function UserProfilePage() {
           <section className="profile-section">
             <div className="section-header">
               <h2><Heart size={24} /> Saved/Favorite Events</h2>
-              <p className="section-subtitle">저장한 행사 목록</p>
-              <Link to="/" className="view-all-link">View All</Link>
+              <p className="section-subtitle">
+                저장한 행사 목록 ({savedEvents.length}개)
+              </p>
             </div>
             <div className="saved-events-grid">
               {loadingSavedEvents ? (
@@ -318,7 +333,7 @@ export function UserProfilePage() {
               ) : savedEvents.length === 0 ? (
                 <p>저장된 행사가 없습니다</p>
               ) : (
-                savedEvents.map(event => (
+                currentEvents.map(event => (
                   <Link key={event.id} to={`/event/${event.id}`} className="saved-event-card">
                     {event.poster && (
                       <img src={event.poster} alt={event.title} referrerPolicy="no-referrer" />
@@ -340,6 +355,39 @@ export function UserProfilePage() {
                 ))
               )}
             </div>
+            
+            {/* 페이지네이션 */}
+            {!loadingSavedEvents && savedEvents.length > eventsPerPage && (
+              <div className="pagination">
+                <button
+                  className="pagination-btn"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  ‹ 이전
+                </button>
+                
+                <div className="pagination-numbers">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                      onClick={() => handlePageChange(page)}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                
+                <button
+                  className="pagination-btn"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  다음 ›
+                </button>
+              </div>
+            )}
           </section>
 
           {/* Account Settings */}
