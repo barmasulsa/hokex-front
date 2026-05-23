@@ -7,6 +7,7 @@ interface UserProfile {
   id: string;
   email: string;
   is_admin: boolean;
+  nickname: string | null;
 }
 
 interface AuthContextType {
@@ -22,6 +23,8 @@ interface AuthContextType {
   signInWithPassword: (email: string, password: string) => Promise<void>;
   signInWithMagicLink: (email: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
+  updateNickname: (nickname: string) => Promise<void>;
   signOut: () => Promise<void>;
   toggleAdminMode: () => void;
 }
@@ -203,6 +206,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // 비밀번호 업데이트 (로그인된 사용자만)
+  const updatePassword = async (newPassword: string) => {
+    if (!user) {
+      throw new Error('로그인이 필요합니다');
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+    
+    if (error) {
+      console.error('Error updating password:', error);
+      throw error;
+    }
+  };
+
+  // 닉네임 업데이트 (자동으로 "판다" 붙임)
+  const updateNickname = async (nickname: string) => {
+    if (!user) {
+      throw new Error('로그인이 필요합니다');
+    }
+
+    // 사용자 입력 그대로 + "판다" 붙이기
+    // 공백 있으면: "레서 " → "레서 판다"
+    // 공백 없으면: "레서" → "레서판다"
+    const nicknameWithPanda = nickname + '판다';
+
+    // 중복 체크
+    const { data: existingUser, error: checkError } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('nickname', nicknameWithPanda)
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      // PGRST116은 "no rows returned" 에러 (중복 없음)
+      console.error('Error checking nickname:', checkError);
+      throw checkError;
+    }
+
+    if (existingUser && existingUser.id !== user.id) {
+      throw new Error('NICKNAME_TAKEN');
+    }
+
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({ nickname: nicknameWithPanda })
+      .eq('id', user.id);
+    
+    if (error) {
+      console.error('Error updating nickname:', error);
+      throw error;
+    }
+
+    // 로컬 상태 업데이트
+    if (userProfile) {
+      setUserProfile({ ...userProfile, nickname: nicknameWithPanda });
+    }
+  };
+
   // Magic Link 로그인 (이메일 전용) - 구독자만 허용
   const signInWithMagicLink = async (email: string) => {
     // 1. 먼저 스티비 구독자인지 확인
@@ -257,6 +320,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signInWithPassword,
     signInWithMagicLink,
     resetPassword,
+    updatePassword,
+    updateNickname,
     signOut,
     toggleAdminMode,
   };

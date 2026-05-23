@@ -35,6 +35,17 @@ function AppContent() {
     }
   }, []);
 
+  // URL 해시 정리 (에러 파라미터 제거)
+  useEffect(() => {
+    const hash = window.location.hash;
+    
+    // Supabase 인증 관련 에러 해시가 있으면 조용히 제거
+    if (hash.includes('error=') || hash.includes('error_code=') || hash.includes('error_description=')) {
+      // URL에서 에러 해시만 깔끔하게 제거
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, []);
+
   const handleSignOut = async () => {
     try {
       await signOut();

@@ -18,6 +18,15 @@ export function LoginPage() {
     }
   }, [user, loading, navigate]);
 
+  // 매직 링크 만료 감지 (로그인 페이지에서만)
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes('error=access_denied') && hash.includes('otp_expired')) {
+      // 이미 App.tsx에서 URL은 정리되었으므로, 여기서는 안내만 표시
+      setError('⚠️ 로그인 링크가 만료되었습니다. 아래에서 새로운 링크를 요청해주세요.');
+    }
+  }, []);
+
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -100,6 +109,12 @@ export function LoginPage() {
             HOKEX는 카페인판다 뉴스레터 구독자 전용 서비스입니다.
           </p>
 
+          <div className="magic-link-info-box">
+            <h3>💡 이메일 링크 로그인 안내</h3>
+            <p>이메일로 받은 로그인 링크를 클릭하면 자동으로 로그인됩니다.</p>
+            <p><strong>첫 로그인 후 비밀번호를 설정하면 링크 없이도 로그인으로 이용 가능합니다.</strong></p>
+          </div>
+
           <form onSubmit={handlePasswordLogin} className="login-form">
             <div className="form-group">
               <label htmlFor="email">구독 이메일</label>
@@ -131,7 +146,7 @@ export function LoginPage() {
                 onClick={handleForgotPassword}
                 disabled={isSubmitting}
               >
-                비밀번호 설정(첫 로그인 후 가능) 및 찾기
+                비밀번호 찾기
               </button>
             </div>
 
@@ -162,7 +177,7 @@ export function LoginPage() {
           <div className="subscriber-notice">
             <p>💡 뉴스레터를 구독한 이메일 주소로 로그인해주세요.</p>
             <p>아직 구독하지 않으셨나요? <a href="https://page.stibee.com/subscriptions/289942" target="_blank" rel="noopener noreferrer">뉴스레터 구독하기</a></p>
-            <p>비밀번호가 없으신가요? 이메일 링크로 로그인 후 비밀번호를 설정하세요. 비밀번호 설정 후에는 이메일 링크 없이 사이트에서 로그인 후 이용 가능합니다.</p>
+            <p><strong>💡 Tip:</strong> 이메일 링크로 첫 로그인 후, 프로필 페이지에서 비밀번호를 설정하면 다음부터는 이메일 링크 없이 바로 로그인할 수 있습니다.</p>
           </div>
 
           <div className="login-footer">
