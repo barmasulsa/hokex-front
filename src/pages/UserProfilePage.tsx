@@ -206,6 +206,27 @@ export function UserProfilePage() {
                 </div>
               </div>
 
+              {/* 주의사항 박스 */}
+              <div style={{
+                background: '#fff9e6',
+                border: '1px solid #ffc107',
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h3 style={{ margin: '0 0 8px 0', color: '#f57c00', fontSize: '16px' }}>
+                  ⚠️ 주의사항
+                </h3>
+                <ul style={{ margin: '0', paddingLeft: '20px', color: '#e65100', fontSize: '14px', lineHeight: '1.6' }}>
+                  <li>특정 조직의 이름을 넣은 닉네임은 삼가해주시기를 바랍니다.</li>
+                  <li>닉네임은 상식선에서 작성해주시길 바랍니다.</li>
+                  <li style={{ marginTop: '8px' }}>
+                    현재 닉네임은 사용처가 딱히 없으나 미래에는 사용될 수 있으니 (이벤트, 커뮤니티 기능) 미리 마련해두는 게 좋을 거 같아 만들었습니다. 
+                    중복 닉네임은 설정이 불가하오니 멋있는 닉네임을 미리 선점하시길 권유드립니다 :)
+                  </li>
+                </ul>
+              </div>
+
               <div className="account-settings">
                 <div className="setting-row">
                   <label>닉네임</label>
