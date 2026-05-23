@@ -257,6 +257,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     if (error) {
       console.error('Error updating nickname:', error);
+      // 409 Conflict 에러는 UNIQUE constraint 위반 (닉네임 중복)
+      if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
+        throw new Error('NICKNAME_TAKEN');
+      }
       throw error;
     }
 
