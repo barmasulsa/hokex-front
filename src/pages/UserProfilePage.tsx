@@ -153,46 +153,39 @@ export function UserProfilePage() {
       <div className="profile-content">
         {/* Main Content */}
         <div className="profile-main">
-          {/* 닉네임 미설정 안내 */}
-          {!userProfile?.nickname && !isSettingNickname && (
-            <div className="nickname-setup-notice" style={{
-              background: '#e7f3ff',
-              border: '1px solid #2196f3',
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '24px',
-            }}>
-              <h3 style={{ margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <UserIcon size={20} />
-                🐼 나만의 판다 닉네임을 만들어보세요!
-              </h3>
-              <p style={{ margin: '0 0 12px 0', color: '#0d47a1' }}>
-                모든 닉네임은 자동으로 "판다"로 끝납니다. 띄어쓰기는 자유롭게!<br />
-                예: "레서" → "레서판다" / "레서 " → "레서 판다"
-              </p>
-              <button 
-                onClick={() => setIsSettingNickname(true)}
-                style={{
-                  background: '#2196f3',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              >
-                닉네임 설정하기
-              </button>
-            </div>
-          )}
 
           {/* 닉네임 설정 폼 */}
           {isSettingNickname && (
             <section className="profile-section" style={{ marginBottom: '24px' }}>
               <h2>🐼 판다 닉네임 설정</h2>
+              
+              {/* 파란색 안내 박스 */}
+              <div style={{
+                background: '#e7f3ff',
+                border: '1px solid #2196F3',
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h3 style={{ margin: '0 0 8px 0', color: '#1976D2', fontSize: '16px' }}>
+                  💡 닉네임 설정 방법
+                </h3>
+                <p style={{ margin: '0 0 8px 0', color: '#1565C0', fontSize: '14px' }}>
+                  모든 닉네임은 자동으로 "판다"로 끝납니다. 띄어쓰기는 자유롭게 선택할 수 있어요!
+                </p>
+                <div style={{ fontSize: '14px', color: '#1565C0' }}>
+                  <strong>예시:</strong>
+                  <ul style={{ margin: '4px 0 0 0', paddingLeft: '20px' }}>
+                    <li>"레서" 입력 → <strong>레서판다</strong> (붙여쓰기)</li>
+                    <li>"레서 " 입력 → <strong>레서 판다</strong> (띄어쓰기)</li>
+                    <li>"대나무 먹는 " 입력 → <strong>대나무 먹는 판다</strong></li>
+                  </ul>
+                </div>
+              </div>
+
               <div className="account-settings">
                 <div className="setting-row">
-                  <label>닉네임 (자동으로 "판다"가 붙습니다)</label>
+                  <label>닉네임</label>
                   <input
                     type="text"
                     value={nicknameInput}
