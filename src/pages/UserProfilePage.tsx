@@ -6,7 +6,7 @@ import type { EventRecord } from '../types/core';
 import { Heart, Bell, Shield, Mail, User as UserIcon, Key } from 'lucide-react';
 
 export function UserProfilePage() {
-  const { user, userProfile, updatePassword, updateNickname, isAdmin } = useAuth();
+  const { user, userProfile, updatePassword, updateNickname, unsubscribe, isAdmin } = useAuth();
   
   const [isSettingPassword, setIsSettingPassword] = useState(false);
   const [isSettingNickname, setIsSettingNickname] = useState(false);
@@ -139,9 +139,22 @@ export function UserProfilePage() {
     }
   };
 
-  const handleDeactivate = () => {
-    if (confirm('정말로 계정을 비활성화하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-      alert('계정이 비활성화되었습니다');
+  const handleUnsubscribe = async () => {
+    if (!user?.email) return;
+    
+    // 첫 번째 경고
+    if (confirm('⚠️ 구독을 해지하면 본 사이트를 이용하실 수 없습니다.\n\n구독 해지 시:\n- HOKEX 뉴스레터를 더 이상 받지 못합니다\n- 로그인이 불가능합니다\n- 저장한 행사 목록이 삭제됩니다\n- 닉네임 및 프로필 정보가 삭제됩니다\n\n정말로 구독을 해지하시겠습니까?')) {
+      // 두 번째 확인
+      if (confirm('다시 한번 확인합니다.\n\n구독을 해지하시겠습니까?')) {
+        try {
+          await unsubscribe();
+          alert('✅ 구독이 해지되었습니다.\n\n그동안 HOKEX를 이용해주셔서 감사합니다.');
+          // unsubscribe 함수 내에서 자동 로그아웃되므로 홈으로 리다이렉트됨
+        } catch (error) {
+          console.error('Error unsubscribing:', error);
+          alert('❌ 구독 해지에 실패했습니다.\n\n다시 시도해주시거나 관리자에게 문의해주세요.');
+        }
+      }
     }
   };
 
@@ -531,14 +544,17 @@ export function UserProfilePage() {
             </div>
           </div>
 
-          {/* Security & Danger Zone */}
+          {/* 구독 해지 */}
           <div className="sidebar-card danger-zone">
-            <h3><Shield size={20} /> SECURITY & DANGER ZONE</h3>
+            <h3><Shield size={20} /> 구독 해지</h3>
             <p className="danger-warning">
-              Once you delete your account, there is no going back. Please be certain.
+              구독을 해지하면 본 사이트를 이용하실 수 없습니다. 신중히 결정해주세요.
             </p>
-            <button className="btn-deactivate" onClick={handleDeactivate}>
-              Deactivate Account
+            <button 
+              className="btn-deactivate" 
+              onClick={handleUnsubscribe}
+            >
+              구독 해지
             </button>
           </div>
         </aside>

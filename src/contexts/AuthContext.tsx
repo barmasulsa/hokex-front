@@ -25,6 +25,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
   updateNickname: (nickname: string) => Promise<void>;
+  unsubscribe: () => Promise<any>;
   signOut: () => Promise<void>;
   toggleAdminMode: () => void;
 }
@@ -312,6 +313,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // 구독 해지 (계정 삭제 포함)
+  const unsubscribe = async () => {
+    if (!user?.email) {
+      throw new Error('No user email found');
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('unsubscribe-stibee', {
+        body: { email: user.email },
+      });
+
+      if (error) {
+        console.error('Error unsubscribing:', error);
+        throw error;
+      }
+
+      if (!data?.success) {
+        throw new Error('Unsubscribe failed');
+      }
+
+      // 자동 로그아웃 (계정이 삭제되었으므로)
+      await supabase.auth.signOut();
+      
+      return data;
+    } catch (error) {
+      console.error('Error in unsubscribe:', error);
+      throw error;
+    }
+  };
+
   // 로그아웃
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -345,6 +376,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     resetPassword,
     updatePassword,
     updateNickname,
+    unsubscribe,
     signOut,
     toggleAdminMode,
   };
