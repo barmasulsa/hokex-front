@@ -303,7 +303,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: import.meta.env.VITE_APP_URL || window.location.origin,
       },
     });
     

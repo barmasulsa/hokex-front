@@ -80,6 +80,18 @@ serve(async (req) => {
 
     console.log('Deleting data for user:', user.id);
 
+    // stibee_subscribers 테이블에서 삭제 (중요!)
+    const { error: stibeeSubError } = await supabaseClient
+      .from('stibee_subscribers')
+      .delete()
+      .eq('email', email.toLowerCase().trim());
+
+    if (stibeeSubError) {
+      console.error('Error deleting from stibee_subscribers:', stibeeSubError);
+    } else {
+      console.log('Successfully deleted from stibee_subscribers table');
+    }
+
     // saved_events 삭제
     const { error: savedEventsError } = await supabaseClient
       .from('saved_events')
