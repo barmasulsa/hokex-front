@@ -105,7 +105,11 @@ export function UserProfilePage() {
     const nicknameWithPanda = nicknameInput + '판다';
     const forbiddenNicknames = ['판다', '카페인판다', '슬픈 판다', '슬픈판다'];
     
-    if (!isAdmin && forbiddenNicknames.includes(nicknameWithPanda)) {
+    // hokex 포함 여부 체크 (대소문자 구분 없이)
+    const containsHokex = nicknameWithPanda.toLowerCase().includes('hokex') || 
+                          nicknameWithPanda.includes('호켁스');
+    
+    if (!isAdmin && (forbiddenNicknames.includes(nicknameWithPanda) || containsHokex)) {
       setNicknameError('해당 닉네임은 사용하실 수 없습니다');
       return;
     }
