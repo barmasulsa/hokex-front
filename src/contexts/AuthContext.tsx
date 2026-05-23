@@ -233,21 +233,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error('INVALID_NICKNAME_WHITESPACE');
     }
 
-    // 관리자 여부 확인
-    const isUserAdmin = userProfile?.is_admin ?? false;
-
-    // 금지된 닉네임 목록 (관리자 제외)
-    const trimmedNickname = nickname.trim();
-    const forbiddenNicknames = ['판다', '카페인', '카페인판다', '슬픈 판다', '슬픈판다'];
-    
-    if (!isUserAdmin && forbiddenNicknames.includes(trimmedNickname)) {
-      throw new Error('INVALID_NICKNAME');
-    }
-
     // 사용자 입력 그대로 + "판다" 붙이기
     // 공백 있으면: "레서 " → "레서 판다"
     // 공백 없으면: "레서" → "레서판다"
     const nicknameWithPanda = nickname + '판다';
+
+    // 관리자 여부 확인
+    const isUserAdmin = userProfile?.is_admin ?? false;
+
+    // 금지된 닉네임 목록 체크 (판다 붙인 후 체크, 관리자 제외)
+    const forbiddenNicknames = ['판다', '카페인판다', '슬픈 판다', '슬픈판다'];
+    
+    if (!isUserAdmin && forbiddenNicknames.includes(nicknameWithPanda)) {
+      throw new Error('INVALID_NICKNAME');
+    }
 
     // 중복 체크
     const { data: existingUser, error: checkError } = await supabase

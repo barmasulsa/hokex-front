@@ -101,11 +101,11 @@ export function UserProfilePage() {
       return;
     }
 
-    // 금지된 닉네임 목록 (관리자 제외)
-    const trimmedInput = nicknameInput.trim();
-    const forbiddenNicknames = ['판다', '카페인', '카페인판다', '슬픈 판다', '슬픈판다'];
+    // 금지된 닉네임 목록 체크 (판다 붙인 후 체크, 관리자 제외)
+    const nicknameWithPanda = nicknameInput + '판다';
+    const forbiddenNicknames = ['판다', '카페인판다', '슬픈 판다', '슬픈판다'];
     
-    if (!isAdmin && forbiddenNicknames.includes(trimmedInput)) {
+    if (!isAdmin && forbiddenNicknames.includes(nicknameWithPanda)) {
       setNicknameError('해당 닉네임은 사용하실 수 없습니다');
       return;
     }
