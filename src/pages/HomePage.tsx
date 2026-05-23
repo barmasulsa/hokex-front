@@ -39,6 +39,7 @@ export function HomePage() {
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showDeleteMode, setShowDeleteMode] = useState(false); // 삭제 모드 토글
   const [visitorStats, setVisitorStats] = useState({
     today: 0,
     last7Days: 0,
@@ -789,13 +790,22 @@ export function HomePage() {
           <div className="results-count-banner">
             <p>{filteredEvents.length}개의 행사</p>
             {isAdmin && (
-              <button 
-                className="admin-add-event-btn"
-                onClick={() => setShowAddModal(true)}
-                title="행사 추가"
-              >
-                + 행사 추가
-              </button>
+              <div className="admin-actions">
+                <button 
+                  className="admin-add-event-btn"
+                  onClick={() => setShowAddModal(true)}
+                  title="행사 추가"
+                >
+                  + 행사 추가
+                </button>
+                <button 
+                  className={`admin-delete-toggle-btn ${showDeleteMode ? 'active' : ''}`}
+                  onClick={() => setShowDeleteMode(!showDeleteMode)}
+                  title="행사 제거 모드"
+                >
+                  {showDeleteMode ? '✓ 행사 제거' : '행사 제거'}
+                </button>
+              </div>
             )}
           </div>
 
@@ -816,7 +826,7 @@ export function HomePage() {
                   event={event}
                   onSave={handleSave}
                   onEdit={handleEdit}
-                  onDelete={isAdmin ? handleDelete : undefined}
+                  onDelete={isAdmin && showDeleteMode ? handleDelete : undefined}
                 />
               ))
             )}

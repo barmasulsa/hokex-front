@@ -2195,6 +2195,36 @@ body {
   background: #45a049;
 }
 
+/* 관리자 액션 버튼 그룹 */
+.admin-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* 행사 제거 토글 버튼 */
+.admin-delete-toggle-btn {
+  background: #757575;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.admin-delete-toggle-btn:hover {
+  background: #616161;
+}
+
+.admin-delete-toggle-btn.active {
+  background: #f44336;
+}
+
+.admin-delete-toggle-btn.active:hover {
+  background: #d32f2f;
+}
+
 /* 행사 카드 삭제 버튼 */
 .delete-event-btn {
   background: #f44336;
@@ -2332,7 +2362,13 @@ body {
     gap: 0.5rem;
   }
   
-  .admin-add-event-btn {
+  .admin-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+  
+  .admin-add-event-btn,
+  .admin-delete-toggle-btn {
     width: 100%;
   }
 }
