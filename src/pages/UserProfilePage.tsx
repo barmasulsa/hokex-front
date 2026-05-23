@@ -109,7 +109,7 @@ export function UserProfilePage() {
     } catch (error: any) {
       console.error('Error setting nickname:', error);
       if (error.message === 'NICKNAME_TAKEN') {
-        setNicknameError(`"${nicknameInput}판다"는 이미 사용 중인 닉네임입니다. 다른 닉네임을 선택해주세요.`);
+        setNicknameError(`"${nicknameInput}판다"는 이미 사용 중인 닉네임입니다.`);
       } else {
         setNicknameError('닉네임 설정에 실패했습니다. 다시 시도해주세요.');
       }
