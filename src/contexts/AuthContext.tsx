@@ -228,6 +228,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error('로그인이 필요합니다');
     }
 
+    // 공백만 입력한 경우 체크
+    if (nickname.trim() === '') {
+      throw new Error('INVALID_NICKNAME_WHITESPACE');
+    }
+
+    // 관리자 여부 확인
+    const isUserAdmin = userProfile?.is_admin ?? false;
+
+    // 금지된 닉네임 목록 (관리자 제외)
+    const trimmedNickname = nickname.trim();
+    const forbiddenNicknames = ['판다', '카페인', '카페인판다', '슬픈 판다', '슬픈판다'];
+    
+    if (!isUserAdmin && forbiddenNicknames.includes(trimmedNickname)) {
+      throw new Error('INVALID_NICKNAME');
+    }
+
     // 사용자 입력 그대로 + "판다" 붙이기
     // 공백 있으면: "레서 " → "레서 판다"
     // 공백 없으면: "레서" → "레서판다"

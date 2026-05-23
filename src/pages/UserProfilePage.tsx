@@ -6,7 +6,7 @@ import type { EventRecord } from '../types/core';
 import { Heart, Bell, Shield, Mail, User as UserIcon, Key } from 'lucide-react';
 
 export function UserProfilePage() {
-  const { user, userProfile, updatePassword, updateNickname } = useAuth();
+  const { user, userProfile, updatePassword, updateNickname, isAdmin } = useAuth();
   
   const [isSettingPassword, setIsSettingPassword] = useState(false);
   const [isSettingNickname, setIsSettingNickname] = useState(false);
@@ -95,6 +95,21 @@ export function UserProfilePage() {
       return;
     }
 
+    // 공백만 입력한 경우 체크
+    if (nicknameInput.trim() === '') {
+      setNicknameError('공백으로 구성된 닉네임은 사용하실 수 없습니다');
+      return;
+    }
+
+    // 금지된 닉네임 목록 (관리자 제외)
+    const trimmedInput = nicknameInput.trim();
+    const forbiddenNicknames = ['판다', '카페인', '카페인판다', '슬픈 판다', '슬픈판다'];
+    
+    if (!isAdmin && forbiddenNicknames.includes(trimmedInput)) {
+      setNicknameError('해당 닉네임은 사용하실 수 없습니다');
+      return;
+    }
+
     if (nicknameInput.length > 20) {
       setNicknameError('닉네임은 20자 이하로 입력해주세요');
       return;
@@ -110,6 +125,10 @@ export function UserProfilePage() {
       console.error('Error setting nickname:', error);
       if (error.message === 'NICKNAME_TAKEN') {
         setNicknameError(`"${nicknameInput}판다"는 이미 사용 중인 닉네임입니다.`);
+      } else if (error.message === 'INVALID_NICKNAME_WHITESPACE') {
+        setNicknameError('공백으로 구성된 닉네임은 사용하실 수 없습니다');
+      } else if (error.message === 'INVALID_NICKNAME') {
+        setNicknameError('해당 닉네임은 사용하실 수 없습니다');
       } else {
         setNicknameError('닉네임 설정에 실패했습니다. 다시 시도해주세요.');
       }
