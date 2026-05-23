@@ -440,7 +440,7 @@ export function UserProfilePage() {
         <aside className="profile-sidebar">
           {/* Notifications */}
           <div className="sidebar-card">
-            <h3><Bell size={20} /> Notifications</h3>
+            <h3><Bell size={20} /> Notifications (미기능)</h3>
             <div className="notification-settings">
               <div className="notification-item">
                 <div>
