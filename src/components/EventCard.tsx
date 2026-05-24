@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import type { EventRecord } from '../types/core';
 import { calculateStatusBadge, calculateDaysUntilStart } from '../utils/badgeCalculator';
@@ -30,7 +30,6 @@ const DCC_EVENT_POSTER = '/images/dcc-event.png';
 const SUWONMESSE_DEFAULT_POSTER = '/images/suwonmesse-default.png';
 
 export function EventCard({ event, onSave, onEdit, onDelete }: EventCardProps) {
-  const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(event.title);
@@ -124,14 +123,18 @@ export function EventCard({ event, onSave, onEdit, onDelete }: EventCardProps) {
     setIsEditingTitle(false);
   };
 
-  const handleCardClick = () => {
+  const handleLinkClick = () => {
     // 스크롤 위치 저장
     sessionStorage.setItem('homeScrollPosition', window.scrollY.toString());
-    navigate(`/event/${event.id}`);
   };
 
   return (
-    <div className="event-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
+    <Link 
+      to={`/event/${event.id}`} 
+      className="event-card" 
+      onClick={handleLinkClick}
+      style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit', display: 'block' }}
+    >
       <div className="card-image-wrap" style={{ position: 'relative', width: '100%', height: '200px', overflow: 'hidden' }}>
         <img 
           src={imgError ? (
@@ -255,6 +258,6 @@ export function EventCard({ event, onSave, onEdit, onDelete }: EventCardProps) {
           )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
