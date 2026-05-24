@@ -56,10 +56,6 @@ export function UserProfilePage() {
     document.querySelector('.profile-section')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSaveAccount = () => {
-    alert('계정 정보가 저장되었습니다');
-  };
-
   const handleSetPassword = async () => {
     setPasswordError('');
 
@@ -483,12 +479,7 @@ export function UserProfilePage() {
                   </div>
                 </div>
               )}
-              <div className="setting-actions">
-                <button className="btn-cancel">Cancel Changes</button>
-                <button className="btn-save" onClick={handleSaveAccount}>
-                  Save Account Details
-                </button>
-              </div>
+
             </div>
           </section>
         </div>
