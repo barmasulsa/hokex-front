@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchAllBanners, createBanner, updateBanner, deleteBanner } from '../services/bannerService';
 import { fetchViewCountStats, fetchSavedEventStats, flushViewCounts, type ViewCountStats, type SavedEventStats, type ViewCountStatsFilters } from '../services/eventService';
-import { Region, type Venue, REGION_VENUE_MAP } from '../types/core';
+import { Region, REGION_VENUE_MAP } from '../types/core';
 import { 
   getDetailedVisitorStats, 
   downloadStatsAsCSV, 
