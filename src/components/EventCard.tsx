@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import type { EventRecord } from '../types/core';
 import { calculateStatusBadge, calculateDaysUntilStart } from '../utils/badgeCalculator';
@@ -31,6 +31,7 @@ const SUWONMESSE_DEFAULT_POSTER = '/images/suwonmesse-default.png';
 
 export function EventCard({ event, onSave, onEdit, onDelete }: EventCardProps) {
   const { isAdmin } = useAuth();
+  const navigate = useNavigate();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(event.title);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -123,17 +124,40 @@ export function EventCard({ event, onSave, onEdit, onDelete }: EventCardProps) {
     setIsEditingTitle(false);
   };
 
-  const handleLinkClick = () => {
-    // 스크롤 위치 저장
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // 우클릭(button=2), 중간클릭(button=1), Ctrl/Cmd/Shift 클릭은 브라우저 기본 동작 허용
+    if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) {
+      console.log('[EventCard] Special click detected - allowing browser default');
+      return; // 브라우저가 새 탭에서 열기 처리
+    }
+
+    // 일반 좌클릭만 가로채서 처리
+    e.preventDefault(); // 기본 링크 동작 방지
+    console.log('[EventCard] Normal left click - saving scroll and navigating');
     sessionStorage.setItem('homeScrollPosition', window.scrollY.toString());
+    
+    // 프로그래밍 방식으로 이동
+    navigate(`/event/${event.id}`);
+  };
+
+  const handleAuxClick = () => {
+    // 중간 클릭(휠 클릭)은 브라우저가 자동으로 새 탭에서 열도록 허용
+    console.log('[EventCard] Aux click (middle button) detected');
+  };
+
+  const handleContextMenu = () => {
+    // 우클릭 컨텍스트 메뉴는 정상 작동하도록 허용
+    console.log('[EventCard] Context menu (right click) detected');
   };
 
   return (
-    <Link 
-      to={`/event/${event.id}`} 
+    <a
+      href={`/event/${event.id}`}
       className="event-card" 
-      onClick={handleLinkClick}
       style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit', display: 'block' }}
+      onClick={handleClick}
+      onAuxClick={handleAuxClick}
+      onContextMenu={handleContextMenu}
     >
       <div className="card-image-wrap" style={{ position: 'relative', width: '100%', height: '200px', overflow: 'hidden' }}>
         <img 
@@ -258,6 +282,6 @@ export function EventCard({ event, onSave, onEdit, onDelete }: EventCardProps) {
           )}
         </div>
       </div>
-    </Link>
+    </a>
   );
 }

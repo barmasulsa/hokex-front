@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { HomePage } from './pages/HomePage';
@@ -11,6 +11,62 @@ import { DeletedEventsPage } from './pages/DeletedEventsPage';
 import { initGA4, recordVisit } from './utils/analytics';
 import { recordDetailedVisit } from './utils/detailedAnalytics';
 import './App.css';
+
+// 스크롤 복원 컴포넌트
+function ScrollRestoration() {
+  const location = useLocation();
+
+  useEffect(() => {
+    console.log('[ScrollRestoration] Location changed to:', location.pathname);
+    
+    // 홈페이지로 돌아올 때만 저장된 스크롤 위치 복원
+    if (location.pathname === '/') {
+      const savedPosition = sessionStorage.getItem('homeScrollPosition');
+      console.log('[ScrollRestoration] Saved position:', savedPosition);
+      
+      if (savedPosition) {
+        const position = parseInt(savedPosition, 10);
+        console.log('[ScrollRestoration] Will restore scroll to:', position);
+        
+        // 데이터 로딩 완료를 기다리기 위해 여러 시도
+        const attemptRestore = (attempt = 0) => {
+          if (attempt > 50) { // 최대 5초 대기 (50 * 100ms)
+            console.log('[ScrollRestoration] Max attempts reached, giving up');
+            sessionStorage.removeItem('homeScrollPosition');
+            return;
+          }
+          
+          // 페이지 높이가 충분한지 확인
+          const pageHeight = document.documentElement.scrollHeight;
+          const viewportHeight = window.innerHeight;
+          
+          console.log(`[ScrollRestoration] Attempt ${attempt}: pageHeight=${pageHeight}, viewport=${viewportHeight}, target=${position}`);
+          
+          // 페이지 높이가 목표 스크롤 위치보다 충분히 크면 복원
+          if (pageHeight > position + viewportHeight) {
+            // 페이지가 충분히 로드됨
+            setTimeout(() => {
+              window.scrollTo(0, position);
+              console.log('[ScrollRestoration] Scroll restored to:', window.scrollY);
+              sessionStorage.removeItem('homeScrollPosition');
+            }, 50); // 약간의 지연을 두고 스크롤
+          } else {
+            // 아직 로딩 중, 다시 시도
+            setTimeout(() => attemptRestore(attempt + 1), 100);
+          }
+        };
+        
+        // 첫 시도는 약간 지연 후
+        setTimeout(() => attemptRestore(0), 200);
+      }
+    } else {
+      // 다른 페이지는 맨 위로 스크롤
+      window.scrollTo(0, 0);
+    }
+  }, [location.pathname]);
+
+  return null;
+}
 
 function AppContent() {
   const { user, isAdmin, loading, signOut, userProfile, toggleAdminMode } = useAuth();
@@ -67,6 +123,7 @@ function AppContent() {
 
   return (
     <div className="app">
+      <ScrollRestoration />
       {/* 헤더 */}
       <header className="app-header">
         <div className="header-logo-container">

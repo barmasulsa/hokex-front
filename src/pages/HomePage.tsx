@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EventCard } from '../components/EventCard';
 import { Banner } from '../components/Banner';
@@ -46,6 +46,9 @@ export function HomePage() {
     last30Days: 0
   });
   const [onlineCount, setOnlineCount] = useState<number>(0);
+  
+  // 데이터 로드 여부를 추적하는 ref
+  const hasLoadedData = useRef(false);
 
   // 로그인 체크 - Stibee 구독자만 홈페이지 이용 가능
   useEffect(() => {
@@ -84,31 +87,56 @@ export function HomePage() {
   // 필터링된 이벤트
   const [filteredEvents, setFilteredEvents] = useState<EventRecord[]>(events);
 
-  // Supabase에서 데이터 가져오기
+  // Supabase에서 데이터 가져오기 - 한 번만 실행
   useEffect(() => {
     async function loadEvents() {
-      setLoading(true);
-      const data = await fetchEvents();
-      
-      // 사용자가 로그인되어 있으면 저장된 행사 ID 가져오기
-      if (user) {
-        const savedIds = await fetchSavedEventIds(user.id);
-        const savedIdsSet = new Set(savedIds);
-        
-        // isSaved 플래그 설정
-        const eventsWithSaved = data.map(event => ({
-          ...event,
-          isSaved: savedIdsSet.has(event.id)
-        }));
-        
-        setEvents(eventsWithSaved);
-      } else {
-        setEvents(data);
+      // 이미 데이터를 로드했으면 다시 로드하지 않음
+      if (hasLoadedData.current) {
+        console.log('[HomePage] Data already loaded, skipping fetch');
+        return;
       }
       
-      setLoading(false);
+      console.log('[HomePage] loadEvents started');
+      try {
+        setLoading(true);
+        console.log('[HomePage] Calling fetchEvents...');
+        const data = await fetchEvents();
+        console.log('[HomePage] fetchEvents completed, got', data.length, 'events');
+        
+        // 사용자가 로그인되어 있으면 저장된 행사 ID 가져오기
+        if (user) {
+          console.log('[HomePage] Fetching saved event IDs for user:', user.id);
+          const savedIds = await fetchSavedEventIds(user.id);
+          const savedIdsSet = new Set(savedIds);
+          
+          // isSaved 플래그 설정
+          const eventsWithSaved = data.map(event => ({
+            ...event,
+            isSaved: savedIdsSet.has(event.id)
+          }));
+          
+          console.log('[HomePage] Setting events with saved flags');
+          setEvents(eventsWithSaved);
+        } else {
+          console.log('[HomePage] Setting events without saved flags');
+          setEvents(data);
+        }
+        
+        // 데이터 로드 완료 표시
+        hasLoadedData.current = true;
+        console.log('[HomePage] Events set successfully, marked as loaded');
+      } catch (error) {
+        console.error('[HomePage] 행사 데이터 로딩 실패:', error);
+        setEvents([]);
+      } finally {
+        console.log('[HomePage] Setting loading to false');
+        setLoading(false);
+      }
     }
-    loadEvents();
+    
+    if (user && !hasLoadedData.current) {
+      loadEvents();
+    }
   }, [user]);
 
   // 방문자 통계 가져오기 (캐시 사용 - 빠름)
@@ -143,24 +171,8 @@ export function HomePage() {
     };
   }, []);
 
-  // 스크롤 위치 복원 (데이터 로딩 완료 후)
-  useEffect(() => {
-    if (!loading && events.length > 0) {
-      const savedScrollPosition = sessionStorage.getItem('homeScrollPosition');
-      if (savedScrollPosition) {
-        // 여러 프레임을 기다려서 DOM이 완전히 렌더링된 후 스크롤
-        const scrollPos = parseInt(savedScrollPosition, 10);
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            setTimeout(() => {
-              window.scrollTo({ top: scrollPos, behavior: 'instant' });
-              sessionStorage.removeItem('homeScrollPosition');
-            }, 150);
-          });
-        });
-      }
-    }
-  }, [loading, events.length]);
+  // 스크롤 위치 복원 제거 - App.tsx의 ScrollRestoration에서 처리하므로 중복 제거
+  // HomePage에서는 필요 없음
 
   // 필터 상태 저장
   useEffect(() => {

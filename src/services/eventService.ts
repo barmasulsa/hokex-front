@@ -35,63 +35,74 @@ function mapSupabaseEventToEventRecord(event: any): EventRecord {
 export async function fetchEvents() {
   console.log('[fetchEvents] Starting fetch with pagination');
   
-  let allData: any[] = [];
-  let from = 0;
-  const pageSize = 1000;
-  let hasMore = true;
+  try {
+    let allData: any[] = [];
+    let from = 0;
+    const pageSize = 1000;
+    let hasMore = true;
+    let attempts = 0;
+    const maxAttempts = 10; // 최대 10페이지 (10,000개 행사)
 
-  // 페이지네이션으로 모든 데이터 가져오기
-  while (hasMore) {
-    const { data, error } = await supabase
-      .from('events')
-      .select('*')
-      .order('start_date', { ascending: true })
-      .range(from, from + pageSize - 1);
-
-    if (error) {
-      console.error('Error fetching events:', error);
-      break;
-    }
-
-    if (data && data.length > 0) {
-      allData = [...allData, ...data];
-      console.log(`[fetchEvents] Fetched ${data.length} events (total: ${allData.length})`);
+    // 페이지네이션으로 모든 데이터 가져오기
+    while (hasMore && attempts < maxAttempts) {
+      attempts++;
+      console.log(`[fetchEvents] Attempt ${attempts}: fetching from ${from} to ${from + pageSize - 1}`);
       
-      if (data.length < pageSize) {
-        hasMore = false;
-      } else {
-        from += pageSize;
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .is('deleted_at', null) // 삭제되지 않은 행사만
+        .order('start_date', { ascending: true })
+        .range(from, from + pageSize - 1);
+
+      if (error) {
+        console.error('[fetchEvents] Error:', error);
+        throw error; // 에러를 던져서 catch 블록에서 처리
       }
-    } else {
-      hasMore = false;
+
+      if (data && data.length > 0) {
+        allData = [...allData, ...data];
+        console.log(`[fetchEvents] Fetched ${data.length} events (total: ${allData.length})`);
+        
+        if (data.length < pageSize) {
+          hasMore = false;
+        } else {
+          from += pageSize;
+        }
+      } else {
+        hasMore = false;
+      }
     }
+
+    console.log('[fetchEvents] Completed. Total events:', allData.length);
+
+    // 엑스코 행사 확인
+    const excoEvents = allData.filter(e => e.venue === '엑스코') || [];
+    console.log('[fetchEvents] EXCO events:', excoEvents.length);
+
+    // 6월 이후 엑스코 행사 확인
+    const excoAfterMay = excoEvents.filter(e => e.start_date >= '2026-06-01');
+    console.log('[fetchEvents] EXCO after May:', excoAfterMay.length);
+    if (excoAfterMay.length > 0) {
+      console.log('[fetchEvents] Sample:', excoAfterMay.slice(0, 3).map(e => e.title));
+    }
+
+    // HICO 행사 확인
+    const hicoEvents = allData.filter(e => e.venue === '경주화백컨벤션센터') || [];
+    console.log('[fetchEvents] HICO events:', hicoEvents.length);
+    if (hicoEvents.length > 0) {
+      console.log('[fetchEvents] HICO sample:', hicoEvents.slice(0, 3).map(e => ({
+        title: e.title,
+        date: e.start_date,
+        poster: e.poster_url
+      })));
+    }
+
+    return allData.map(mapSupabaseEventToEventRecord);
+  } catch (error) {
+    console.error('[fetchEvents] Fatal error:', error);
+    throw error; // 에러를 다시 던져서 호출자가 처리하도록
   }
-
-  console.log('[fetchEvents] Total events:', allData.length);
-
-  // 엑스코 행사 확인
-  const excoEvents = allData.filter(e => e.venue === '엑스코') || [];
-  console.log('[fetchEvents] EXCO events:', excoEvents.length);
-
-  // 6월 이후 엑스코 행사 확인
-  const excoAfterMay = excoEvents.filter(e => e.start_date >= '2026-06-01');
-  console.log('[fetchEvents] EXCO after May:', excoAfterMay.length);
-  if (excoAfterMay.length > 0) {
-    console.log('[fetchEvents] Sample:', excoAfterMay.slice(0, 3).map(e => e.title));
-  }
-
-  // HICO 행사 확인
-  const hicoEvents = allData.filter(e => e.venue === '경주화백컨벤션센터') || [];
-  console.log('[fetchEvents] HICO events:', hicoEvents.length);
-  if (hicoEvents.length > 0) {
-    console.log('[fetchEvents] HICO sample:', hicoEvents.slice(0, 3).map(e => ({
-      title: e.title,
-      date: e.start_date,
-      poster: e.poster_url
-    })));
-  }
-
-  return allData.map(mapSupabaseEventToEventRecord);
 }
 
 
