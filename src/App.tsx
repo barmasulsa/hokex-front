@@ -10,6 +10,7 @@ import { BannerManagementPage } from './pages/BannerManagementPage';
 import { DeletedEventsPage } from './pages/DeletedEventsPage';
 import { initGA4, recordVisit } from './utils/analytics';
 import { recordDetailedVisit } from './utils/detailedAnalytics';
+import { flushViewCounts } from './services/eventService';
 import './App.css';
 
 // 스크롤 복원 컴포넌트
@@ -89,6 +90,18 @@ function AppContent() {
         });
       });
     }
+    
+    // 조회수 배치 업데이트 (1분마다)
+    const viewCountInterval = setInterval(() => {
+      flushViewCounts();
+    }, 60000); // 60초
+    
+    // 컴포넌트 언마운트 시 정리
+    return () => {
+      clearInterval(viewCountInterval);
+      // 마지막으로 한 번 더 flush
+      flushViewCounts();
+    };
   }, []);
 
   // URL 해시 정리 (에러 파라미터 제거)

@@ -40,6 +40,7 @@ export function HomePage() {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteMode, setShowDeleteMode] = useState(false); // 삭제 모드 토글
+  const [showViewCounts, setShowViewCounts] = useState(false); // 조회수 표시 모드 토글
   const [visitorStats, setVisitorStats] = useState({
     today: 0,
     last7Days: 0,
@@ -825,6 +826,13 @@ export function HomePage() {
                 >
                   {showDeleteMode ? '✓ 행사 제거' : '행사 제거'}
                 </button>
+                <button 
+                  className={`admin-view-count-toggle-btn ${showViewCounts ? 'active' : ''}`}
+                  onClick={() => setShowViewCounts(!showViewCounts)}
+                  title="조회수 표시 모드"
+                >
+                  {showViewCounts ? '✓ 조회수 보기' : '조회수 보기'}
+                </button>
               </div>
             )}
           </div>
@@ -847,6 +855,7 @@ export function HomePage() {
                   onSave={handleSave}
                   onEdit={handleEdit}
                   onDelete={isAdmin && showDeleteMode ? handleDelete : undefined}
+                  showViewCount={isAdmin && showViewCounts}
                 />
               ))
             )}

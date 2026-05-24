@@ -9,6 +9,7 @@ interface EventCardProps {
   onSave?: (eventId: string) => void;
   onEdit?: (eventId: string, field: string, value: string) => void;
   onDelete?: (eventId: string) => void;
+  showViewCount?: boolean; // 조회수 표시 여부 (관리자 전용)
 }
 
 // 기본 포스터 이미지
@@ -29,7 +30,7 @@ const DCC_EVENT_POSTER = '/images/dcc-event.png';
 // 수원메쎄 기본 포스터
 const SUWONMESSE_DEFAULT_POSTER = '/images/suwonmesse-default.png';
 
-export function EventCard({ event, onSave, onEdit, onDelete }: EventCardProps) {
+export function EventCard({ event, onSave, onEdit, onDelete, showViewCount }: EventCardProps) {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -199,6 +200,30 @@ export function EventCard({ event, onSave, onEdit, onDelete }: EventCardProps) {
         {badge && (
           <div className={`status-badge badge-${badge.toLowerCase().replace(/[\s-]+/g, '')}`}>
             {getBadgeText()}
+          </div>
+        )}
+        
+        {showViewCount && (
+          <div className="view-count-badge" style={{
+            position: 'absolute',
+            bottom: '10px',
+            right: '10px',
+            background: 'rgba(0, 0, 0, 0.75)',
+            color: 'white',
+            padding: '4px 10px',
+            borderRadius: '12px',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            backdropFilter: 'blur(4px)'
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            {(event.view_count || 0).toLocaleString()}
           </div>
         )}
       </div>

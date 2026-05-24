@@ -2225,6 +2225,30 @@ body {
   background: #d32f2f;
 }
 
+/* 조회수 표시 토글 버튼 */
+.admin-view-count-toggle-btn {
+  background: #B39DDB; /* 연보라색 */
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.admin-view-count-toggle-btn:hover {
+  background: #9575CD; /* 조금 더 진한 보라색 */
+}
+
+.admin-view-count-toggle-btn.active {
+  background: #7E57C2; /* 활성화 시 더 진한 보라색 */
+}
+
+.admin-view-count-toggle-btn.active:hover {
+  background: #673AB7; /* 활성화 호버 시 가장 진한 보라색 */
+}
+
 /* 행사 카드 삭제 버튼 */
 .delete-event-btn {
   background: #f44336;

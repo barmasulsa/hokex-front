@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { fetchEventById, updateEvent, fetchEventHistory, revertEventChange } from '../services/eventService';
+import { fetchEventById, updateEvent, fetchEventHistory, revertEventChange, incrementViewCount } from '../services/eventService';
 import type { EventRecord } from '../types/core';
 import { calculateStatusBadge, calculateDaysUntilStart } from '../utils/badgeCalculator';
 import { Calendar, MapPin, ExternalLink, Share2, Copy, Edit2, Check, X, Image, History, RotateCcw } from 'lucide-react';
@@ -81,6 +81,11 @@ export function EventDetailPage() {
       console.log('venueEventPageUrl:', eventData?.venueEventPageUrl); // 디버그: URL 확인
       setEvent(eventData);
       setLoading(false);
+      
+      // 조회수 증가 (메모리에 기록)
+      if (id) {
+        await incrementViewCount(id);
+      }
     }
     
     loadEvent();

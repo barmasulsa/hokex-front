@@ -72,6 +72,7 @@ export interface EventRecord {
   operatingHours?: string;
   venueHall?: string;
   isSaved: boolean; // 사용자별 상태
+  view_count?: number; // 조회수 (관리자 전용)
 }
 
 export interface FilterCriteria {

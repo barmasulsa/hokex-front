@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchAllBanners, createBanner, updateBanner, deleteBanner } from '../services/bannerService';
+import { fetchViewCountStats, fetchSavedEventStats, flushViewCounts, type ViewCountStats, type SavedEventStats, type ViewCountStatsFilters } from '../services/eventService';
+import { Region, type Venue, REGION_VENUE_MAP } from '../types/core';
 import { 
   getDetailedVisitorStats, 
   downloadStatsAsCSV, 
@@ -12,7 +14,7 @@ import {
 import type { Banner, BannerType } from '../types/banner';
 import './BannerManagementPage.css';
 
-type ManagementTab = 'image' | 'youtube' | 'text' | 'statistics';
+type ManagementTab = 'image' | 'youtube' | 'text' | 'statistics' | 'viewcounts';
 
 export function BannerManagementPage() {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -26,6 +28,17 @@ export function BannerManagementPage() {
   const [detailedStats, setDetailedStats] = useState<DetailedVisitorStats | null>(null);
   const [statsView, setStatsView] = useState<'daily' | 'hourly' | 'yearly'>('daily');
   const [loadingLatestStats, setLoadingLatestStats] = useState(false);
+  const [viewCountStats, setViewCountStats] = useState<ViewCountStats[]>([]);
+  const [loadingViewCounts, setLoadingViewCounts] = useState(false);
+  const [savedEventStats, setSavedEventStats] = useState<SavedEventStats[]>([]);
+  const [loadingSavedStats, setLoadingSavedStats] = useState(false);
+  
+  // 조회수 통계 필터
+  const [viewCountLimit, setViewCountLimit] = useState<number>(50);
+  const [viewCountCustomLimit, setViewCountCustomLimit] = useState<string>('50');
+  const [viewCountRegion, setViewCountRegion] = useState<string>('전체');
+  const [viewCountVenue, setViewCountVenue] = useState<string>('전체');
+  const [statsType, setStatsType] = useState<'viewcount' | 'saved'>('viewcount');
 
   // 새 배너 폼 상태
   const [formData, setFormData] = useState({
@@ -66,6 +79,80 @@ export function BannerManagementPage() {
     
     return () => clearInterval(interval);
   }, []);
+
+  // 조회수 통계 로드 함수
+  const loadViewCounts = async () => {
+    console.log('[BannerManagement] loadViewCounts called');
+    setLoadingViewCounts(true);
+    
+    // 먼저 메모리 큐를 DB로 플러시
+    console.log('[BannerManagement] Flushing view count queue to DB first...');
+    try {
+      await flushViewCounts();
+      console.log('[BannerManagement] Queue flushed successfully');
+    } catch (err) {
+      console.error('[BannerManagement] Error flushing queue:', err);
+    }
+    
+    // 약간의 지연 후 DB에서 가져오기 (DB 업데이트 반영 시간)
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const filters: ViewCountStatsFilters = {
+      region: viewCountRegion !== '전체' ? viewCountRegion : undefined,
+      venue: viewCountVenue !== '전체' ? viewCountVenue : undefined,
+    };
+    console.log('[BannerManagement] Calling fetchViewCountStats with limit:', viewCountLimit, 'filters:', filters);
+    const stats = await fetchViewCountStats(viewCountLimit, filters);
+    console.log('[BannerManagement] Received stats:', stats.length, 'items');
+    console.log('[BannerManagement] First 3 stats:', stats.slice(0, 3));
+    setViewCountStats(stats);
+    setLoadingViewCounts(false);
+  };
+
+  // 조회수 통계 가져오기
+  useEffect(() => {
+    if (activeTab === 'viewcounts') {
+      loadViewCounts();
+      
+      // 1분마다 조회수 통계 업데이트
+      const interval = setInterval(() => {
+        loadViewCounts();
+      }, 60000); // 60초
+      
+      return () => clearInterval(interval);
+    }
+  }, [activeTab, viewCountLimit, viewCountRegion, viewCountVenue]);
+
+  // 찜 목록 통계 로드 함수
+  const loadSavedStats = async () => {
+    console.log('[BannerManagement] loadSavedStats called');
+    setLoadingSavedStats(true);
+    
+    // 찜 목록은 실시간으로 DB에 저장되므로 플러시 불필요
+    const filters: ViewCountStatsFilters = {
+      region: viewCountRegion !== '전체' ? viewCountRegion : undefined,
+      venue: viewCountVenue !== '전체' ? viewCountVenue : undefined,
+    };
+    console.log('[BannerManagement] Calling fetchSavedEventStats with limit:', viewCountLimit, 'filters:', filters);
+    const stats = await fetchSavedEventStats(viewCountLimit, filters);
+    console.log('[BannerManagement] Received saved stats:', stats.length, 'items');
+    setSavedEventStats(stats);
+    setLoadingSavedStats(false);
+  };
+
+  // 찜 목록 통계 가져오기
+  useEffect(() => {
+    if (activeTab === 'viewcounts' && statsType === 'saved') {
+      loadSavedStats();
+      
+      // 1분마다 찜 통계 업데이트
+      const interval = setInterval(() => {
+        loadSavedStats();
+      }, 60000); // 60초
+      
+      return () => clearInterval(interval);
+    }
+  }, [activeTab, statsType, viewCountLimit, viewCountRegion, viewCountVenue]);
 
   const loadBanners = async () => {
     setLoading(true);
@@ -128,6 +215,112 @@ export function BannerManagementPage() {
     } finally {
       setLoadingLatestStats(false);
     }
+  };
+
+  // 조회수/찜 목록 통계 CSV 다운로드
+  const handleDownloadViewCountCSV = () => {
+    const data = statsType === 'viewcount' ? viewCountStats : savedEventStats;
+    const type = statsType === 'viewcount' ? '조회수' : '찜목록';
+    
+    if (data.length === 0) {
+      alert('다운로드할 데이터가 없습니다.');
+      return;
+    }
+
+    // CSV 헤더
+    const headers = ['순위', '행사명', '지역', '전시장', '시작일', '종료일', type];
+    
+    // CSV 데이터 생성
+    const csvRows = [headers.join(',')];
+    
+    data.forEach((stat, index) => {
+      const count = statsType === 'viewcount' 
+        ? (stat as ViewCountStats).viewCount 
+        : (stat as SavedEventStats).savedCount;
+      
+      const row = [
+        index + 1,
+        `"${stat.title.replace(/"/g, '""')}"`, // 쉼표와 따옴표 처리
+        stat.region,
+        stat.venue,
+        stat.startDate.toISOString().slice(0, 10),
+        stat.endDate.toISOString().slice(0, 10),
+        count
+      ];
+      csvRows.push(row.join(','));
+    });
+
+    // CSV 파일 생성 및 다운로드
+    const csvContent = '\uFEFF' + csvRows.join('\n'); // UTF-8 BOM 추가
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const filename = `행사_${type}_통계_${timestamp}.csv`;
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // 조회수/찜 목록 통계 JSON 다운로드
+  const handleDownloadViewCountJSON = () => {
+    const data = statsType === 'viewcount' ? viewCountStats : savedEventStats;
+    const type = statsType === 'viewcount' ? '조회수' : '찜목록';
+    
+    if (data.length === 0) {
+      alert('다운로드할 데이터가 없습니다.');
+      return;
+    }
+
+    // JSON 데이터 생성
+    const jsonData = {
+      exportDate: new Date().toISOString(),
+      statsType: type,
+      filters: {
+        limit: viewCountLimit,
+        region: viewCountRegion,
+        venue: viewCountVenue
+      },
+      totalCount: data.length,
+      data: data.map((stat, index) => {
+        const count = statsType === 'viewcount' 
+          ? (stat as ViewCountStats).viewCount 
+          : (stat as SavedEventStats).savedCount;
+        
+        return {
+          rank: index + 1,
+          eventId: stat.eventId,
+          title: stat.title,
+          region: stat.region,
+          venue: stat.venue,
+          startDate: stat.startDate.toISOString().slice(0, 10),
+          endDate: stat.endDate.toISOString().slice(0, 10),
+          [statsType === 'viewcount' ? 'viewCount' : 'savedCount']: count,
+          poster: stat.poster
+        };
+      })
+    };
+
+    // JSON 파일 생성 및 다운로드
+    const jsonContent = JSON.stringify(jsonData, null, 2);
+    const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const filename = `행사_${type}_통계_${timestamp}.json`;
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleEdit = (banner: Banner) => {
@@ -335,6 +528,12 @@ export function BannerManagementPage() {
           onClick={() => setActiveTab('statistics')}
         >
           📊 방문자 통계
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'viewcounts' ? 'active' : ''}`}
+          onClick={() => setActiveTab('viewcounts')}
+        >
+          👁️ 행사 조회수
         </button>
       </div>
 
@@ -569,8 +768,309 @@ export function BannerManagementPage() {
         </div>
       )}
 
+      {/* 행사 조회수 통계 탭 */}
+      {activeTab === 'viewcounts' && (
+        <div className="view-count-stats-tab-content">
+          <div className="view-count-stats-section">
+            <h2>
+              {statsType === 'viewcount' ? '👁️ 행사 조회수 통계' : '❤️ 행사 찜 목록 통계'}
+            </h2>
+            
+            {/* 통계 타입 선택 */}
+            <div className="stats-type-selector">
+              <button
+                className={`stats-type-btn ${statsType === 'viewcount' ? 'active' : ''}`}
+                onClick={() => setStatsType('viewcount')}
+              >
+                👁️ 조회수
+              </button>
+              <button
+                className={`stats-type-btn ${statsType === 'saved' ? 'active' : ''}`}
+                onClick={() => setStatsType('saved')}
+              >
+                ❤️ 찜 목록
+              </button>
+            </div>
+
+            {/* 필터 컨트롤 */}
+            <div className="view-count-filters">
+              {/* 상위 개수 선택 */}
+              <div className="filter-group">
+                <label>표시 개수:</label>
+                <div className="limit-buttons">
+                  <button
+                    className={`limit-btn ${viewCountLimit === 3 ? 'active' : ''}`}
+                    onClick={() => {
+                      setViewCountLimit(3);
+                      setViewCountCustomLimit('3');
+                    }}
+                  >
+                    상위 3개
+                  </button>
+                  <button
+                    className={`limit-btn ${viewCountLimit === 5 ? 'active' : ''}`}
+                    onClick={() => {
+                      setViewCountLimit(5);
+                      setViewCountCustomLimit('5');
+                    }}
+                  >
+                    상위 5개
+                  </button>
+                  <button
+                    className={`limit-btn ${viewCountLimit === 10 ? 'active' : ''}`}
+                    onClick={() => {
+                      setViewCountLimit(10);
+                      setViewCountCustomLimit('10');
+                    }}
+                  >
+                    상위 10개
+                  </button>
+                  <button
+                    className={`limit-btn ${viewCountLimit === 50 ? 'active' : ''}`}
+                    onClick={() => {
+                      setViewCountLimit(50);
+                      setViewCountCustomLimit('50');
+                    }}
+                  >
+                    상위 50개
+                  </button>
+                  <button
+                    className={`limit-btn ${viewCountLimit === 100 ? 'active' : ''}`}
+                    onClick={() => {
+                      setViewCountLimit(100);
+                      setViewCountCustomLimit('100');
+                    }}
+                  >
+                    상위 100개
+                  </button>
+                </div>
+                <div className="custom-limit-input">
+                  <input
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value={viewCountCustomLimit}
+                    onChange={(e) => setViewCountCustomLimit(e.target.value)}
+                    placeholder="직접 입력"
+                  />
+                  <button
+                    className="apply-custom-limit-btn"
+                    onClick={() => {
+                      const num = parseInt(viewCountCustomLimit);
+                      if (num > 0 && num <= 1000) {
+                        setViewCountLimit(num);
+                      } else {
+                        alert('1~1000 사이의 숫자를 입력하세요.');
+                      }
+                    }}
+                  >
+                    적용
+                  </button>
+                </div>
+              </div>
+
+              {/* 지역 필터 */}
+              <div className="filter-group">
+                <label>지역:</label>
+                <select
+                  value={viewCountRegion}
+                  onChange={(e) => {
+                    setViewCountRegion(e.target.value);
+                    setViewCountVenue('전체'); // 지역 변경 시 전시장 초기화
+                  }}
+                  className="filter-select"
+                >
+                  <option value="전체">전체</option>
+                  {Object.values(Region).map(region => (
+                    <option key={region} value={region}>{region}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 전시장 필터 */}
+              <div className="filter-group">
+                <label>전시장:</label>
+                <select
+                  value={viewCountVenue}
+                  onChange={(e) => setViewCountVenue(e.target.value)}
+                  className="filter-select"
+                  disabled={viewCountRegion === '전체'}
+                >
+                  <option value="전체">전체</option>
+                  {viewCountRegion !== '전체' && 
+                    REGION_VENUE_MAP[viewCountRegion as Region]?.map(venue => (
+                      <option key={venue} value={venue}>{venue}</option>
+                    ))
+                  }
+                </select>
+              </div>
+            </div>
+
+            {/* 다운로드 버튼 */}
+            <div className="view-count-download-section">
+              <button 
+                className="btn-primary" 
+                onClick={() => {
+                  if (statsType === 'viewcount') {
+                    loadViewCounts();
+                  } else {
+                    loadSavedStats();
+                  }
+                }}
+                disabled={statsType === 'viewcount' ? loadingViewCounts : loadingSavedStats}
+              >
+                {(statsType === 'viewcount' ? loadingViewCounts : loadingSavedStats) ? '⏳ 로딩 중...' : '🔄 즉시 업데이트'}
+              </button>
+              <button 
+                className="btn-download" 
+                onClick={handleDownloadViewCountCSV}
+                disabled={statsType === 'viewcount' ? viewCountStats.length === 0 : savedEventStats.length === 0}
+              >
+                📥 CSV 다운로드
+              </button>
+              <button 
+                className="btn-download" 
+                onClick={handleDownloadViewCountJSON}
+                disabled={statsType === 'viewcount' ? viewCountStats.length === 0 : savedEventStats.length === 0}
+              >
+                📥 JSON 다운로드
+              </button>
+            </div>
+
+            <p className="stats-info-text">
+              {statsType === 'viewcount' 
+                ? `조회수가 높은 상위 ${viewCountLimit}개 행사를 표시합니다.`
+                : `찜이 많은 상위 ${viewCountLimit}개 행사를 표시합니다.`
+              } 1분마다 자동 업데이트됩니다.
+            </p>
+
+            {/* 조회수 통계 테이블 */}
+            {statsType === 'viewcount' && (
+              <>
+                {loadingViewCounts ? (
+                  <p>로딩 중...</p>
+                ) : viewCountStats.length === 0 ? (
+                  <p>조회수 데이터가 없습니다.</p>
+                ) : (
+                  <div className="view-count-table-container">
+                    <table className="view-count-table">
+                      <thead>
+                        <tr>
+                          <th>순위</th>
+                          <th>행사명</th>
+                          <th>지역</th>
+                          <th>전시장</th>
+                          <th>기간</th>
+                          <th>조회수</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {viewCountStats.map((stat, index) => (
+                          <tr key={stat.eventId}>
+                            <td className="rank-cell">
+                              {index + 1 <= 3 ? (
+                                <span className={`rank-badge rank-${index + 1}`}>
+                                  {index + 1}위
+                                </span>
+                              ) : (
+                                <span className="rank-number">{index + 1}</span>
+                              )}
+                            </td>
+                            <td className="title-cell">
+                              <a 
+                                href={`/event/${stat.eventId}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="event-link"
+                              >
+                                {stat.title}
+                              </a>
+                            </td>
+                            <td>{stat.region}</td>
+                            <td>{stat.venue}</td>
+                            <td className="date-cell">
+                              {stat.startDate.toISOString().slice(0, 10)} ~ {stat.endDate.toISOString().slice(0, 10)}
+                            </td>
+                            <td className="view-count-cell">
+                              <span className="view-count-value">
+                                {stat.viewCount.toLocaleString()}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* 찜 목록 통계 테이블 */}
+            {statsType === 'saved' && (
+              <>
+                {loadingSavedStats ? (
+                  <p>로딩 중...</p>
+                ) : savedEventStats.length === 0 ? (
+                  <p>찜 목록 데이터가 없습니다.</p>
+                ) : (
+                  <div className="view-count-table-container">
+                    <table className="view-count-table">
+                      <thead>
+                        <tr>
+                          <th>순위</th>
+                          <th>행사명</th>
+                          <th>지역</th>
+                          <th>전시장</th>
+                          <th>기간</th>
+                          <th>찜 수</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {savedEventStats.map((stat, index) => (
+                          <tr key={stat.eventId}>
+                            <td className="rank-cell">
+                              {index + 1 <= 3 ? (
+                                <span className={`rank-badge rank-${index + 1}`}>
+                                  {index + 1}위
+                                </span>
+                              ) : (
+                                <span className="rank-number">{index + 1}</span>
+                              )}
+                            </td>
+                            <td className="title-cell">
+                              <a 
+                                href={`/event/${stat.eventId}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="event-link"
+                              >
+                                {stat.title}
+                              </a>
+                            </td>
+                            <td>{stat.region}</td>
+                            <td>{stat.venue}</td>
+                            <td className="date-cell">
+                              {stat.startDate.toISOString().slice(0, 10)} ~ {stat.endDate.toISOString().slice(0, 10)}
+                            </td>
+                            <td className="view-count-cell">
+                              <span className="view-count-value">
+                                ❤️ {stat.savedCount.toLocaleString()}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 배너 관리 섹션 (기존 코드) */}
-      {activeTab !== 'statistics' && (
+      {activeTab !== 'statistics' && activeTab !== 'viewcounts' && (
         <div className="banner-management-section">
       {/* 새 배너 추가 버튼 */}
       <div className="add-banner-section">

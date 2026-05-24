@@ -28,6 +28,7 @@ function mapSupabaseEventToEventRecord(event: any): EventRecord {
     operatingHours: event.operating_hours,
     venueHall: event.venue_hall,
     isSaved: false, // 나중에 saved_events 조인으로 설정
+    view_count: event.view_count || 0, // 조회수
   };
 }
 
@@ -441,4 +442,216 @@ export async function revertEventChange(eventId: string, historyId: string) {
   await saveEventHistory(eventId, history.field_name, history.new_value, history.old_value);
 
   return true;
+}
+
+// 조회수 증가 (메모리에 저장, 나중에 배치 업데이트)
+const viewCountQueue: Map<string, number> = new Map();
+
+export async function incrementViewCount(eventId: string) {
+  // 메모리에 조회수 증가 기록
+  const currentCount = viewCountQueue.get(eventId) || 0;
+  viewCountQueue.set(eventId, currentCount + 1);
+  
+  console.log(`[ViewCount] Event ${eventId} view count queued: ${currentCount + 1}`);
+}
+
+// 배치로 조회수 업데이트 (1분마다 호출)
+export async function flushViewCounts() {
+  console.log(`[ViewCount] flushViewCounts called. Queue size: ${viewCountQueue.size}`);
+  
+  if (viewCountQueue.size === 0) {
+    console.log('[ViewCount] Queue is empty, skipping flush');
+    return;
+  }
+
+  console.log(`[ViewCount] Flushing ${viewCountQueue.size} events to database`);
+  console.log('[ViewCount] Queue contents:', Array.from(viewCountQueue.entries()));
+
+  // 각 이벤트의 조회수를 DB에 업데이트
+  for (const [eventId, count] of viewCountQueue.entries()) {
+    try {
+      console.log(`[ViewCount] Calling RPC for event ${eventId} with count ${count}`);
+      
+      const { data, error } = await supabase.rpc('increment_view_count', {
+        event_id: eventId,
+        increment_by: count
+      });
+
+      if (error) {
+        console.error(`[ViewCount] Error updating event ${eventId}:`, error);
+        console.error('[ViewCount] Error details:', JSON.stringify(error, null, 2));
+      } else {
+        console.log(`[ViewCount] Successfully updated event ${eventId} by +${count}`);
+        console.log('[ViewCount] RPC response data:', data);
+      }
+    } catch (err) {
+      console.error(`[ViewCount] Exception updating event ${eventId}:`, err);
+    }
+  }
+
+  // 큐 비우기
+  console.log('[ViewCount] Clearing queue');
+  viewCountQueue.clear();
+  console.log('[ViewCount] Flush complete');
+}
+
+// 조회수 통계 가져오기 (관리자 전용)
+export interface ViewCountStats {
+  eventId: string;
+  title: string;
+  venue: string;
+  region: string;
+  viewCount: number;
+  startDate: Date;
+  endDate: Date;
+  poster: string;
+}
+
+export interface ViewCountStatsFilters {
+  limit?: number;
+  region?: string;
+  venue?: string;
+}
+
+export async function fetchViewCountStats(
+  limit: number = 50,
+  filters?: ViewCountStatsFilters
+): Promise<ViewCountStats[]> {
+  console.log('[ViewCountStats] Fetching view count stats with filters:', filters);
+  
+  let query = supabase
+    .from('events')
+    .select('id, title, venue, region, view_count, start_date, end_date, poster_url')
+    .is('deleted_at', null);
+
+  // 지역 필터
+  if (filters?.region && filters.region !== '전체') {
+    query = query.eq('region', filters.region);
+  }
+
+  // 전시장 필터
+  if (filters?.venue && filters.venue !== '전체') {
+    query = query.eq('venue', filters.venue);
+  }
+
+  const { data, error } = await query
+    .order('view_count', { ascending: false, nullsFirst: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('[ViewCountStats] Error fetching view count stats:', error);
+    return [];
+  }
+
+  console.log('[ViewCountStats] Fetched data count:', data?.length);
+  console.log('[ViewCountStats] Sample data (first 3):', data?.slice(0, 3).map(e => ({
+    title: e.title,
+    view_count: e.view_count,
+    id: e.id
+  })));
+
+  const results = data.map(event => ({
+    eventId: event.id,
+    title: event.title,
+    venue: event.venue,
+    region: event.region,
+    viewCount: event.view_count || 0,
+    startDate: new Date(event.start_date),
+    endDate: new Date(event.end_date),
+    poster: event.poster_url || ''
+  }));
+
+  console.log('[ViewCountStats] Returning results count:', results.length);
+  console.log('[ViewCountStats] Sample results (first 3):', results.slice(0, 3).map(r => ({
+    title: r.title,
+    viewCount: r.viewCount
+  })));
+
+  return results;
+}
+
+// 찜 목록 통계 가져오기 (관리자 전용)
+export interface SavedEventStats {
+  eventId: string;
+  title: string;
+  venue: string;
+  region: string;
+  savedCount: number;
+  startDate: Date;
+  endDate: Date;
+  poster: string;
+}
+
+export async function fetchSavedEventStats(
+  limit: number = 50,
+  filters?: ViewCountStatsFilters
+): Promise<SavedEventStats[]> {
+  // 먼저 saved_events에서 event_id별 count를 가져옴
+  let savedCountQuery = supabase
+    .from('saved_events')
+    .select('event_id');
+
+  const { data: savedData, error: savedError } = await savedCountQuery;
+
+  if (savedError) {
+    console.error('Error fetching saved events:', savedError);
+    return [];
+  }
+
+  // event_id별로 count 계산
+  const eventSavedCounts = new Map<string, number>();
+  savedData?.forEach(item => {
+    const count = eventSavedCounts.get(item.event_id) || 0;
+    eventSavedCounts.set(item.event_id, count + 1);
+  });
+
+  // count가 있는 event_id만 추출하고 내림차순 정렬
+  const sortedEventIds = Array.from(eventSavedCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([eventId]) => eventId);
+
+  if (sortedEventIds.length === 0) {
+    return [];
+  }
+
+  // 상위 event들의 정보 가져오기
+  let eventsQuery = supabase
+    .from('events')
+    .select('id, title, venue, region, start_date, end_date, poster_url')
+    .is('deleted_at', null)
+    .in('id', sortedEventIds.slice(0, Math.min(limit * 2, sortedEventIds.length))); // 필터링을 고려해 여유있게 가져옴
+
+  // 지역 필터
+  if (filters?.region && filters.region !== '전체') {
+    eventsQuery = eventsQuery.eq('region', filters.region);
+  }
+
+  // 전시장 필터
+  if (filters?.venue && filters.venue !== '전체') {
+    eventsQuery = eventsQuery.eq('venue', filters.venue);
+  }
+
+  const { data: eventsData, error: eventsError } = await eventsQuery;
+
+  if (eventsError) {
+    console.error('Error fetching events:', eventsError);
+    return [];
+  }
+
+  // 결과 매핑 및 정렬
+  const results = eventsData
+    .map(event => ({
+      eventId: event.id,
+      title: event.title,
+      venue: event.venue,
+      region: event.region,
+      savedCount: eventSavedCounts.get(event.id) || 0,
+      startDate: new Date(event.start_date),
+      endDate: new Date(event.end_date),
+      poster: event.poster_url || ''
+    }))
+    .sort((a, b) => b.savedCount - a.savedCount)
+    .slice(0, limit);
+
+  return results;
 }

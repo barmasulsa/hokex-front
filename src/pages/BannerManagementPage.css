@@ -778,3 +778,332 @@
     width: 100% !important;
   }
 }
+
+/* 행사 조회수 통계 섹션 */
+.view-count-stats-section {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 30px;
+}
+
+.view-count-stats-section h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.view-count-table-container {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.view-count-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.view-count-table thead {
+  background: #f8f9fa;
+}
+
+.view-count-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+  font-size: 14px;
+}
+
+.view-count-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 14px;
+  color: #495057;
+}
+
+.view-count-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+/* 순위 셀 */
+.rank-cell {
+  width: 80px;
+  text-align: center;
+}
+
+.rank-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  color: white;
+}
+
+.rank-badge.rank-1 {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+}
+
+.rank-badge.rank-2 {
+  background: linear-gradient(135deg, #C0C0C0, #A8A8A8);
+  box-shadow: 0 2px 4px rgba(192, 192, 192, 0.3);
+}
+
+.rank-badge.rank-3 {
+  background: linear-gradient(135deg, #CD7F32, #B8860B);
+  box-shadow: 0 2px 4px rgba(205, 127, 50, 0.3);
+}
+
+.rank-number {
+  font-weight: 600;
+  color: #6c757d;
+}
+
+/* 제목 셀 */
+.title-cell {
+  max-width: 400px;
+}
+
+.event-link {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.event-link:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+/* 날짜 셀 */
+.date-cell {
+  font-size: 13px;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+/* 조회수 셀 */
+.view-count-cell {
+  text-align: right;
+  font-weight: 600;
+}
+
+.view-count-value {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #e3f2fd;
+  color: #1976d2;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .view-count-table {
+    font-size: 12px;
+  }
+
+  .view-count-table th,
+  .view-count-table td {
+    padding: 8px 12px;
+  }
+
+  .title-cell {
+    max-width: 200px;
+  }
+
+  .date-cell {
+    font-size: 11px;
+  }
+}
+
+/* 통계 타입 선택 버튼 */
+.stats-type-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.stats-type-btn {
+  padding: 10px 20px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  color: #666;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.stats-type-btn:hover {
+  border-color: #4A90E2;
+  color: #4A90E2;
+}
+
+.stats-type-btn.active {
+  background: #4A90E2;
+  border-color: #4A90E2;
+  color: white;
+}
+
+/* 필터 컨트롤 */
+.view-count-filters {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-group label {
+  font-weight: 600;
+  color: #333;
+  min-width: 80px;
+}
+
+.filter-select {
+  padding: 8px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 150px;
+}
+
+.filter-select:hover:not(:disabled) {
+  border-color: #4A90E2;
+}
+
+.filter-select:disabled {
+  background: #f0f0f0;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* 상위 개수 선택 버튼 */
+.limit-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.limit-btn {
+  padding: 8px 16px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  color: #666;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.limit-btn:hover {
+  border-color: #4A90E2;
+  color: #4A90E2;
+}
+
+.limit-btn.active {
+  background: #4A90E2;
+  border-color: #4A90E2;
+  color: white;
+}
+
+/* 커스텀 입력 */
+.custom-limit-input {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.custom-limit-input input {
+  width: 100px;
+  padding: 8px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.custom-limit-input input:focus {
+  outline: none;
+  border-color: #4A90E2;
+}
+
+.apply-custom-limit-btn {
+  padding: 8px 16px;
+  background: #28A745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.apply-custom-limit-btn:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.stats-info-text {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* 조회수 통계 다운로드 섹션 */
+.view-count-download-section {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.view-count-download-section .btn-download {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.view-count-download-section .btn-download:hover:not(:disabled) {
+  background-color: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.view-count-download-section .btn-download:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
