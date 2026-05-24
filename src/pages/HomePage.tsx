@@ -656,6 +656,10 @@ export function HomePage() {
                       className={`accordion-header ${isExpanded ? 'expanded' : ''} ${!hasVenues ? 'disabled' : ''}`}
                       onClick={() => {
                         if (hasVenues) {
+                          // 다른 지역을 펼칠 때 venue 선택 초기화
+                          if (!isExpanded && selectedVenue && !venues.includes(selectedVenue)) {
+                            setSelectedVenue(null);
+                          }
                           setExpandedRegion(isExpanded ? null : region);
                         }
                       }}
@@ -684,7 +688,11 @@ export function HomePage() {
                           <button
                             key={venue}
                             className={`venue-btn ${selectedVenue === venue ? 'active' : ''}`}
-                            onClick={() => handleVenueClick(venue)}
+                            onClick={() => {
+                              // venue 선택 시 해당 지역도 함께 설정
+                              setSelectedRegion(region);
+                              handleVenueClick(venue);
+                            }}
                           >
                             {venue}
                           </button>
