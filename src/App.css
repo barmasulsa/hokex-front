@@ -1814,6 +1814,10 @@ body {
   margin: 0;
 }
 
+.section-header h2 svg {
+  color: #EF4444;
+}
+
 .section-subtitle {
   font-size: 14px;
   color: #6b7280;

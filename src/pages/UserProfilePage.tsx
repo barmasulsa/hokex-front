@@ -189,7 +189,7 @@ export function UserProfilePage() {
           {/* Saved Events */}
           <section className="profile-section">
             <div className="section-header">
-              <h2><Heart size={24} /> Saved/Favorite Events</h2>
+              <h2><Heart size={24} fill="currentColor" /> Saved/Favorite Events</h2>
               <p className="section-subtitle">
                 저장한 행사 목록 ({savedEvents.length}개)
               </p>
