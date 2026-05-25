@@ -89,8 +89,8 @@ export function Banner() {
       } else {
         console.log('[Banner] Banner view count incremented successfully');
       }
-    } catch (error) {
-      console.error('[Banner] Exception incrementing banner view count:', error);
+    } catch (err) {
+      console.error('[Banner] Exception incrementing banner view count:', err);
     }
   };
 
