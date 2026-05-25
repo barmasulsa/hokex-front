@@ -11,6 +11,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
@@ -50,6 +51,11 @@ export function LoginPage() {
   };
 
   const handleMagicLink = async () => {
+    if (!agreedToTerms) {
+      alert('이용약관 및 개인정보처리방침에 동의해주세요.');
+      return;
+    }
+
     const emailInput = prompt('이메일 주소를 입력하세요:');
     if (emailInput) {
       try {
@@ -176,10 +182,25 @@ export function LoginPage() {
             <span>또는</span>
           </div>
 
+          <div className="terms-agreement">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                disabled={isSubmitting}
+              />
+              <span>
+                <a href="/terms.html" target="_blank" rel="noopener noreferrer">이용약관</a> 및{' '}
+                <a href="/privacy.html" target="_blank" rel="noopener noreferrer">개인정보처리방침</a>에 동의합니다.
+              </span>
+            </label>
+          </div>
+
           <button 
             className="login-btn secondary-btn"
             onClick={handleMagicLink}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !agreedToTerms}
           >
             <span className="btn-icon">✉️</span>
             이메일 링크로 로그인
@@ -188,10 +209,6 @@ export function LoginPage() {
           <div className="subscriber-notice">
             <p>💡 뉴스레터를 구독한 이메일 주소로 로그인해주세요.</p>
             <p>아직 구독하지 않으셨나요? <a href="https://page.stibee.com/subscriptions/289942" target="_blank" rel="noopener noreferrer">뉴스레터 구독하기</a></p>
-          </div>
-
-          <div className="login-footer">
-            <p>로그인하면 <a href="/terms.html" target="_blank" rel="noopener noreferrer">이용약관</a> 및 <a href="/privacy.html" target="_blank" rel="noopener noreferrer">개인정보처리방침</a>에 동의하는 것으로 간주됩니다.</p>
           </div>
         </div>
       </div>
