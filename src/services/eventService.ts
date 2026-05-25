@@ -524,7 +524,7 @@ export async function fetchViewCountStats(
     }));
 
     console.log('[ViewCountStats] Period results count:', results.length);
-    console.log('[ViewCountStats] Sample period results (first 3):', results.slice(0, 3).map(r => ({
+    console.log('[ViewCountStats] Sample period results (first 3):', results.slice(0, 3).map((r: { title: string; viewCount: number }) => ({
       title: r.title,
       viewCount: r.viewCount
     })));
