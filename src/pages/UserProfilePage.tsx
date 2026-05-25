@@ -6,7 +6,7 @@ import type { EventRecord } from '../types/core';
 import { Heart, Bell, Shield, Mail, User as UserIcon, Key } from 'lucide-react';
 
 export function UserProfilePage() {
-  const { user, userProfile, updatePassword, updateNickname, unsubscribe, isAdmin, needsNickname } = useAuth();
+  const { user, userProfile, updatePassword, updateNickname, unsubscribe, isAdmin } = useAuth();
   
   const [isSettingPassword, setIsSettingPassword] = useState(false);
   const [isSettingNickname, setIsSettingNickname] = useState(false);

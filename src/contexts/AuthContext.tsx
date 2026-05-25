@@ -17,7 +17,6 @@ interface AuthContextType {
   isAdmin: boolean;
   adminModeEnabled: boolean;
   loading: boolean;
-  needsNickname: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithKakao: () => Promise<void>;
   signInWithNaver: () => Promise<void>;
