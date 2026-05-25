@@ -83,7 +83,7 @@ export function Banner() {
     // 배너 조회수 증가
     console.log(`[Banner] Incrementing view count for banner ${banner.id} (${banner.title})`);
     try {
-      const { data, error } = await supabase.rpc('increment_banner_view_count', { banner_id: banner.id });
+      const { error } = await supabase.rpc('increment_banner_view_count', { banner_id: banner.id });
       if (error) {
         console.error('[Banner] Failed to increment banner view count:', error);
       } else {
