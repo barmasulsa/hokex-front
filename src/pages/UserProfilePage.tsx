@@ -298,7 +298,7 @@ export function UserProfilePage() {
                   ⚠️ 주의사항
                 </h3>
                 <ul style={{ margin: '0', paddingLeft: '20px', color: '#e65100', fontSize: '14px', lineHeight: '1.6' }}>
-                  <li>특정 조직의 이름을 넣은 닉네임은 삼가해주시기를 바랍니다.</li>
+                  <li>특정 조직의 이름을 넣은 닉네임(전시장, 기관, 업체 등)과 타인에게 불쾌감을 유발하는 닉네임은 삼가해주시길 바랍니다.</li>
                   <li>닉네임은 일반적인 상식선에서 작성해주시길 바랍니다.</li>
                   <li style={{ marginTop: '8px' }}>
                     현재 닉네임은 사용처가 딱히 없으나 미래에는 사용될 수 있으니 (이벤트, 커뮤니티 기능 등) 미리 마련해두는 게 좋을 거 같아 만들었습니다. 
