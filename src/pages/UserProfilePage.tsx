@@ -97,6 +97,13 @@ export function UserProfilePage() {
       return;
     }
 
+    // 특수문자 체크 (한글, 영문, 숫자, 공백만 허용)
+    const specialCharRegex = /[^가-힣a-zA-Z0-9\s]/;
+    if (specialCharRegex.test(nicknameInput)) {
+      setNicknameError('닉네임에는 특수문자를 사용할 수 없습니다 (한글, 영문, 숫자, 공백만 가능)');
+      return;
+    }
+
     // 금지된 닉네임 목록 체크 (판다 붙인 후 체크, 관리자 제외)
     const nicknameWithPanda = nicknameInput + '판다';
     const forbiddenNicknames = [
