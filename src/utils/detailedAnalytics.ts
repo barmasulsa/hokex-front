@@ -91,46 +91,30 @@ export function recordDetailedVisit() {
 // DB에 비동기로 저장 (사용자는 기다리지 않음)
 async function recordToDBAsync(date: string, hour: number) {
   try {
-    // UPSERT: 같은 날짜/시간이면 count 증가, 없으면 새로 생성
-    const { error } = await supabase
+    // 기존 데이터 조회
+    const { data: existing } = await supabase
       .from('visitor_stats')
-      .upsert(
-        {
+      .select('visit_count')
+      .eq('visit_date', date)
+      .eq('visit_hour', hour)
+      .maybeSingle();
+    
+    if (existing) {
+      // 이미 존재하면 count 증가
+      await supabase
+        .from('visitor_stats')
+        .update({ visit_count: existing.visit_count + 1 })
+        .eq('visit_date', date)
+        .eq('visit_hour', hour);
+    } else {
+      // 없으면 새로 삽입
+      await supabase
+        .from('visitor_stats')
+        .insert({
           visit_date: date,
           visit_hour: hour,
           visit_count: 1
-        },
-        {
-          onConflict: 'visit_date,visit_hour',
-          ignoreDuplicates: false
-        }
-      );
-    
-    if (error) {
-      // UPSERT가 실패하면 기존 데이터 조회 후 업데이트
-      const { data: existing } = await supabase
-        .from('visitor_stats')
-        .select('visit_count')
-        .eq('visit_date', date)
-        .eq('visit_hour', hour)
-        .single();
-      
-      if (existing) {
-        await supabase
-          .from('visitor_stats')
-          .update({ visit_count: existing.visit_count + 1 })
-          .eq('visit_date', date)
-          .eq('visit_hour', hour);
-      } else {
-        // 새로 삽입
-        await supabase
-          .from('visitor_stats')
-          .insert({
-            visit_date: date,
-            visit_hour: hour,
-            visit_count: 1
-          });
-      }
+        });
     }
   } catch (err) {
     // 에러 무시 (통계만 누락, 사이트는 정상)
