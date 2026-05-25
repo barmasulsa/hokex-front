@@ -17,6 +17,7 @@ interface AuthContextType {
   isAdmin: boolean;
   adminModeEnabled: boolean;
   loading: boolean;
+  needsNickname: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithKakao: () => Promise<void>;
   signInWithNaver: () => Promise<void>;
@@ -361,6 +362,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  // 닉네임이 필요한지 확인 (로그인했지만 닉네임이 없는 경우)
+  const needsNickname = !!(user && userProfile && !userProfile.nickname);
+
   const value = {
     user,
     session,
@@ -368,6 +372,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAdmin: (userProfile?.is_admin ?? false) && adminModeEnabled,
     adminModeEnabled,
     loading,
+    needsNickname,
     signInWithGoogle,
     signInWithKakao,
     signInWithNaver,

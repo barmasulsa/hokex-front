@@ -6,7 +6,7 @@ import type { EventRecord } from '../types/core';
 import { Heart, Bell, Shield, Mail, User as UserIcon, Key } from 'lucide-react';
 
 export function UserProfilePage() {
-  const { user, userProfile, updatePassword, updateNickname, unsubscribe, isAdmin } = useAuth();
+  const { user, userProfile, updatePassword, updateNickname, unsubscribe, isAdmin, needsNickname } = useAuth();
   
   const [isSettingPassword, setIsSettingPassword] = useState(false);
   const [isSettingNickname, setIsSettingNickname] = useState(false);
@@ -185,6 +185,58 @@ export function UserProfilePage() {
       <div className="profile-content">
         {/* Main Content */}
         <div className="profile-main">
+
+          {/* 닉네임 미설정 안내 - 최상단에 배치 */}
+          {!userProfile?.nickname && !isSettingNickname && (
+            <div className="nickname-setup-notice" style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              border: '3px solid #5a67d8',
+              borderRadius: '12px',
+              padding: '24px',
+              marginBottom: '32px',
+              boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+            }}>
+              <h3 style={{ 
+                margin: '0 0 12px 0', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px', 
+                color: 'white',
+                fontSize: '20px',
+                fontWeight: 'bold'
+              }}>
+                🐼 판다 닉네임을 설정해보세요!
+              </h3>
+              <p style={{ 
+                margin: '0 0 16px 0', 
+                color: 'rgba(255, 255, 255, 0.95)', 
+                lineHeight: '1.6',
+                fontSize: '15px'
+              }}>
+                닉네임은 미래에 추가될 기능(이벤트 추첨, 커뮤니티 등)에서 사용될 예정입니다. 
+                중복 닉네임은 설정이 불가하니 사람이 없는 초기에 멋있는 닉네임을 미리 선점하세요! :)
+              </p>
+              <button 
+                onClick={() => setIsSettingNickname(true)}
+                style={{
+                  background: 'white',
+                  color: '#667eea',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '15px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                  transition: 'transform 0.2s',
+                }}
+                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                닉네임 설정하기 →
+              </button>
+            </div>
+          )}
 
           {/* Saved Events */}
           <section className="profile-section">
