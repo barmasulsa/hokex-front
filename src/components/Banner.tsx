@@ -76,15 +76,21 @@ export function Banner() {
   }, [youtubeBanners.length]);
 
   // 모달 열기 및 조회수 증가
-  const openModal = async (bannerId: string, title: string, content: string) => {
-    setModalContent({ title, content });
+  const openModal = async (banner: BannerType) => {
+    setModalContent({ title: banner.title, content: banner.content });
     setIsModalOpen(true);
 
-    // 조회수 증가
+    // 배너 조회수 증가
+    console.log(`[Banner] Incrementing view count for banner ${banner.id} (${banner.title})`);
     try {
-      await supabase.rpc('increment_banner_view_count', { banner_id: parseInt(bannerId) });
+      const { data, error } = await supabase.rpc('increment_banner_view_count', { banner_id: banner.id });
+      if (error) {
+        console.error('[Banner] Failed to increment banner view count:', error);
+      } else {
+        console.log('[Banner] Banner view count incremented successfully');
+      }
     } catch (error) {
-      console.error('Failed to increment view count:', error);
+      console.error('[Banner] Exception incrementing banner view count:', error);
     }
   };
 
@@ -238,7 +244,7 @@ export function Banner() {
                 <div 
                   key={banner.id}
                   className="notice-item"
-                  onClick={() => openModal(banner.id, banner.title, banner.content)}
+                  onClick={() => openModal(banner)}
                 >
                   <span className="notice-number">{index + 1}</span>
                   <span className="notice-item-title">{banner.title}</span>
