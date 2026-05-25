@@ -6,7 +6,7 @@ import type { EventRecord } from '../types/core';
 import { Heart, Bell, Shield, Mail, User as UserIcon, Key } from 'lucide-react';
 
 export function UserProfilePage() {
-  const { user, userProfile, updatePassword, updateNickname, unsubscribe, isAdmin } = useAuth();
+  const { user, userProfile, updatePassword, updateNickname, resetNickname, unsubscribe, isAdmin } = useAuth();
   
   const [isSettingPassword, setIsSettingPassword] = useState(false);
   const [isSettingNickname, setIsSettingNickname] = useState(false);
@@ -99,14 +99,63 @@ export function UserProfilePage() {
 
     // 금지된 닉네임 목록 체크 (판다 붙인 후 체크, 관리자 제외)
     const nicknameWithPanda = nicknameInput + '판다';
-    const forbiddenNicknames = ['판다', '카페인판다', '슬픈 판다', '슬픈판다', '무명의 판다', '무명의판다', '이름없는 판다', '이름없는판다', '이름 없는 판다', '이름 없는판다', '관리자 판다', '관리자판다', '매니저 판다', '매니저판다', '부매니저 판다', '부매니저판다', '부 매니저 판다', '부 매니저판다'];
+    const forbiddenNicknames = [
+      '판다', '카페인판다', 
+      '슬픈 판다', '슬픈판다', 
+      '무명의 판다', '무명의판다', 
+      '이름없는 판다', '이름없는판다', 
+      '이름 없는 판다', '이름 없는판다', 
+      '관리자 판다', '관리자판다', 
+      '매니저 판다', '매니저판다', 
+      '부매니저 판다', '부매니저판다', 
+      '부 매니저 판다', '부 매니저판다',
+      // 1급~9급
+      '1급 판다', '1급판다',
+      '2급 판다', '2급판다',
+      '3급 판다', '3급판다',
+      '4급 판다', '4급판다',
+      '5급 판다', '5급판다',
+      '6급 판다', '6급판다',
+      '7급 판다', '7급판다',
+      '8급 판다', '8급판다',
+      '9급 판다', '9급판다',
+      // 정부 직책
+      '대통령 판다', '대통령판다',
+      '부통령 판다', '부통령판다',
+      '국무총리 판다', '국무총리판다',
+      '부총리 판다', '부총리판다',
+      '장관 판다', '장관판다',
+      '처장 판다', '처장판다',
+      '청장 판다', '청장판다',
+      '차관 판다', '차관판다',
+      // 공무원 직급 (직급명만)
+      '관리관 판다', '관리관판다',
+      '이사관 판다', '이사관판다',
+      '부이사관 판다', '부이사관판다',
+      '서기관 판다', '서기관판다',
+      '사무관 판다', '사무관판다',
+      '주사 판다', '주사판다',
+      '주사보 판다', '주사보판다',
+      '서기 판다', '서기판다',
+      '서기보 판다', '서기보판다',
+      // 공무원 직급 (급수 + 직급명)
+      '1급 관리관 판다', '1급 관리관판다', '1급관리관 판다', '1급관리관판다',
+      '2급 이사관 판다', '2급 이사관판다', '2급이사관 판다', '2급이사관판다',
+      '3급 부이사관 판다', '3급 부이사관판다', '3급부이사관 판다', '3급부이사관판다',
+      '4급 서기관 판다', '4급 서기관판다', '4급서기관 판다', '4급서기관판다',
+      '5급 사무관 판다', '5급 사무관판다', '5급사무관 판다', '5급사무관판다',
+      '6급 주사 판다', '6급 주사판다', '6급주사 판다', '6급주사판다',
+      '7급 주사보 판다', '7급 주사보판다', '7급주사보 판다', '7급주사보판다',
+      '8급 서기 판다', '8급 서기판다', '8급서기 판다', '8급서기판다',
+      '9급 서기보 판다', '9급 서기보판다', '9급서기보 판다', '9급서기보판다'
+    ];
     
     // hokex 포함 여부 체크 (대소문자 구분 없이)
     const containsHokex = nicknameWithPanda.toLowerCase().includes('hokex') || 
                           nicknameWithPanda.includes('호켁스');
     
     if (!isAdmin && (forbiddenNicknames.includes(nicknameWithPanda) || containsHokex)) {
-      setNicknameError('해당 닉네임은 사용하실 수 없습니다');
+      setNicknameError('해당 닉네임은 추후 커뮤니티 용도로 활용될 가능성이 있는 닉네임으로 양해해주시기를 바랍니다.');
       return;
     }
 
@@ -132,6 +181,20 @@ export function UserProfilePage() {
       } else {
         setNicknameError('닉네임 설정에 실패했습니다. 다시 시도해주세요.');
       }
+    }
+  };
+
+  const handleResetNickname = async () => {
+    if (!confirm('⚠️ 닉네임을 초기화하시겠습니까?\n\n초기화하면 닉네임이 이메일 앞자리로 표시됩니다.')) {
+      return;
+    }
+
+    try {
+      await resetNickname();
+      alert('✅ 닉네임이 초기화되었습니다!');
+    } catch (error: any) {
+      console.error('Error resetting nickname:', error);
+      alert('❌ 닉네임 초기화에 실패했습니다. 다시 시도해주세요.');
     }
   };
 
@@ -500,12 +563,23 @@ export function UserProfilePage() {
                 </label>
                 <div className="setting-value">
                   {userProfile?.nickname || '닉네임 미설정'}
-                  <button 
-                    className="btn-change"
-                    onClick={() => setIsSettingNickname(true)}
-                  >
-                    {userProfile?.nickname ? 'CHANGE' : 'SET'}
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button 
+                      className="btn-change"
+                      onClick={() => setIsSettingNickname(true)}
+                    >
+                      {userProfile?.nickname ? 'CHANGE' : 'SET'}
+                    </button>
+                    {userProfile?.nickname && (
+                      <button 
+                        className="btn-change"
+                        onClick={handleResetNickname}
+                        style={{ background: '#dc3545' }}
+                      >
+                        RESET
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="setting-row">

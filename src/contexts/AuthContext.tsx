@@ -25,6 +25,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
   updateNickname: (nickname: string) => Promise<void>;
+  resetNickname: () => Promise<void>;
   unsubscribe: () => Promise<any>;
   signOut: () => Promise<void>;
   toggleAdminMode: () => void;
@@ -290,6 +291,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // 닉네임 초기화 (null로 설정)
+  const resetNickname = async () => {
+    if (!user) {
+      throw new Error('로그인이 필요합니다');
+    }
+
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({ nickname: null })
+      .eq('id', user.id);
+    
+    if (error) {
+      console.error('Error resetting nickname:', error);
+      throw error;
+    }
+
+    // 로컬 상태 업데이트
+    if (userProfile) {
+      setUserProfile({ ...userProfile, nickname: null });
+    }
+  };
+
   // Magic Link 로그인 (이메일 전용) - 구독자만 허용
   const signInWithMagicLink = async (email: string) => {
     // 1. 먼저 스티비 구독자인지 확인
@@ -380,6 +403,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     resetPassword,
     updatePassword,
     updateNickname,
+    resetNickname,
     unsubscribe,
     signOut,
     toggleAdminMode,
