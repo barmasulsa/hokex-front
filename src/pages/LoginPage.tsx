@@ -191,7 +191,7 @@ export function LoginPage() {
           </div>
 
           <div className="login-footer">
-            <p>로그인하면 <a href="#">이용약관</a> 및 <a href="#">개인정보처리방침</a>에 동의하는 것으로 간주됩니다.</p>
+            <p>로그인하면 <a href="/terms.html" target="_blank" rel="noopener noreferrer">이용약관</a> 및 <a href="/privacy.html" target="_blank" rel="noopener noreferrer">개인정보처리방침</a>에 동의하는 것으로 간주됩니다.</p>
           </div>
         </div>
       </div>

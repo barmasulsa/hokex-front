@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchAllBanners, createBanner, updateBanner, deleteBanner } from '../services/bannerService';
-import { fetchViewCountStats, fetchSavedEventStats, flushViewCounts, type ViewCountStats, type SavedEventStats, type ViewCountStatsFilters } from '../services/eventService';
+import { fetchViewCountStats, fetchSavedEventStats, type ViewCountStats, type SavedEventStats, type ViewCountStatsFilters } from '../services/eventService';
 import { Region, REGION_VENUE_MAP } from '../types/core';
 import { 
   getDetailedVisitorStats, 
@@ -39,6 +39,11 @@ export function BannerManagementPage() {
   const [viewCountRegion, setViewCountRegion] = useState<string>('전체');
   const [viewCountVenue, setViewCountVenue] = useState<string>('전체');
   const [statsType, setStatsType] = useState<'viewcount' | 'saved'>('viewcount');
+  
+  // 기간 필터
+  const [datePeriod, setDatePeriod] = useState<'all' | '1day' | '1week' | '1month' | '3months' | '6months' | '1year' | 'custom'>('all');
+  const [customStartDate, setCustomStartDate] = useState<string>('');
+  const [customEndDate, setCustomEndDate] = useState<string>('');
 
   // 새 배너 폼 상태
   const [formData, setFormData] = useState({
@@ -80,28 +85,75 @@ export function BannerManagementPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // 기간 필터에 따른 날짜 범위 계산
+  const getDateRange = (): { startDate?: string; endDate?: string } => {
+    if (datePeriod === 'all') {
+      return {}; // 전체 기간 (필터 없음)
+    }
+
+    const now = new Date();
+    const endDate = now.toISOString().split('T')[0]; // 오늘
+    let startDate: string;
+
+    switch (datePeriod) {
+      case '1day':
+        startDate = endDate; // 오늘만
+        break;
+      case '1week':
+        const weekAgo = new Date(now);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        startDate = weekAgo.toISOString().split('T')[0];
+        break;
+      case '1month':
+        const monthAgo = new Date(now);
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        startDate = monthAgo.toISOString().split('T')[0];
+        break;
+      case '3months':
+        const threeMonthsAgo = new Date(now);
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+        startDate = threeMonthsAgo.toISOString().split('T')[0];
+        break;
+      case '6months':
+        const sixMonthsAgo = new Date(now);
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        startDate = sixMonthsAgo.toISOString().split('T')[0];
+        break;
+      case '1year':
+        const yearAgo = new Date(now);
+        yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+        startDate = yearAgo.toISOString().split('T')[0];
+        break;
+      case 'custom':
+        if (customStartDate && customEndDate) {
+          return { startDate: customStartDate, endDate: customEndDate };
+        }
+        return {}; // 날짜 미입력 시 전체 기간
+      default:
+        return {};
+    }
+
+    return { startDate, endDate };
+  };
+
   // 조회수 통계 로드 함수
   const loadViewCounts = async () => {
     console.log('[BannerManagement] loadViewCounts called');
     setLoadingViewCounts(true);
     
-    // 먼저 메모리 큐를 DB로 플러시
-    console.log('[BannerManagement] Flushing view count queue to DB first...');
-    try {
-      await flushViewCounts();
-      console.log('[BannerManagement] Queue flushed successfully');
-    } catch (err) {
-      console.error('[BannerManagement] Error flushing queue:', err);
-    }
-    
-    // 약간의 지연 후 DB에서 가져오기 (DB 업데이트 반영 시간)
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const dateRange = getDateRange();
+    console.log('[BannerManagement] dateRange:', dateRange);
+    console.log('[BannerManagement] dateRange.startDate:', dateRange.startDate, 'type:', typeof dateRange.startDate);
+    console.log('[BannerManagement] dateRange.endDate:', dateRange.endDate, 'type:', typeof dateRange.endDate);
     
     const filters: ViewCountStatsFilters = {
       region: viewCountRegion !== '전체' ? viewCountRegion : undefined,
       venue: viewCountVenue !== '전체' ? viewCountVenue : undefined,
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
     };
     console.log('[BannerManagement] Calling fetchViewCountStats with limit:', viewCountLimit, 'filters:', filters);
+    console.log('[BannerManagement] filters.startDate:', filters.startDate, 'filters.endDate:', filters.endDate);
     const stats = await fetchViewCountStats(viewCountLimit, filters);
     console.log('[BannerManagement] Received stats:', stats.length, 'items');
     console.log('[BannerManagement] First 3 stats:', stats.slice(0, 3));
@@ -121,7 +173,7 @@ export function BannerManagementPage() {
       
       return () => clearInterval(interval);
     }
-  }, [activeTab, viewCountLimit, viewCountRegion, viewCountVenue]);
+  }, [activeTab, viewCountLimit, viewCountRegion, viewCountVenue, datePeriod, customStartDate, customEndDate]);
 
   // 찜 목록 통계 로드 함수
   const loadSavedStats = async () => {
@@ -129,9 +181,12 @@ export function BannerManagementPage() {
     setLoadingSavedStats(true);
     
     // 찜 목록은 실시간으로 DB에 저장되므로 플러시 불필요
+    const dateRange = getDateRange();
     const filters: ViewCountStatsFilters = {
       region: viewCountRegion !== '전체' ? viewCountRegion : undefined,
       venue: viewCountVenue !== '전체' ? viewCountVenue : undefined,
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
     };
     console.log('[BannerManagement] Calling fetchSavedEventStats with limit:', viewCountLimit, 'filters:', filters);
     const stats = await fetchSavedEventStats(viewCountLimit, filters);
@@ -152,7 +207,7 @@ export function BannerManagementPage() {
       
       return () => clearInterval(interval);
     }
-  }, [activeTab, statsType, viewCountLimit, viewCountRegion, viewCountVenue]);
+  }, [activeTab, statsType, viewCountLimit, viewCountRegion, viewCountVenue, datePeriod, customStartDate, customEndDate]);
 
   const loadBanners = async () => {
     setLoading(true);
@@ -867,6 +922,78 @@ export function BannerManagementPage() {
                     적용
                   </button>
                 </div>
+              </div>
+
+              {/* 기간 필터 */}
+              <div className="filter-group">
+                <label>기간:</label>
+                <div className="period-buttons">
+                  <button
+                    className={`period-btn ${datePeriod === 'all' ? 'active' : ''}`}
+                    onClick={() => setDatePeriod('all')}
+                  >
+                    전체
+                  </button>
+                  <button
+                    className={`period-btn ${datePeriod === '1day' ? 'active' : ''}`}
+                    onClick={() => setDatePeriod('1day')}
+                  >
+                    일일
+                  </button>
+                  <button
+                    className={`period-btn ${datePeriod === '1week' ? 'active' : ''}`}
+                    onClick={() => setDatePeriod('1week')}
+                  >
+                    1주일
+                  </button>
+                  <button
+                    className={`period-btn ${datePeriod === '1month' ? 'active' : ''}`}
+                    onClick={() => setDatePeriod('1month')}
+                  >
+                    1개월
+                  </button>
+                  <button
+                    className={`period-btn ${datePeriod === '3months' ? 'active' : ''}`}
+                    onClick={() => setDatePeriod('3months')}
+                  >
+                    3개월
+                  </button>
+                  <button
+                    className={`period-btn ${datePeriod === '6months' ? 'active' : ''}`}
+                    onClick={() => setDatePeriod('6months')}
+                  >
+                    6개월
+                  </button>
+                  <button
+                    className={`period-btn ${datePeriod === '1year' ? 'active' : ''}`}
+                    onClick={() => setDatePeriod('1year')}
+                  >
+                    1년
+                  </button>
+                  <button
+                    className={`period-btn ${datePeriod === 'custom' ? 'active' : ''}`}
+                    onClick={() => setDatePeriod('custom')}
+                  >
+                    직접 입력
+                  </button>
+                </div>
+                {datePeriod === 'custom' && (
+                  <div className="custom-date-input">
+                    <input
+                      type="date"
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      placeholder="시작일"
+                    />
+                    <span>~</span>
+                    <input
+                      type="date"
+                      value={customEndDate}
+                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      placeholder="종료일"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* 지역 필터 */}

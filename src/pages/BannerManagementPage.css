@@ -1107,3 +1107,55 @@
   cursor: not-allowed;
   opacity: 0.6;
 }
+
+/* 기간 필터 버튼 */
+.period-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.period-btn {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #495057;
+  transition: all 0.2s;
+}
+
+.period-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.period-btn.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+/* 커스텀 날짜 입력 */
+.custom-date-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.custom-date-input input[type="date"] {
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #495057;
+}
+
+.custom-date-input span {
+  color: #6c757d;
+  font-weight: 500;
+}

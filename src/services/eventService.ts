@@ -444,55 +444,24 @@ export async function revertEventChange(eventId: string, historyId: string) {
   return true;
 }
 
-// 조회수 증가 (메모리에 저장, 나중에 배치 업데이트)
-const viewCountQueue: Map<string, number> = new Map();
-
+// 조회수 증가 (즉시 DB에 기록)
 export async function incrementViewCount(eventId: string) {
-  // 메모리에 조회수 증가 기록
-  const currentCount = viewCountQueue.get(eventId) || 0;
-  viewCountQueue.set(eventId, currentCount + 1);
-  
-  console.log(`[ViewCount] Event ${eventId} view count queued: ${currentCount + 1}`);
-}
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const { error } = await supabase.rpc('increment_event_view_count', {
+      p_event_id: eventId,
+      p_user_id: user?.id || null
+    });
 
-// 배치로 조회수 업데이트 (1분마다 호출)
-export async function flushViewCounts() {
-  console.log(`[ViewCount] flushViewCounts called. Queue size: ${viewCountQueue.size}`);
-  
-  if (viewCountQueue.size === 0) {
-    console.log('[ViewCount] Queue is empty, skipping flush');
-    return;
-  }
-
-  console.log(`[ViewCount] Flushing ${viewCountQueue.size} events to database`);
-  console.log('[ViewCount] Queue contents:', Array.from(viewCountQueue.entries()));
-
-  // 각 이벤트의 조회수를 DB에 업데이트
-  for (const [eventId, count] of viewCountQueue.entries()) {
-    try {
-      console.log(`[ViewCount] Calling RPC for event ${eventId} with count ${count}`);
-      
-      const { data, error } = await supabase.rpc('increment_view_count', {
-        event_id: eventId,
-        increment_by: count
-      });
-
-      if (error) {
-        console.error(`[ViewCount] Error updating event ${eventId}:`, error);
-        console.error('[ViewCount] Error details:', JSON.stringify(error, null, 2));
-      } else {
-        console.log(`[ViewCount] Successfully updated event ${eventId} by +${count}`);
-        console.log('[ViewCount] RPC response data:', data);
-      }
-    } catch (err) {
-      console.error(`[ViewCount] Exception updating event ${eventId}:`, err);
+    if (error) {
+      console.error(`[ViewCount] Error incrementing view count for event ${eventId}:`, error);
+    } else {
+      console.log(`[ViewCount] Successfully incremented view count for event ${eventId}`);
     }
+  } catch (err) {
+    console.error(`[ViewCount] Exception incrementing view count:`, err);
   }
-
-  // 큐 비우기
-  console.log('[ViewCount] Clearing queue');
-  viewCountQueue.clear();
-  console.log('[ViewCount] Flush complete');
 }
 
 // 조회수 통계 가져오기 (관리자 전용)
@@ -511,6 +480,8 @@ export interface ViewCountStatsFilters {
   limit?: number;
   region?: string;
   venue?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export async function fetchViewCountStats(
@@ -518,6 +489,51 @@ export async function fetchViewCountStats(
   filters?: ViewCountStatsFilters
 ): Promise<ViewCountStats[]> {
   console.log('[ViewCountStats] Fetching view count stats with filters:', filters);
+  console.log('[ViewCountStats] startDate:', filters?.startDate, 'endDate:', filters?.endDate);
+  console.log('[ViewCountStats] Has startDate?', !!filters?.startDate, 'Has endDate?', !!filters?.endDate);
+  
+  // 기간 필터가 있으면 event_views_log 테이블에서 조회
+  // CRITICAL: Only use period-based query if BOTH dates are provided or at least one is truthy
+  if (filters?.startDate || filters?.endDate) {
+    console.log('[ViewCountStats] Using period-based query from event_views_log');
+    
+    const { data, error } = await supabase.rpc('get_event_views_by_period', {
+      p_start_date: filters.startDate || '2020-01-01',
+      p_end_date: filters.endDate || '2099-12-31',
+      p_limit: limit,
+      p_region: (filters.region && filters.region !== '전체') ? filters.region : null,
+      p_venue: (filters.venue && filters.venue !== '전체') ? filters.venue : null
+    });
+
+    if (error) {
+      console.error('[ViewCountStats] Error fetching period view stats:', error);
+      return [];
+    }
+
+    console.log('[ViewCountStats] Period data count:', data?.length);
+
+    const results = (data || []).map((event: any) => ({
+      eventId: event.event_id,
+      title: event.title,
+      venue: event.venue,
+      region: event.region,
+      viewCount: event.view_count || 0,
+      startDate: new Date(event.start_date),
+      endDate: new Date(event.end_date),
+      poster: event.poster_url || ''
+    }));
+
+    console.log('[ViewCountStats] Period results count:', results.length);
+    console.log('[ViewCountStats] Sample period results (first 3):', results.slice(0, 3).map(r => ({
+      title: r.title,
+      viewCount: r.viewCount
+    })));
+
+    return results;
+  }
+
+  // 기간 필터가 없으면 events 테이블의 누적 view_count 사용
+  console.log('[ViewCountStats] Using cumulative view_count from events table');
   
   let query = supabase
     .from('events')
@@ -539,12 +555,12 @@ export async function fetchViewCountStats(
     .limit(limit);
 
   if (error) {
-    console.error('[ViewCountStats] Error fetching view count stats:', error);
+    console.error('[ViewCountStats] Error fetching cumulative view count stats:', error);
     return [];
   }
 
-  console.log('[ViewCountStats] Fetched data count:', data?.length);
-  console.log('[ViewCountStats] Sample data (first 3):', data?.slice(0, 3).map(e => ({
+  console.log('[ViewCountStats] Cumulative data count:', data?.length);
+  console.log('[ViewCountStats] Sample cumulative data (first 3):', data?.slice(0, 3).map(e => ({
     title: e.title,
     view_count: e.view_count,
     id: e.id
@@ -561,8 +577,8 @@ export async function fetchViewCountStats(
     poster: event.poster_url || ''
   }));
 
-  console.log('[ViewCountStats] Returning results count:', results.length);
-  console.log('[ViewCountStats] Sample results (first 3):', results.slice(0, 3).map(r => ({
+  console.log('[ViewCountStats] Cumulative results count:', results.length);
+  console.log('[ViewCountStats] Sample cumulative results (first 3):', results.slice(0, 3).map(r => ({
     title: r.title,
     viewCount: r.viewCount
   })));
@@ -629,6 +645,14 @@ export async function fetchSavedEventStats(
   // 전시장 필터
   if (filters?.venue && filters.venue !== '전체') {
     eventsQuery = eventsQuery.eq('venue', filters.venue);
+  }
+
+  // 날짜 필터 (행사 시작일 기준)
+  if (filters?.startDate) {
+    eventsQuery = eventsQuery.gte('start_date', filters.startDate);
+  }
+  if (filters?.endDate) {
+    eventsQuery = eventsQuery.lte('start_date', filters.endDate);
   }
 
   const { data: eventsData, error: eventsError } = await eventsQuery;
