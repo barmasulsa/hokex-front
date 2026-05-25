@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { fetchEventById, updateEvent, fetchEventHistory, revertEventChange, incrementViewCount } from '../services/eventService';
 import type { EventRecord } from '../types/core';
 import { calculateStatusBadge, calculateDaysUntilStart } from '../utils/badgeCalculator';
@@ -29,6 +29,7 @@ export function EventDetailPage() {
   const [event, setEvent] = useState<EventRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const { isAdmin } = useAuth();
+  const viewCountedRef = useRef<string | null>(null); // 조회수 중복 카운트 방지 - 카운트한 이벤트 ID 저장
   
   // URL 편집 상태
   const [editingVenueUrl, setEditingVenueUrl] = useState(false);
@@ -82,8 +83,9 @@ export function EventDetailPage() {
       setEvent(eventData);
       setLoading(false);
       
-      // 조회수 증가 (메모리에 기록)
-      if (id) {
+      // 조회수 증가 (중복 호출 방지 - 이미 카운트한 이벤트인지 확인)
+      if (id && viewCountedRef.current !== id) {
+        viewCountedRef.current = id;
         await incrementViewCount(id);
       }
     }
