@@ -917,7 +917,7 @@ function AddEventModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
     title: '',
     venue: '',
     venue_hall: '',
-    region: '수도권',
+    region: '',
     category: ['전시'],
     start_date: '',
     end_date: '',
@@ -932,21 +932,21 @@ function AddEventModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
 
   // 전시장 선택 시 지역 자동 설정
   const handleVenueChange = (venue: string) => {
-    let region = '수도권';
+    let region = '';
     
     // 지역 자동 매핑
     if (['코엑스', '코엑스 마곡', 'aT센터', '세텍'].includes(venue)) {
-      region = '수도권';
+      region = '서울';
     } else if (['킨텍스', '수원컨벤션센터', '수원메쎄', '송도컨벤시아'].includes(venue)) {
       region = '수도권';
     } else if (['대전컨벤션센터', '청주오스코'].includes(venue)) {
-      region = '대전/충청';
+      region = '충청도';
     } else if (['김대중컨벤션센터', '군산새만금컨벤션센터'].includes(venue)) {
-      region = '광주/전남';
+      region = '전라도';
     } else if (['벡스코', '엑스코', '창원컨벤션센터', '유에코', '경주화백컨벤션센터', '구미코'].includes(venue)) {
-      region = '부산/경남';
+      region = '경상도';
     } else if (venue === '제주국제컨벤션센터') {
-      region = '제주';
+      region = '제주도';
     }
     
     setFormData({ ...formData, venue, region });
@@ -1029,15 +1029,15 @@ function AddEventModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
                   <option value="수원메쎄">수원메쎄</option>
                   <option value="송도컨벤시아">송도컨벤시아</option>
                 </optgroup>
-                <optgroup label="대전/충청">
+                <optgroup label="충청도">
                   <option value="대전컨벤션센터">대전컨벤션센터</option>
                   <option value="청주오스코">청주오스코</option>
                 </optgroup>
-                <optgroup label="광주/전남">
+                <optgroup label="전라도">
                   <option value="김대중컨벤션센터">김대중컨벤션센터</option>
                   <option value="군산새만금컨벤션센터">군산새만금컨벤션센터</option>
                 </optgroup>
-                <optgroup label="부산/경남">
+                <optgroup label="경상도">
                   <option value="벡스코">벡스코</option>
                   <option value="엑스코">엑스코</option>
                   <option value="창원컨벤션센터">창원컨벤션센터</option>
@@ -1045,7 +1045,7 @@ function AddEventModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
                   <option value="경주화백컨벤션센터">경주화백컨벤션센터</option>
                   <option value="구미코">구미코</option>
                 </optgroup>
-                <optgroup label="제주">
+                <optgroup label="제주도">
                   <option value="제주국제컨벤션센터">제주국제컨벤션센터</option>
                 </optgroup>
               </select>
@@ -1064,12 +1064,19 @@ function AddEventModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
           <div className="form-row">
             <div className="form-group">
               <label>지역 (자동 설정)</label>
-              <input
-                type="text"
+              <select
                 value={formData.region}
-                readOnly
-                style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
-              />
+                onChange={(e) => setFormData({ ...formData, region: e.target.value })}
+                required
+              >
+                <option value="">지역 선택</option>
+                <option value="서울">서울</option>
+                <option value="수도권">수도권</option>
+                <option value="충청도">충청도</option>
+                <option value="전라도">전라도</option>
+                <option value="경상도">경상도</option>
+                <option value="제주도">제주도</option>
+              </select>
             </div>
             <div className="form-group">
               <label>카테고리 *</label>
