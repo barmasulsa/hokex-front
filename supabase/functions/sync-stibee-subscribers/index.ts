@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 
@@ -31,17 +32,16 @@ serve(async (req) => {
 
     console.log(`🔄 Starting Stibee subscriber sync...`)
 
-    // Stibee API로 전체 구독자 목록 조회 (offset 방식 페이지네이션)
+    // Stibee API로 전체 구독자 목록 조회 (page 방식 페이지네이션)
     let allSubscribers: any[] = []
-    let offset = 0
+    let page = 0
     let hasMore = true
     const limit = 1000
-    const MAX_ITERATIONS = 20  // 최대 20회 (20,000명)
-    let iteration = 0
+    const MAX_PAGES = 20  // 최대 20페이지 (20,000명)
 
-    while (hasMore && iteration < MAX_ITERATIONS) {
-      const stibeeUrl = `https://api.stibee.com/v1/lists/${STIBEE_LIST_ID}/subscribers?offset=${offset}&limit=${limit}`
-      console.log(`📡 Fetching offset ${offset} (iteration ${iteration + 1})...`)
+    while (hasMore && page < MAX_PAGES) {
+      const stibeeUrl = `https://api.stibee.com/v1/lists/${STIBEE_LIST_ID}/subscribers?page=${page}&limit=${limit}`
+      console.log(`📡 Fetching page ${page}...`)
 
       const stibeeResponse = await fetch(stibeeUrl, {
         method: 'GET',
@@ -69,26 +69,27 @@ serve(async (req) => {
         pageSubscribers = stibeeData.Value
       } else if (stibeeData.value && Array.isArray(stibeeData.value)) {
         pageSubscribers = stibeeData.value
+      } else if (stibeeData.Ok && Array.isArray(stibeeData.Ok)) {
+        pageSubscribers = stibeeData.Ok
       } else if (stibeeData.data && Array.isArray(stibeeData.data)) {
         pageSubscribers = stibeeData.data
       } else if (stibeeData.subscribers && Array.isArray(stibeeData.subscribers)) {
         pageSubscribers = stibeeData.subscribers
       }
 
-      console.log(`📊 Offset ${offset}: ${pageSubscribers.length} subscribers`)
+      console.log(`📊 Page ${page}: ${pageSubscribers.length} subscribers`)
 
       if (!pageSubscribers || pageSubscribers.length === 0) {
-        console.log(`⚠️ Offset ${offset} returned no subscribers, stopping...`)
+        console.log(`✅ Reached end of subscribers (empty page)`)
         hasMore = false
       } else {
         allSubscribers = allSubscribers.concat(pageSubscribers)
         
         if (pageSubscribers.length < limit) {
-          console.log(`✅ Offset ${offset} returned ${pageSubscribers.length} subscribers (less than limit), this is the last batch`)
+          console.log(`✅ Reached end of subscribers (${pageSubscribers.length} < ${limit})`)
           hasMore = false
         } else {
-          offset += limit  // 다음 offset으로 이동
-          iteration++
+          page++
         }
       }
     }

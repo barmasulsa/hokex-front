@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>무한 스크롤 API 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>무한 스크롤 API 테스트</h1>
+    
+    <div class="test-section">
+        <h2>1. Supabase 연결 테스트</h2>
+        <button onclick="testConnection()">연결 테스트</button>
+        <div id="connection-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 첫 페이지 로드 (48개)</h2>
+        <button onclick="testFirstPage()">첫 페이지 로드</button>
+        <div id="first-page-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 두 번째 페이지 로드 (48개)</h2>
+        <button onclick="testSecondPage()">두 번째 페이지 로드</button>
+        <div id="second-page-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. 전체 카운트 확인</h2>
+        <button onclick="testTotalCount()">전체 카운트</button>
+        <div id="count-result" class="result"></div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        // Supabase 설정 (실제 값으로 교체 필요)
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        window.testConnection = async function() {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.innerHTML = '테스트 중...';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('events')
+                    .select('id', { count: 'exact', head: true });
+                
+                if (error) throw error;
+                
+                resultDiv.innerHTML = `<span class="success">✓ 연결 성공!</span>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ 연결 실패: ${error.message}</span>`;
+            }
+        };
+
+        window.testFirstPage = async function() {
+            const resultDiv = document.getElementById('first-page-result');
+            resultDiv.innerHTML = '로딩 중...';
+            
+            try {
+                const pageParam = 0;
+                const pageSize = 48;
+                const from = pageParam * pageSize;
+                const to = from + pageSize - 1;
+                
+                console.log(`Fetching range: ${from} to ${to}`);
+                
+                const { data, error, count } = await supabase
+                    .from('events')
+                    .select('*', { count: 'exact' })
+                    .is('deleted_at', null)
+                    .order('start_date', { ascending: true })
+                    .range(from, to);
+                
+                if (error) throw error;
+                
+                const result = {
+                    fetched: data?.length || 0,
+                    totalCount: count,
+                    hasMore: data && data.length === pageSize,
+                    firstEvent: data?.[0] ? {
+                        title: data[0].title,
+                        venue: data[0].venue,
+                        start_date: data[0].start_date
+                    } : null,
+                    lastEvent: data?.[data.length - 1] ? {
+                        title: data[data.length - 1].title,
+                        venue: data[data.length - 1].venue,
+                        start_date: data[data.length - 1].start_date
+                    } : null
+                };
+                
+                resultDiv.innerHTML = `<span class="success">✓ 성공!</span>\n${JSON.stringify(result, null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ 실패: ${error.message}</span>`;
+            }
+        };
+
+        window.testSecondPage = async function() {
+            const resultDiv = document.getElementById('second-page-result');
+            resultDiv.innerHTML = '로딩 중...';
+            
+            try {
+                const pageParam = 1;
+                const pageSize = 48;
+                const from = pageParam * pageSize;
+                const to = from + pageSize - 1;
+                
+                console.log(`Fetching range: ${from} to ${to}`);
+                
+                const { data, error, count } = await supabase
+                    .from('events')
+                    .select('*', { count: 'exact' })
+                    .is('deleted_at', null)
+                    .order('start_date', { ascending: true })
+                    .range(from, to);
+                
+                if (error) throw error;
+                
+                const result = {
+                    fetched: data?.length || 0,
+                    totalCount: count,
+                    hasMore: data && data.length === pageSize,
+                    firstEvent: data?.[0] ? {
+                        title: data[0].title,
+                        venue: data[0].venue,
+                        start_date: data[0].start_date
+                    } : null
+                };
+                
+                resultDiv.innerHTML = `<span class="success">✓ 성공!</span>\n${JSON.stringify(result, null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ 실패: ${error.message}</span>`;
+            }
+        };
+
+        window.testTotalCount = async function() {
+            const resultDiv = document.getElementById('count-result');
+            resultDiv.innerHTML = '카운트 중...';
+            
+            try {
+                const { count, error } = await supabase
+                    .from('events')
+                    .select('*', { count: 'exact', head: true })
+                    .is('deleted_at', null);
+                
+                if (error) throw error;
+                
+                resultDiv.innerHTML = `<span class="success">✓ 전체 행사 수: ${count}개</span>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ 실패: ${error.message}</span>`;
+            }
+        };
+    </script>
+</body>
+</html>

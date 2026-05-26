@@ -32,8 +32,134 @@ function mapSupabaseEventToEventRecord(event: any): EventRecord {
   };
 }
 
-// 모든 행사 가져오기
+// 캐시 관련 타입 및 유틸리티
+interface CachedData<T> {
+  data: T;
+  timestamp: number;
+  ttl: number; // Time To Live (밀리초)
+}
+
+function getCachedData<T>(key: string): T | null {
+  try {
+    const cached = localStorage.getItem(key);
+    if (!cached) return null;
+    
+    const { data, timestamp, ttl }: CachedData<T> = JSON.parse(cached);
+    const now = Date.now();
+    
+    // TTL 만료 확인
+    if (now - timestamp > ttl) {
+      localStorage.removeItem(key);
+      return null;
+    }
+    
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedData<T>(key: string, data: T, ttl: number = 300000) {
+  // 기본 TTL: 5분 (300,000ms)
+  const cached: CachedData<T> = {
+    data,
+    timestamp: Date.now(),
+    ttl
+  };
+  localStorage.setItem(key, JSON.stringify(cached));
+}
+
+// 페이지네이션된 행사 가져오기 (48개씩)
+export async function fetchEventsPaginated(
+  pageParam: number = 0, 
+  pageSize: number = 48
+) {
+  const from = pageParam * pageSize;
+  const to = from + pageSize - 1;
+  
+  console.log(`[fetchEventsPaginated] Fetching page ${pageParam}, from ${from} to ${to}`);
+  
+  // 첫 페이지만 count 계산 (성능 최적화)
+  const needCount = pageParam === 0;
+  
+  const query = supabase
+    .from('events')
+    .select('*', { count: needCount ? 'exact' : undefined })
+    .is('deleted_at', null)
+    .order('start_date', { ascending: true })
+    .range(from, to);
+
+  const { data, error, count } = await query;
+
+  if (error) {
+    console.error('[fetchEventsPaginated] Error:', error);
+    throw error;
+  }
+
+  console.log(`[fetchEventsPaginated] Fetched ${data?.length || 0} events`);
+
+  return {
+    events: (data || []).map(mapSupabaseEventToEventRecord),
+    nextPage: data && data.length === pageSize ? pageParam + 1 : undefined,
+    totalCount: count || undefined
+  };
+}
+
+// 캐싱이 적용된 페이지네이션 (첫 페이지만 캐싱)
+export async function fetchEventsPaginatedWithCache(
+  pageParam: number = 0, 
+  pageSize: number = 48
+) {
+  // 첫 페이지만 캐싱
+  if (pageParam === 0) {
+    const cacheKey = `events:page:0:size:${pageSize}`;
+    
+    // 캐시 확인
+    const cached = getCachedData<{ events: EventRecord[]; nextPage?: number; totalCount?: number }>(cacheKey);
+    if (cached) {
+      console.log('[Cache] Hit for homepage events');
+      // 날짜 문자열을 Date 객체로 복원
+      return {
+        ...cached,
+        events: cached.events.map(event => ({
+          ...event,
+          startDate: new Date(event.startDate),
+          endDate: new Date(event.endDate)
+        }))
+      };
+    }
+    
+    // 캐시 미스 → DB 조회
+    console.log('[Cache] Miss, fetching from DB');
+    const result = await fetchEventsPaginated(pageParam, pageSize);
+    
+    // 캐시 저장 (5분 TTL)
+    setCachedData(cacheKey, result, 300000);
+    
+    return result;
+  }
+  
+  // 2페이지 이후는 직접 DB 조회
+  return fetchEventsPaginated(pageParam, pageSize);
+}
+
+// 모든 행사 가져오기 (캐싱 적용)
 export async function fetchEvents() {
+  const cacheKey = 'events:all';
+  
+  // 캐시 확인
+  const cached = getCachedData<EventRecord[]>(cacheKey);
+  if (cached) {
+    console.log('[Cache] Hit for all events');
+    // 날짜 문자열을 Date 객체로 복원
+    return cached.map(event => ({
+      ...event,
+      startDate: new Date(event.startDate),
+      endDate: new Date(event.endDate)
+    }));
+  }
+  
+  console.log('[Cache] Miss, fetching all events from DB');
   console.log('[fetchEvents] Starting fetch with pagination');
   
   try {
@@ -77,29 +203,12 @@ export async function fetchEvents() {
 
     console.log('[fetchEvents] Completed. Total events:', allData.length);
 
-    // 엑스코 행사 확인
-    const excoEvents = allData.filter(e => e.venue === '엑스코') || [];
-    console.log('[fetchEvents] EXCO events:', excoEvents.length);
-
-    // 6월 이후 엑스코 행사 확인
-    const excoAfterMay = excoEvents.filter(e => e.start_date >= '2026-06-01');
-    console.log('[fetchEvents] EXCO after May:', excoAfterMay.length);
-    if (excoAfterMay.length > 0) {
-      console.log('[fetchEvents] Sample:', excoAfterMay.slice(0, 3).map(e => e.title));
-    }
-
-    // HICO 행사 확인
-    const hicoEvents = allData.filter(e => e.venue === '경주화백컨벤션센터') || [];
-    console.log('[fetchEvents] HICO events:', hicoEvents.length);
-    if (hicoEvents.length > 0) {
-      console.log('[fetchEvents] HICO sample:', hicoEvents.slice(0, 3).map(e => ({
-        title: e.title,
-        date: e.start_date,
-        poster: e.poster_url
-      })));
-    }
-
-    return allData.map(mapSupabaseEventToEventRecord);
+    const result = allData.map(mapSupabaseEventToEventRecord);
+    
+    // 캐시 저장 (5분 TTL)
+    setCachedData(cacheKey, result, 300000);
+    
+    return result;
   } catch (error) {
     console.error('[fetchEvents] Fatal error:', error);
     throw error; // 에러를 다시 던져서 호출자가 처리하도록

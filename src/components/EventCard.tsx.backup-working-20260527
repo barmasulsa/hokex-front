@@ -134,12 +134,9 @@ export function EventCard({ event, onSave, onEdit, onDelete, showViewCount }: Ev
 
     // 일반 좌클릭만 가로채서 처리
     e.preventDefault(); // 기본 링크 동작 방지
-    console.log('[EventCard] Normal left click - saving scroll position and navigating');
-    
-    // 현재 스크롤 위치 저장
-    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-    sessionStorage.setItem('homeScrollPosition', scrollY.toString());
-    console.log('[EventCard] Saved scroll position:', scrollY);
+    console.log('[EventCard] Normal left click - saving event ID and navigating');
+    // 이벤트 ID 저장 (픽셀 위치 대신)
+    sessionStorage.setItem('lastViewedEventId', event.id);
     
     // 프로그래밍 방식으로 이동
     navigate(`/event/${event.id}`);

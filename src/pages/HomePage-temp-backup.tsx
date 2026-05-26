@@ -171,45 +171,8 @@ export function HomePage() {
     };
   }, []);
 
-  // 스크롤 위치 복원 - 동기적으로 처리 (React 렌더링 전)
-  useEffect(() => {
-    // 브라우저의 기본 스크롤 복원 비활성화
-    if ('scrollRestoration' in history) {
-      history.scrollRestoration = 'manual';
-    }
-
-    const savedScrollPosition = sessionStorage.getItem('homeScrollPosition');
-    console.log('[HomePage] Mount - saved scroll position:', savedScrollPosition);
-    
-    if (!savedScrollPosition) {
-      return;
-    }
-
-    const scrollY = parseInt(savedScrollPosition, 10);
-    
-    // 즉시 스크롤 복원 시도 (캐시가 있을 때 대응)
-    console.log('[HomePage] Attempting immediate scroll restoration to:', scrollY);
-    window.scrollTo(0, scrollY);
-    
-    // 추가 복원 시도 (이미지 로딩 등으로 레이아웃이 변경될 수 있음)
-    const timeouts = [100, 300, 500, 800, 1200];
-    timeouts.forEach(delay => {
-      setTimeout(() => {
-        const currentScroll = window.pageYOffset;
-        if (Math.abs(currentScroll - scrollY) > 10) {
-          console.log(`[HomePage] Retry scroll at ${delay}ms - current:`, currentScroll, 'target:', scrollY);
-          window.scrollTo(0, scrollY);
-        }
-      }, delay);
-    });
-    
-    // 최종 정리
-    setTimeout(() => {
-      console.log('[HomePage] Final scroll position:', window.pageYOffset);
-      sessionStorage.removeItem('homeScrollPosition');
-    }, 1500);
-  }, []); // 빈 배열 - 컴포넌트 마운트 시 한 번만 실행
-
+  // 스크롤 위치 복원 제거 - App.tsx의 ScrollRestoration에서 처리하므로 중복 제거
+  // HomePage에서는 필요 없음
 
   // 필터 상태 저장
   useEffect(() => {
@@ -308,6 +271,9 @@ export function HomePage() {
         const eventEnd = new Date(event.endDate);
         return eventStart <= endDate && eventEnd >= startDate;
       });
+      processed = FilterEngine.sortByStartDate(processed);
+    } else if (!showCurrentOnly) {
+      processed = FilterEngine.sortByStartDate(processed);
     }
     
     // 검색어 필터링
@@ -327,10 +293,7 @@ export function HomePage() {
     
     console.log('[HomePage] After deduplication:', uniqueEvents.length);
     
-    // 모든 경우에 날짜/지역/전시장 기준으로 정렬
-    const sortedEvents = FilterEngine.sortByStartDate(uniqueEvents);
-    
-    setFilteredEvents(sortedEvents);
+    setFilteredEvents(uniqueEvents);
   }, [events, selectedRegion, selectedVenue, selectedMonth, selectedCategories, selectedIndustries, searchQuery, dateRange, showCurrentOnly]);
 
   const handleSave = async (eventId: string) => {
@@ -693,6 +656,10 @@ export function HomePage() {
                       className={`accordion-header ${isExpanded ? 'expanded' : ''} ${!hasVenues ? 'disabled' : ''}`}
                       onClick={() => {
                         if (hasVenues) {
+                          // 다른 지역을 펼칠 때 venue 선택 초기화
+                          if (!isExpanded && selectedVenue && !venues.includes(selectedVenue)) {
+                            setSelectedVenue(null);
+                          }
                           setExpandedRegion(isExpanded ? null : region);
                         }
                       }}
@@ -721,7 +688,11 @@ export function HomePage() {
                           <button
                             key={venue}
                             className={`venue-btn ${selectedVenue === venue ? 'active' : ''}`}
-                            onClick={() => handleVenueClick(venue)}
+                            onClick={() => {
+                              // venue 선택 시 해당 지역도 함께 설정
+                              setSelectedRegion(region);
+                              handleVenueClick(venue);
+                            }}
                           >
                             {venue}
                           </button>

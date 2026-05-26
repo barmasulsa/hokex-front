@@ -12,46 +12,40 @@ import { initGA4, recordVisit } from './utils/analytics';
 import { recordDetailedVisit } from './utils/detailedAnalytics';
 import './App.css';
 
-// 스크롤 복원 컴포넌트
+// 스크롤 복원 컴포넌트 (이벤트 ID 기반)
 function ScrollRestoration() {
   const location = useLocation();
 
   useEffect(() => {
     console.log('[ScrollRestoration] Location changed to:', location.pathname);
     
-    // 홈페이지로 돌아올 때만 저장된 스크롤 위치 복원
+    // 홈페이지로 돌아올 때만 저장된 이벤트로 스크롤 복원
     if (location.pathname === '/') {
-      const savedPosition = sessionStorage.getItem('homeScrollPosition');
-      console.log('[ScrollRestoration] Saved position:', savedPosition);
+      const savedEventId = sessionStorage.getItem('lastViewedEventId');
+      console.log('[ScrollRestoration] Saved event ID:', savedEventId);
       
-      if (savedPosition) {
-        const position = parseInt(savedPosition, 10);
-        console.log('[ScrollRestoration] Will restore scroll to:', position);
-        
+      if (savedEventId) {
         // 데이터 로딩 완료를 기다리기 위해 여러 시도
         const attemptRestore = (attempt = 0) => {
           if (attempt > 50) { // 최대 5초 대기 (50 * 100ms)
             console.log('[ScrollRestoration] Max attempts reached, giving up');
-            sessionStorage.removeItem('homeScrollPosition');
+            sessionStorage.removeItem('lastViewedEventId');
             return;
           }
           
-          // 페이지 높이가 충분한지 확인
-          const pageHeight = document.documentElement.scrollHeight;
-          const viewportHeight = window.innerHeight;
+          // 해당 이벤트 카드 찾기
+          const eventCard = document.querySelector(`[data-event-id="${savedEventId}"]`);
           
-          console.log(`[ScrollRestoration] Attempt ${attempt}: pageHeight=${pageHeight}, viewport=${viewportHeight}, target=${position}`);
-          
-          // 페이지 높이가 목표 스크롤 위치보다 충분히 크면 복원
-          if (pageHeight > position + viewportHeight) {
-            // 페이지가 충분히 로드됨
-            setTimeout(() => {
-              window.scrollTo(0, position);
-              console.log('[ScrollRestoration] Scroll restored to:', window.scrollY);
-              sessionStorage.removeItem('homeScrollPosition');
-            }, 50); // 약간의 지연을 두고 스크롤
+          if (eventCard) {
+            console.log(`[ScrollRestoration] Found event card at attempt ${attempt}`);
+            
+            // 즉시 스크롤 (순간이동 효과)
+            eventCard.scrollIntoView({ behavior: 'auto', block: 'start' });
+            console.log('[ScrollRestoration] Scrolled to event:', savedEventId);
+            sessionStorage.removeItem('lastViewedEventId');
           } else {
             // 아직 로딩 중, 다시 시도
+            console.log(`[ScrollRestoration] Event card not found, attempt ${attempt}`);
             setTimeout(() => attemptRestore(attempt + 1), 100);
           }
         };

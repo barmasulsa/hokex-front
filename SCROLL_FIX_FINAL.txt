@@ -1,0 +1,33 @@
+// 스크롤 복원 (sessionStorage 사용)
+useEffect(() => {
+  if (!loading && filteredEvents.length > 0) {
+    const savedScroll = sessionStorage.getItem('homeScrollPosition');
+    if (savedScroll) {
+      const targetY = parseInt(savedScroll, 10);
+      console.log('[HomePage] Found saved scroll position:', targetY);
+
+      let attempts = 0;
+      const maxAttempts = 100;
+
+      const tryRestore = () => {
+        attempts++;
+        const currentHeight = document.documentElement.scrollHeight;
+        const viewportHeight = window.innerHeight;
+        
+        console.log(`[HomePage] Restore attempt ${attempts}: height=${currentHeight}, target=${targetY}`);
+
+        const hasEnoughHeight = currentHeight >= targetY + viewportHeight * 0.8;
+
+        if (hasEnoughHeight || attempts >= maxAttempts) {
+          window.scrollTo(0, targetY);
+          console.log('[HomePage] Scroll restored to:', targetY, `(ready: ${hasEnoughHeight}, attempts: ${attempts})`);
+          sessionStorage.removeItem('homeScrollPosition');
+        } else {
+          setTimeout(tryRestore, 100);
+        }
+      };
+
+      setTimeout(tryRestore, 200);
+    }
+  }
+}, [loading, filteredEvents.length]);

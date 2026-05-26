@@ -861,7 +861,7 @@ body {
 .events-grid {
   padding: 2rem;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(3, 1fr); /* 항상 3열 고정 */
   gap: 1.5rem;
   max-width: 100%; /* 제한 없음 */
   margin: 0 auto;

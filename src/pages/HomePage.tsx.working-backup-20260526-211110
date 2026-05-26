@@ -171,45 +171,38 @@ export function HomePage() {
     };
   }, []);
 
-  // 스크롤 위치 복원 - 동기적으로 처리 (React 렌더링 전)
+  // 스크롤 위치 복원 - 이벤트 ID 기반
   useEffect(() => {
-    // 브라우저의 기본 스크롤 복원 비활성화
-    if ('scrollRestoration' in history) {
-      history.scrollRestoration = 'manual';
+    if (!loading && filteredEvents.length > 0) {
+      const savedEventId = sessionStorage.getItem('lastViewedEventId');
+      if (savedEventId) {
+        console.log('[HomePage] Found saved event ID:', savedEventId);
+        
+        let attempts = 0;
+        const maxAttempts = 50; // 5초 (100ms * 50)
+        
+        const tryRestore = () => {
+          attempts++;
+          const eventCard = document.querySelector(`[data-event-id="${savedEventId}"]`);
+          
+          if (eventCard) {
+            console.log('[HomePage] Event card found, scrolling to it (attempt:', attempts, ')');
+            eventCard.scrollIntoView({ behavior: 'auto', block: 'center' });
+            sessionStorage.removeItem('lastViewedEventId');
+          } else if (attempts < maxAttempts) {
+            console.log('[HomePage] Event card not found yet, retrying... (attempt:', attempts, ')');
+            setTimeout(tryRestore, 100);
+          } else {
+            console.log('[HomePage] Event card not found after', maxAttempts, 'attempts, giving up');
+            sessionStorage.removeItem('lastViewedEventId');
+          }
+        };
+        
+        // 초기 딜레이 후 복원 시작
+        setTimeout(tryRestore, 200);
+      }
     }
-
-    const savedScrollPosition = sessionStorage.getItem('homeScrollPosition');
-    console.log('[HomePage] Mount - saved scroll position:', savedScrollPosition);
-    
-    if (!savedScrollPosition) {
-      return;
-    }
-
-    const scrollY = parseInt(savedScrollPosition, 10);
-    
-    // 즉시 스크롤 복원 시도 (캐시가 있을 때 대응)
-    console.log('[HomePage] Attempting immediate scroll restoration to:', scrollY);
-    window.scrollTo(0, scrollY);
-    
-    // 추가 복원 시도 (이미지 로딩 등으로 레이아웃이 변경될 수 있음)
-    const timeouts = [100, 300, 500, 800, 1200];
-    timeouts.forEach(delay => {
-      setTimeout(() => {
-        const currentScroll = window.pageYOffset;
-        if (Math.abs(currentScroll - scrollY) > 10) {
-          console.log(`[HomePage] Retry scroll at ${delay}ms - current:`, currentScroll, 'target:', scrollY);
-          window.scrollTo(0, scrollY);
-        }
-      }, delay);
-    });
-    
-    // 최종 정리
-    setTimeout(() => {
-      console.log('[HomePage] Final scroll position:', window.pageYOffset);
-      sessionStorage.removeItem('homeScrollPosition');
-    }, 1500);
-  }, []); // 빈 배열 - 컴포넌트 마운트 시 한 번만 실행
-
+  }, [loading, filteredEvents.length]);
 
   // 필터 상태 저장
   useEffect(() => {
@@ -308,6 +301,9 @@ export function HomePage() {
         const eventEnd = new Date(event.endDate);
         return eventStart <= endDate && eventEnd >= startDate;
       });
+      processed = FilterEngine.sortByStartDate(processed);
+    } else if (!showCurrentOnly) {
+      processed = FilterEngine.sortByStartDate(processed);
     }
     
     // 검색어 필터링
@@ -327,10 +323,7 @@ export function HomePage() {
     
     console.log('[HomePage] After deduplication:', uniqueEvents.length);
     
-    // 모든 경우에 날짜/지역/전시장 기준으로 정렬
-    const sortedEvents = FilterEngine.sortByStartDate(uniqueEvents);
-    
-    setFilteredEvents(sortedEvents);
+    setFilteredEvents(uniqueEvents);
   }, [events, selectedRegion, selectedVenue, selectedMonth, selectedCategories, selectedIndustries, searchQuery, dateRange, showCurrentOnly]);
 
   const handleSave = async (eventId: string) => {
@@ -693,6 +686,10 @@ export function HomePage() {
                       className={`accordion-header ${isExpanded ? 'expanded' : ''} ${!hasVenues ? 'disabled' : ''}`}
                       onClick={() => {
                         if (hasVenues) {
+                          // 다른 지역을 펼칠 때 venue 선택 초기화
+                          if (!isExpanded && selectedVenue && !venues.includes(selectedVenue)) {
+                            setSelectedVenue(null);
+                          }
                           setExpandedRegion(isExpanded ? null : region);
                         }
                       }}
@@ -721,7 +718,11 @@ export function HomePage() {
                           <button
                             key={venue}
                             className={`venue-btn ${selectedVenue === venue ? 'active' : ''}`}
-                            onClick={() => handleVenueClick(venue)}
+                            onClick={() => {
+                              // venue 선택 시 해당 지역도 함께 설정
+                              setSelectedRegion(region);
+                              handleVenueClick(venue);
+                            }}
                           >
                             {venue}
                           </button>

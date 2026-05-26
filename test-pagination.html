@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Pagination API</title>
+</head>
+<body>
+    <h1>Testing fetchEventsPaginated</h1>
+    <button onclick="testPagination()">Test API</button>
+    <pre id="result"></pre>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+        const supabase = createClient(
+            'YOUR_SUPABASE_URL',
+            'YOUR_SUPABASE_ANON_KEY'
+        )
+
+        window.testPagination = async function() {
+            const resultEl = document.getElementById('result');
+            resultEl.textContent = 'Loading...';
+
+            try {
+                const from = 0;
+                const pageSize = 48;
+                const to = from + pageSize - 1;
+                
+                const { data, error, count } = await supabase
+                    .from('events')
+                    .select('*', { count: 'exact' })
+                    .is('deleted_at', null)
+                    .order('start_date', { ascending: true })
+                    .range(from, to);
+
+                if (error) {
+                    resultEl.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+                    return;
+                }
+
+                const result = {
+                    fetched: data?.length || 0,
+                    totalCount: count,
+                    hasMore: data && data.length === pageSize,
+                    sampleTitles: data?.slice(0, 3).map(e => e.title)
+                };
+
+                resultEl.textContent = JSON.stringify(result, null, 2);
+            } catch (err) {
+                resultEl.textContent = 'Exception: ' + err.message;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -103,23 +103,22 @@ export function subscribeToOnlineUsers(
   // 채널 생성
   const channel = supabase.channel('online_users_changes');
   
-  // 이벤트 리스너 등록 (subscribe 전에 모두 등록해야 함)
-  channel.on(
-    'postgres_changes',
-    {
-      event: '*',
-      schema: 'public',
-      table: 'online_users'
-    },
-    async () => {
-      // 변경 발생 시 현재 접속자 수 다시 가져오기
-      const count = await getOnlineCount();
-      onCountChange(count);
-    }
-  );
-  
-  // 모든 리스너 등록 후 구독 시작
-  channel.subscribe();
+  // 이벤트 리스너 등록 후 구독 시작
+  channel
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'online_users'
+      },
+      async () => {
+        // 변경 발생 시 현재 접속자 수 다시 가져오기
+        const count = await getOnlineCount();
+        onCountChange(count);
+      }
+    )
+    .subscribe();
   
   return channel;
 }
