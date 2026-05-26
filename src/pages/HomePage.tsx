@@ -4,7 +4,7 @@ import { EventCard } from '../components/EventCard';
 import { Banner } from '../components/Banner';
 import { fetchEvents, fetchSavedEventIds, toggleSaveEvent } from '../services/eventService';
 import { useAuth } from '../contexts/AuthContext';
-import { getDetailedVisitorStats } from '../utils/detailedAnalytics';
+import { getCachedVisitorStats } from '../utils/detailedAnalytics';
 import { PresenceManager } from '../utils/onlinePresence';
 import { supabase } from '../lib/supabase';
 import type { EventRecord, Venue } from '../types/core';
@@ -40,7 +40,6 @@ export function HomePage() {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteMode, setShowDeleteMode] = useState(false); // 삭제 모드 토글
-  const [showViewCounts, setShowViewCounts] = useState(false); // 조회수 표시 모드 토글
   const [visitorStats, setVisitorStats] = useState({
     today: 0,
     last7Days: 0,
@@ -140,20 +139,16 @@ export function HomePage() {
     }
   }, [user]);
 
-  // 방문자 통계 가져오기 (실시간 데이터)
+  // 방문자 통계 가져오기 (캐시 사용 - 빠름)
   useEffect(() => {
     const loadStats = async () => {
-      const detailed = await getDetailedVisitorStats();
-      setVisitorStats({
-        today: detailed.today,
-        last7Days: detailed.last7Days,
-        last30Days: detailed.last30Days
-      });
+      const stats = await getCachedVisitorStats();
+      setVisitorStats(stats);
     };
     
     loadStats();
     
-    // 1분마다 통계 업데이트
+    // 1분마다 통계 업데이트 (캐시에서 읽기만 하므로 빠름)
     const interval = setInterval(() => {
       loadStats();
     }, 60000); // 60초
@@ -176,8 +171,38 @@ export function HomePage() {
     };
   }, []);
 
-  // 스크롤 위치 복원 제거 - App.tsx의 ScrollRestoration에서 처리하므로 중복 제거
-  // HomePage에서는 필요 없음
+  // 스크롤 위치 복원 - 이벤트 ID 기반
+  useEffect(() => {
+    if (!loading && filteredEvents.length > 0) {
+      const savedEventId = sessionStorage.getItem('lastViewedEventId');
+      if (savedEventId) {
+        console.log('[HomePage] Found saved event ID:', savedEventId);
+        
+        let attempts = 0;
+        const maxAttempts = 50; // 5초 (100ms * 50)
+        
+        const tryRestore = () => {
+          attempts++;
+          const eventCard = document.querySelector(`[data-event-id="${savedEventId}"]`);
+          
+          if (eventCard) {
+            console.log('[HomePage] Event card found, scrolling to it (attempt:', attempts, ')');
+            eventCard.scrollIntoView({ behavior: 'auto', block: 'center' });
+            sessionStorage.removeItem('lastViewedEventId');
+          } else if (attempts < maxAttempts) {
+            console.log('[HomePage] Event card not found yet, retrying... (attempt:', attempts, ')');
+            setTimeout(tryRestore, 100);
+          } else {
+            console.log('[HomePage] Event card not found after', maxAttempts, 'attempts, giving up');
+            sessionStorage.removeItem('lastViewedEventId');
+          }
+        };
+        
+        // 초기 딜레이 후 복원 시작
+        setTimeout(tryRestore, 200);
+      }
+    }
+  }, [loading, filteredEvents.length]);
 
   // 필터 상태 저장
   useEffect(() => {
@@ -830,13 +855,6 @@ export function HomePage() {
                 >
                   {showDeleteMode ? '✓ 행사 제거' : '행사 제거'}
                 </button>
-                <button 
-                  className={`admin-view-count-toggle-btn ${showViewCounts ? 'active' : ''}`}
-                  onClick={() => setShowViewCounts(!showViewCounts)}
-                  title="조회수 표시 모드"
-                >
-                  {showViewCounts ? '✓ 조회수 보기' : '조회수 보기'}
-                </button>
               </div>
             )}
           </div>
@@ -859,7 +877,6 @@ export function HomePage() {
                   onSave={handleSave}
                   onEdit={handleEdit}
                   onDelete={isAdmin && showDeleteMode ? handleDelete : undefined}
-                  showViewCount={isAdmin && showViewCounts}
                 />
               ))
             )}
@@ -921,7 +938,7 @@ function AddEventModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
     title: '',
     venue: '',
     venue_hall: '',
-    region: '',
+    region: '수도권',
     category: ['전시'],
     start_date: '',
     end_date: '',
@@ -936,21 +953,21 @@ function AddEventModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
 
   // 전시장 선택 시 지역 자동 설정
   const handleVenueChange = (venue: string) => {
-    let region = '';
+    let region = '수도권';
     
     // 지역 자동 매핑
     if (['코엑스', '코엑스 마곡', 'aT센터', '세텍'].includes(venue)) {
-      region = '서울';
+      region = '수도권';
     } else if (['킨텍스', '수원컨벤션센터', '수원메쎄', '송도컨벤시아'].includes(venue)) {
       region = '수도권';
     } else if (['대전컨벤션센터', '청주오스코'].includes(venue)) {
-      region = '충청도';
+      region = '대전/충청';
     } else if (['김대중컨벤션센터', '군산새만금컨벤션센터'].includes(venue)) {
-      region = '전라도';
+      region = '광주/전남';
     } else if (['벡스코', '엑스코', '창원컨벤션센터', '유에코', '경주화백컨벤션센터', '구미코'].includes(venue)) {
-      region = '경상도';
+      region = '부산/경남';
     } else if (venue === '제주국제컨벤션센터') {
-      region = '제주도';
+      region = '제주';
     }
     
     setFormData({ ...formData, venue, region });
@@ -1033,15 +1050,15 @@ function AddEventModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
                   <option value="수원메쎄">수원메쎄</option>
                   <option value="송도컨벤시아">송도컨벤시아</option>
                 </optgroup>
-                <optgroup label="충청도">
+                <optgroup label="대전/충청">
                   <option value="대전컨벤션센터">대전컨벤션센터</option>
                   <option value="청주오스코">청주오스코</option>
                 </optgroup>
-                <optgroup label="전라도">
+                <optgroup label="광주/전남">
                   <option value="김대중컨벤션센터">김대중컨벤션센터</option>
                   <option value="군산새만금컨벤션센터">군산새만금컨벤션센터</option>
                 </optgroup>
-                <optgroup label="경상도">
+                <optgroup label="부산/경남">
                   <option value="벡스코">벡스코</option>
                   <option value="엑스코">엑스코</option>
                   <option value="창원컨벤션센터">창원컨벤션센터</option>
@@ -1049,7 +1066,7 @@ function AddEventModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
                   <option value="경주화백컨벤션센터">경주화백컨벤션센터</option>
                   <option value="구미코">구미코</option>
                 </optgroup>
-                <optgroup label="제주도">
+                <optgroup label="제주">
                   <option value="제주국제컨벤션센터">제주국제컨벤션센터</option>
                 </optgroup>
               </select>
@@ -1068,19 +1085,12 @@ function AddEventModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
           <div className="form-row">
             <div className="form-group">
               <label>지역 (자동 설정)</label>
-              <select
+              <input
+                type="text"
                 value={formData.region}
-                onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-                required
-              >
-                <option value="">지역 선택</option>
-                <option value="서울">서울</option>
-                <option value="수도권">수도권</option>
-                <option value="충청도">충청도</option>
-                <option value="전라도">전라도</option>
-                <option value="경상도">경상도</option>
-                <option value="제주도">제주도</option>
-              </select>
+                readOnly
+                style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
+              />
             </div>
             <div className="form-group">
               <label>카테고리 *</label>
