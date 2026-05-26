@@ -86,6 +86,16 @@ export function HomePage() {
 
   // 필터링된 이벤트
   const [filteredEvents, setFilteredEvents] = useState<EventRecord[]>(events);
+  
+  // 페이지네이션 상태
+  const [displayedEvents, setDisplayedEvents] = useState<EventRecord[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const ITEMS_PER_PAGE = 48;
+  
+  // 무한 스크롤 감지를 위한 ref
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   // Supabase에서 데이터 가져오기 - 한 번만 실행
   useEffect(() => {
@@ -171,7 +181,7 @@ export function HomePage() {
     };
   }, []);
 
-  // 스크롤 위치 복원 - 동기적으로 처리 (React 렌더링 전)
+  // 스크롤 위치 복원 - 무한 스크롤과 호환되도록 개선
   useEffect(() => {
     // 브라우저의 기본 스크롤 복원 비활성화
     if ('scrollRestoration' in history) {
@@ -181,18 +191,33 @@ export function HomePage() {
     const savedScrollPosition = sessionStorage.getItem('homeScrollPosition');
     console.log('[HomePage] Mount - saved scroll position:', savedScrollPosition);
     
-    if (!savedScrollPosition) {
+    if (!savedScrollPosition || filteredEvents.length === 0) {
       return;
     }
 
     const scrollY = parseInt(savedScrollPosition, 10);
     
-    // 즉시 스크롤 복원 시도 (캐시가 있을 때 대응)
+    // 스크롤 위치에 필요한 페이지 수 계산
+    // 대략적으로 카드 높이를 400px로 가정하고, 한 줄에 4개씩 표시된다고 가정
+    const estimatedCardHeight = 400;
+    const cardsPerRow = 4;
+    const estimatedRowsNeeded = Math.ceil(scrollY / estimatedCardHeight);
+    const estimatedCardsNeeded = estimatedRowsNeeded * cardsPerRow;
+    const pagesNeeded = Math.ceil(estimatedCardsNeeded / ITEMS_PER_PAGE);
+    
+    console.log('[HomePage] Scroll restoration - pages needed:', pagesNeeded, 'for scroll:', scrollY);
+    
+    // 필요한 페이지 수만큼 미리 로드
+    if (pagesNeeded > page) {
+      setPage(pagesNeeded);
+    }
+    
+    // 즉시 스크롤 복원 시도
     console.log('[HomePage] Attempting immediate scroll restoration to:', scrollY);
     window.scrollTo(0, scrollY);
     
     // 추가 복원 시도 (이미지 로딩 등으로 레이아웃이 변경될 수 있음)
-    const timeouts = [100, 300, 500, 800, 1200];
+    const timeouts = [100, 300, 500, 800, 1200, 2000];
     timeouts.forEach(delay => {
       setTimeout(() => {
         const currentScroll = window.pageYOffset;
@@ -207,8 +232,8 @@ export function HomePage() {
     setTimeout(() => {
       console.log('[HomePage] Final scroll position:', window.pageYOffset);
       sessionStorage.removeItem('homeScrollPosition');
-    }, 1500);
-  }, []); // 빈 배열 - 컴포넌트 마운트 시 한 번만 실행
+    }, 2500);
+  }, [filteredEvents.length]); // filteredEvents가 로드되면 실행
 
 
   // 필터 상태 저장
@@ -332,7 +357,63 @@ export function HomePage() {
     const sortedEvents = FilterEngine.sortByStartDate(uniqueEvents);
     
     setFilteredEvents(sortedEvents);
+    // 필터가 변경되면 페이지를 1로 리셋
+    setPage(1);
   }, [events, selectedRegion, selectedVenue, selectedMonth, selectedCategories, selectedIndustries, searchQuery, dateRange, showCurrentOnly]);
+
+  // filteredEvents가 변경되거나 page가 변경될 때 displayedEvents 업데이트
+  useEffect(() => {
+    const startIndex = 0;
+    const endIndex = page * ITEMS_PER_PAGE;
+    const newDisplayed = filteredEvents.slice(startIndex, endIndex);
+    
+    setDisplayedEvents(newDisplayed);
+    setHasMore(endIndex < filteredEvents.length);
+    
+    console.log('[HomePage] Pagination update:', {
+      page,
+      startIndex,
+      endIndex,
+      displayed: newDisplayed.length,
+      total: filteredEvents.length,
+      hasMore: endIndex < filteredEvents.length
+    });
+  }, [filteredEvents, page]);
+
+  // 무한 스크롤 Intersection Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const target = entries[0];
+        if (target.isIntersecting && hasMore && !loadingMore) {
+          console.log('[HomePage] Loading more items...');
+          setLoadingMore(true);
+          
+          // 약간의 지연을 주어 자연스러운 로딩 효과
+          setTimeout(() => {
+            setPage(prev => prev + 1);
+            setLoadingMore(false);
+          }, 300);
+        }
+      },
+      {
+        root: null,
+        rootMargin: '100px', // 하단 100px 전에 미리 로드
+        threshold: 0.1
+      }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, loadingMore]);
 
   const handleSave = async (eventId: string) => {
     if (!user) {
@@ -839,7 +920,12 @@ export function HomePage() {
 
           {/* 결과 카운트 배너 */}
           <div className="results-count-banner">
-            <p>{filteredEvents.length}개의 행사</p>
+            <p>
+              {displayedEvents.length > 0 
+                ? `${displayedEvents.length} / ${filteredEvents.length}개의 행사`
+                : `${filteredEvents.length}개의 행사`
+              }
+            </p>
             {isAdmin && (
               <div className="admin-actions">
                 <button 
@@ -871,15 +957,35 @@ export function HomePage() {
                 <p>조건에 맞는 행사가 없습니다.</p>
               </div>
             ) : (
-              filteredEvents.map(event => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  onSave={handleSave}
-                  onEdit={handleEdit}
-                  onDelete={isAdmin && showDeleteMode ? handleDelete : undefined}
-                />
-              ))
+              <>
+                {displayedEvents.map(event => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    onSave={handleSave}
+                    onEdit={handleEdit}
+                    onDelete={isAdmin && showDeleteMode ? handleDelete : undefined}
+                  />
+                ))}
+                
+                {/* 무한 스크롤 트리거 */}
+                {hasMore && (
+                  <div ref={observerTarget} style={{ gridColumn: '1 / -1', height: '20px', margin: '20px 0' }}>
+                    {loadingMore && (
+                      <div style={{ textAlign: 'center', color: '#666' }}>
+                        <p>더 많은 행사를 불러오는 중...</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* 모든 항목 로드 완료 메시지 */}
+                {!hasMore && displayedEvents.length > 0 && (
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '20px', color: '#999' }}>
+                    <p>모든 행사를 불러왔습니다. (총 {filteredEvents.length}개)</p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
