@@ -40,9 +40,15 @@ export async function fetchAllBanners(): Promise<Banner[]> {
  * 배너 생성
  */
 export async function createBanner(banner: Omit<Banner, 'id' | 'created_at' | 'updated_at'>): Promise<Banner | null> {
+  // link_url이 빈 문자열이거나 null/undefined이면 null로 통일
+  const cleanedBanner = {
+    ...banner,
+    link_url: banner.link_url?.trim() || null
+  };
+
   const { data, error } = await supabase
     .from('banners')
-    .insert([banner])
+    .insert([cleanedBanner])
     .select()
     .single();
 
@@ -58,9 +64,17 @@ export async function createBanner(banner: Omit<Banner, 'id' | 'created_at' | 'u
  * 배너 수정
  */
 export async function updateBanner(id: string, updates: Partial<Banner>): Promise<Banner | null> {
+  // link_url이 빈 문자열이거나 null/undefined이면 null로 통일
+  const cleanedUpdates = {
+    ...updates,
+    link_url: updates.link_url !== undefined 
+      ? (updates.link_url?.trim() || null)
+      : undefined
+  };
+
   const { data, error } = await supabase
     .from('banners')
-    .update(updates)
+    .update(cleanedUpdates)
     .eq('id', id)
     .select()
     .single();

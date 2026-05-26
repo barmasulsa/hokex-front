@@ -75,6 +75,18 @@ export function Banner() {
     return () => clearInterval(interval);
   }, [youtubeBanners.length]);
 
+  // HTML 콘텐츠를 안전하게 렌더링하기 위한 간단한 sanitize 함수
+  const sanitizeHTML = (html: string): string => {
+    // 위험한 태그와 속성 제거
+    const dangerousTags = /<script[^>]*>.*?<\/script>|<iframe[^>]*>.*?<\/iframe>|<object[^>]*>.*?<\/object>|<embed[^>]*>/gi;
+    const dangerousAttrs = /on\w+\s*=\s*["'][^"']*["']|on\w+\s*=\s*[^\s>]*/gi;
+    
+    let sanitized = html.replace(dangerousTags, '');
+    sanitized = sanitized.replace(dangerousAttrs, '');
+    
+    return sanitized;
+  };
+
   // 모달 열기 및 조회수 증가
   const openModal = async (banner: BannerType) => {
     setModalContent({ title: banner.title, content: banner.content });
@@ -91,6 +103,23 @@ export function Banner() {
       }
     } catch (err) {
       console.error('[Banner] Exception incrementing banner view count:', err);
+    }
+  };
+
+  // 공지사항 클릭 핸들러 (link_url이 있으면 바로 이동)
+  const handleNoticeClick = async (banner: BannerType) => {
+    if (banner.link_url) {
+      // link_url이 있으면 조회수 증가 후 바로 이동
+      console.log(`[Banner] Redirecting to: ${banner.link_url}`);
+      try {
+        await supabase.rpc('increment_banner_view_count', { banner_id: banner.id });
+      } catch (err) {
+        console.error('[Banner] Exception incrementing banner view count:', err);
+      }
+      window.open(banner.link_url, '_blank', 'noopener,noreferrer');
+    } else {
+      // link_url이 없으면 모달 열기
+      openModal(banner);
     }
   };
 
@@ -244,7 +273,7 @@ export function Banner() {
                 <div 
                   key={banner.id}
                   className="notice-item"
-                  onClick={() => openModal(banner)}
+                  onClick={() => handleNoticeClick(banner)}
                 >
                   <span className="notice-number">{index + 1}</span>
                   <span className="notice-item-title">{banner.title}</span>
@@ -265,7 +294,10 @@ export function Banner() {
               <button className="modal-close" onClick={closeModal}>×</button>
             </div>
             <div className="modal-body">
-              <p className="modal-text">{modalContent.content}</p>
+              <div 
+                className="modal-text"
+                dangerouslySetInnerHTML={{ __html: sanitizeHTML(modalContent.content) }}
+              />
             </div>
           </div>
         </div>

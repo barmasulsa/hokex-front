@@ -402,9 +402,65 @@
   line-height: 1.8;
   color: #555;
   margin: 0;
-  white-space: pre-wrap;
+  white-space: normal;
   word-break: break-word;
 }
+
+/* 모달 내 HTML 콘텐츠 스타일 */
+.modal-text img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 10px 0;
+  border-radius: 4px;
+}
+
+.modal-text a {
+  color: #5b7fc7;
+  text-decoration: underline;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.modal-text a:hover {
+  color: #4a6bb3;
+  text-decoration: none;
+}
+
+.modal-text ul,
+.modal-text ol {
+  margin: 10px 0;
+  padding-left: 30px;
+}
+
+.modal-text li {
+  margin: 5px 0;
+}
+
+.modal-text p {
+  margin: 10px 0;
+}
+
+.modal-text strong,
+.modal-text b {
+  font-weight: 600;
+}
+
+.modal-text em,
+.modal-text i {
+  font-style: italic;
+}
+
+.modal-text u {
+  text-decoration: underline;
+}
+
+.modal-text s,
+.modal-text strike {
+  text-decoration: line-through;
+}
+
+/* 모달 내 링크 스타일 - 제거 (위에서 .modal-text a로 통합) */
 
 /* 모달 반응형 */
 @media (max-width: 768px) {

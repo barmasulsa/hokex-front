@@ -12,6 +12,7 @@ import {
   type DetailedVisitorStats 
 } from '../utils/detailedAnalytics';
 import type { Banner, BannerType } from '../types/banner';
+import { RichTextEditor } from '../components/RichTextEditor';
 import './BannerManagementPage.css';
 
 type ManagementTab = 'image' | 'youtube' | 'text' | 'statistics' | 'viewcounts';
@@ -480,12 +481,15 @@ export function BannerManagementPage() {
       content = extractYoutubeId(formData.content);
     }
 
+    // link_url 처리: 빈 문자열이면 명시적으로 undefined로 변환
+    const linkUrl = formData.link_url?.trim() ? formData.link_url.trim() : undefined;
+
     if (isCreating) {
       const newBanner = await createBanner({
         type: formData.type,
         title: formData.title,
         content: content,
-        link_url: formData.link_url || undefined,
+        link_url: linkUrl,
         is_active: formData.is_active,
         display_order: formData.display_order
       });
@@ -502,7 +506,7 @@ export function BannerManagementPage() {
         type: formData.type,
         title: formData.title,
         content: content,
-        link_url: formData.link_url || undefined,
+        link_url: linkUrl,
         is_active: formData.is_active,
         display_order: formData.display_order
       });
@@ -1238,12 +1242,10 @@ export function BannerManagementPage() {
                 {formData.type === 'text' && '공지 내용'}
               </label>
               {formData.type === 'text' ? (
-                <textarea
+                <RichTextEditor
                   value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  className="form-control"
-                  rows={4}
-                  placeholder="공지 내용을 입력하세요"
+                  onChange={(html) => setFormData({ ...formData, content: html })}
+                  placeholder="공지 내용을 입력하세요 (텍스트 서식, 이미지 삽입 가능)"
                 />
               ) : formData.type === 'image' ? (
                 <>
@@ -1288,7 +1290,7 @@ export function BannerManagementPage() {
               )}
             </div>
 
-            {formData.type === 'image' && (
+            {(formData.type === 'image' || formData.type === 'text') && (
               <div className="form-group">
                 <label>링크 URL (선택사항)</label>
                 <input
@@ -1296,8 +1298,14 @@ export function BannerManagementPage() {
                   value={formData.link_url}
                   onChange={(e) => setFormData({ ...formData, link_url: e.target.value })}
                   className="form-control"
-                  placeholder="클릭 시 이동할 URL"
+                  placeholder={formData.type === 'image' ? '클릭 시 이동할 URL' : '제목 클릭 시 이동할 URL (없으면 모달로 내용 표시)'}
                 />
+                {formData.type === 'text' && (
+                  <p className="form-help-text">
+                    💡 링크 URL을 입력하면 공지사항 제목 클릭 시 해당 URL로 바로 이동합니다. 
+                    비워두면 모달로 공지 내용을 표시합니다.
+                  </p>
+                )}
               </div>
             )}
 
