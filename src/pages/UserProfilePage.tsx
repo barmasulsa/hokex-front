@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchSavedEvents } from '../services/eventService';
+import { fetchSavedEvents, unsaveEvent } from '../services/eventService';
 import type { EventRecord } from '../types/core';
 import { Heart, Bell, Shield, Mail, User as UserIcon, Key } from 'lucide-react';
 
@@ -54,6 +54,29 @@ export function UserProfilePage() {
     setCurrentPage(page);
     // 페이지 변경 시 스크롤을 섹션 상단으로 이동
     document.querySelector('.profile-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleUnsaveEvent = async (eventId: string, e: React.MouseEvent) => {
+    e.preventDefault(); // Link 클릭 방지
+    e.stopPropagation(); // 이벤트 버블링 방지
+    
+    if (!user) return;
+    
+    const success = await unsaveEvent(user.id, eventId);
+    
+    if (success) {
+      // 로컬 상태에서 해당 행사 제거
+      const newSavedEvents = savedEvents.filter(event => event.id !== eventId);
+      setSavedEvents(newSavedEvents);
+      
+      // 현재 페이지에 행사가 없어지면 이전 페이지로 이동
+      const newTotalPages = Math.ceil(newSavedEvents.length / eventsPerPage);
+      if (currentPage > newTotalPages && newTotalPages > 0) {
+        setCurrentPage(newTotalPages);
+      }
+    } else {
+      alert('❌ 찜 해제에 실패했습니다. 다시 시도해주세요.');
+    }
   };
 
   const handleSetPassword = async () => {
@@ -327,7 +350,11 @@ export function UserProfilePage() {
                     {event.poster && (
                       <img src={event.poster} alt={event.title} referrerPolicy="no-referrer" />
                     )}
-                    <button className="saved-event-heart">
+                    <button 
+                      className="saved-event-heart"
+                      onClick={(e) => handleUnsaveEvent(event.id, e)}
+                      title="찜 해제"
+                    >
                       <Heart size={20} fill="currentColor" />
                     </button>
                     <div className="saved-event-info">
