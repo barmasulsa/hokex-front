@@ -240,8 +240,9 @@ export function HomePage() {
     // 기본 필터링 (과거 행사 제외)
     let processed = events;
     
-    // showCurrentOnly가 true이고 날짜 범위가 설정되지 않았을 때만 과거 행사 필터링
-    if (showCurrentOnly && !dateRange) {
+    // showCurrentOnly가 true이고 날짜 범위/월 선택이 설정되지 않았을 때만 과거 행사 필터링
+    // 월 선택이나 날짜 범위가 있으면 전체 행사를 대상으로 필터링
+    if (showCurrentOnly && !dateRange && selectedMonth === '전체') {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       processed = processed.filter(event => {
@@ -557,7 +558,8 @@ export function HomePage() {
                   setSelectedMonth(value);
                   if (value !== '전체') {
                     setDateRange(null);
-                    setShowCurrentOnly(true);
+                    // 월 선택 시 showCurrentOnly를 false로 설정하여 전체 행사 표시
+                    setShowCurrentOnly(false);
                   }
                 }}
               >
