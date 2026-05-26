@@ -62,12 +62,105 @@ export class FilterEngine {
   }
 
   /**
-   * 시작 날짜 기준 오름차순 정렬
+   * 지역 우선순위 가져오기
+   * @param region - 지역
+   * @returns 우선순위 (낮을수록 우선)
+   */
+  private static getRegionPriority(region: string): number {
+    const priorities: Record<string, number> = {
+      '서울': 1,
+      '수도권': 2,
+      '충청도': 3,
+      '전라도': 4,
+      '강원도': 5,
+      '경상도': 6,
+      '제주도': 7
+    };
+    return priorities[region] || 999;
+  }
+
+  /**
+   * 전시장 우선순위 가져오기
+   * @param venue - 전시장
+   * @returns 우선순위 (낮을수록 우선)
+   */
+  private static getVenuePriority(venue: string): number {
+    const priorities: Record<string, number> = {
+      // 서울
+      '코엑스': 1,
+      '코엑스 마곡': 2,
+      'aT센터': 3,
+      '세텍': 4,
+      // 수도권
+      '킨텍스': 5,
+      '수원컨벤션센터': 6,
+      '수원메쎄': 7,
+      '송도컨벤시아': 8,
+      // 충청도
+      '대전컨벤션센터': 9,
+      '청주오스코': 10,
+      // 전라도
+      '김대중컨벤션센터': 11,
+      '군산새만금컨벤션센터': 12,
+      // 경상도
+      '벡스코': 13,
+      '엑스코': 14,
+      '창원컨벤션센터': 15,
+      '유에코': 16,
+      '경주화백컨벤션센터': 17,
+      '구미코': 18,
+      // 제주도
+      '제주국제컨벤션센터': 19
+    };
+    return priorities[venue] || 999;
+  }
+
+  /**
+   * 행사 기간 계산 (일수)
+   * @param event - 행사
+   * @returns 행사 기간 (일수)
+   */
+  private static getEventDuration(event: EventRecord): number {
+    const start = new Date(event.startDate);
+    const end = new Date(event.endDate);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    return Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  }
+
+  /**
+   * 복합 정렬: 시작일 → 단일날짜 우선 → 지역 → 전시장 → 종료일
    * @param events - 행사 목록
    * @returns 정렬된 행사 목록
    */
   static sortByStartDate(events: EventRecord[]): EventRecord[] {
-    return [...events].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+    return [...events].sort((a, b) => {
+      // 1. 시작 날짜 비교 (오름차순)
+      const startDateCompare = a.startDate.getTime() - b.startDate.getTime();
+      if (startDateCompare !== 0) return startDateCompare;
+
+      // 2. 시작일이 같으면 단일 날짜 행사 우선 (기간 1일 = 단일 날짜)
+      const durationA = this.getEventDuration(a);
+      const durationB = this.getEventDuration(b);
+      const isSingleDayA = durationA === 1;
+      const isSingleDayB = durationB === 1;
+      
+      if (isSingleDayA && !isSingleDayB) return -1; // A가 단일날짜면 우선
+      if (!isSingleDayA && isSingleDayB) return 1;  // B가 단일날짜면 우선
+
+      // 3. 둘 다 단일날짜이거나 둘 다 기간행사인 경우
+      // 3-1. 지역 우선순위 비교
+      const regionCompare = this.getRegionPriority(a.region) - this.getRegionPriority(b.region);
+      if (regionCompare !== 0) return regionCompare;
+
+      // 3-2. 같은 지역이면 전시장 우선순위 비교
+      const venueCompare = this.getVenuePriority(a.venue) - this.getVenuePriority(b.venue);
+      if (venueCompare !== 0) return venueCompare;
+
+      // 3-3. 같은 전시장이면 종료일 비교 (먼저 끝나는 것 우선)
+      const endDateCompare = a.endDate.getTime() - b.endDate.getTime();
+      return endDateCompare;
+    });
   }
 
   /**

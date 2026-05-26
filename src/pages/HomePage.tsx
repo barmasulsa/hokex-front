@@ -204,6 +204,7 @@ export function HomePage() {
     }
   }, [loading, filteredEvents.length]);
 
+
   // 필터 상태 저장
   useEffect(() => {
     const filterState = {
@@ -301,9 +302,6 @@ export function HomePage() {
         const eventEnd = new Date(event.endDate);
         return eventStart <= endDate && eventEnd >= startDate;
       });
-      processed = FilterEngine.sortByStartDate(processed);
-    } else if (!showCurrentOnly) {
-      processed = FilterEngine.sortByStartDate(processed);
     }
     
     // 검색어 필터링
@@ -323,7 +321,10 @@ export function HomePage() {
     
     console.log('[HomePage] After deduplication:', uniqueEvents.length);
     
-    setFilteredEvents(uniqueEvents);
+    // 모든 경우에 날짜/지역/전시장 기준으로 정렬
+    const sortedEvents = FilterEngine.sortByStartDate(uniqueEvents);
+    
+    setFilteredEvents(sortedEvents);
   }, [events, selectedRegion, selectedVenue, selectedMonth, selectedCategories, selectedIndustries, searchQuery, dateRange, showCurrentOnly]);
 
   const handleSave = async (eventId: string) => {
@@ -686,10 +687,6 @@ export function HomePage() {
                       className={`accordion-header ${isExpanded ? 'expanded' : ''} ${!hasVenues ? 'disabled' : ''}`}
                       onClick={() => {
                         if (hasVenues) {
-                          // 다른 지역을 펼칠 때 venue 선택 초기화
-                          if (!isExpanded && selectedVenue && !venues.includes(selectedVenue)) {
-                            setSelectedVenue(null);
-                          }
                           setExpandedRegion(isExpanded ? null : region);
                         }
                       }}
@@ -718,11 +715,7 @@ export function HomePage() {
                           <button
                             key={venue}
                             className={`venue-btn ${selectedVenue === venue ? 'active' : ''}`}
-                            onClick={() => {
-                              // venue 선택 시 해당 지역도 함께 설정
-                              setSelectedRegion(region);
-                              handleVenueClick(venue);
-                            }}
+                            onClick={() => handleVenueClick(venue)}
                           >
                             {venue}
                           </button>
