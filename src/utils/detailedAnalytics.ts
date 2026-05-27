@@ -48,8 +48,17 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// 세션 내 중복 호출 방지 플래그
+let hasRecordedThisSession = false;
+
 // 방문 기록 저장 (시간대별) - 하루에 한 번만 카운트
 export function recordDetailedVisit() {
+  // 이미 이번 세션에서 기록했으면 중복 실행 방지
+  if (hasRecordedThisSession) {
+    console.log('[recordDetailedVisit] Already recorded in this session, skipping');
+    return;
+  }
+  
   const now = new Date();
   const date = now.toISOString().split('T')[0]; // YYYY-MM-DD
   const hour = now.getHours(); // 0-23
@@ -58,11 +67,15 @@ export function recordDetailedVisit() {
   const lastVisitDate = localStorage.getItem('last_visit_date');
   if (lastVisitDate === date) {
     // 오늘 이미 방문했으면 카운트하지 않음
+    console.log('[recordDetailedVisit] Already visited today, skipping');
+    hasRecordedThisSession = true; // 세션 플래그 설정
     return;
   }
   
   // 오늘 첫 방문이므로 기록
+  console.log('[recordDetailedVisit] Recording new visit for', date);
   localStorage.setItem('last_visit_date', date);
+  hasRecordedThisSession = true; // 세션 플래그 설정
   
   // localStorage에 저장 (즉시, 동기)
   const records = getVisitRecords();
