@@ -51,48 +51,12 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // 세션 내 중복 호출 방지 플래그
 let hasRecordedThisSession = false;
 
-// 디버그 정보를 화면에 표시하는 함수
+// 디버그 정보를 콘솔에만 출력 (화면 표시 제거)
 function showDebugInfo(message: string, isError = false) {
-  console.log(message);
-  
-  // 화면 우측 하단에 디버그 패널 생성
-  let debugPanel = document.getElementById('visitor-debug-panel');
-  if (!debugPanel) {
-    debugPanel = document.createElement('div');
-    debugPanel.id = 'visitor-debug-panel';
-    debugPanel.style.cssText = `
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      max-width: 400px;
-      max-height: 300px;
-      overflow-y: auto;
-      background: rgba(0, 0, 0, 0.9);
-      color: ${isError ? '#ff6b6b' : '#4ade80'};
-      padding: 12px;
-      border-radius: 8px;
-      font-family: monospace;
-      font-size: 11px;
-      z-index: 999999;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    `;
-    document.body.appendChild(debugPanel);
-  }
-  
-  const timestamp = new Date().toLocaleTimeString('ko-KR');
-  const line = document.createElement('div');
-  line.style.cssText = `
-    margin-bottom: 4px;
-    padding: 4px;
-    border-left: 3px solid ${isError ? '#ff6b6b' : '#4ade80'};
-    padding-left: 8px;
-  `;
-  line.textContent = `[${timestamp}] ${message}`;
-  debugPanel.insertBefore(line, debugPanel.firstChild);
-  
-  // 최대 20개 메시지만 유지
-  while (debugPanel.children.length > 20) {
-    debugPanel.removeChild(debugPanel.lastChild!);
+  if (isError) {
+    console.error(message);
+  } else {
+    console.log(message);
   }
 }
 
