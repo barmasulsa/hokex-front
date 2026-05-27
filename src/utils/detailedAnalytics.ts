@@ -51,11 +51,56 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // 세션 내 중복 호출 방지 플래그
 let hasRecordedThisSession = false;
 
+// 디버그 정보를 화면에 표시하는 함수
+function showDebugInfo(message: string, isError = false) {
+  console.log(message);
+  
+  // 화면 우측 하단에 디버그 패널 생성
+  let debugPanel = document.getElementById('visitor-debug-panel');
+  if (!debugPanel) {
+    debugPanel = document.createElement('div');
+    debugPanel.id = 'visitor-debug-panel';
+    debugPanel.style.cssText = `
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      max-width: 400px;
+      max-height: 300px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.9);
+      color: ${isError ? '#ff6b6b' : '#4ade80'};
+      padding: 12px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 11px;
+      z-index: 999999;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    `;
+    document.body.appendChild(debugPanel);
+  }
+  
+  const timestamp = new Date().toLocaleTimeString('ko-KR');
+  const line = document.createElement('div');
+  line.style.cssText = `
+    margin-bottom: 4px;
+    padding: 4px;
+    border-left: 3px solid ${isError ? '#ff6b6b' : '#4ade80'};
+    padding-left: 8px;
+  `;
+  line.textContent = `[${timestamp}] ${message}`;
+  debugPanel.insertBefore(line, debugPanel.firstChild);
+  
+  // 최대 20개 메시지만 유지
+  while (debugPanel.children.length > 20) {
+    debugPanel.removeChild(debugPanel.lastChild!);
+  }
+}
+
 // 방문 기록 저장 (시간대별) - 하루에 한 번만 카운트
 export function recordDetailedVisit() {
   // 이미 이번 세션에서 기록했으면 중복 실행 방지
   if (hasRecordedThisSession) {
-    console.log('[recordDetailedVisit] Already recorded in this session, skipping');
+    showDebugInfo('Already recorded in this session, skipping');
     return;
   }
   
@@ -63,17 +108,21 @@ export function recordDetailedVisit() {
   const date = now.toISOString().split('T')[0]; // YYYY-MM-DD
   const hour = now.getHours(); // 0-23
   
+  showDebugInfo(`현재 시간: ${date} ${hour}시`);
+  
   // 오늘 이미 방문했는지 확인
   const lastVisitDate = localStorage.getItem('last_visit_date');
+  showDebugInfo(`localStorage last_visit_date: ${lastVisitDate || '없음'}`);
+  
   if (lastVisitDate === date) {
     // 오늘 이미 방문했으면 카운트하지 않음
-    console.log('[recordDetailedVisit] Already visited today, skipping');
+    showDebugInfo('Already visited today, skipping');
     hasRecordedThisSession = true; // 세션 플래그 설정
     return;
   }
   
   // 오늘 첫 방문이므로 기록
-  console.log('[recordDetailedVisit] Recording new visit for', date);
+  showDebugInfo(`✅ Recording new visit for ${date} ${hour}시`);
   localStorage.setItem('last_visit_date', date);
   hasRecordedThisSession = true; // 세션 플래그 설정
   
@@ -84,8 +133,10 @@ export function recordDetailedVisit() {
   
   if (existingIndex >= 0) {
     records[existingIndex].count++;
+    showDebugInfo(`localStorage: 기존 기록 업데이트 (count: ${records[existingIndex].count})`);
   } else {
     records.push({ date, hour, count: 1 });
+    showDebugInfo(`localStorage: 새 기록 추가`);
   }
   
   // 1년 이전 데이터 삭제
@@ -94,44 +145,37 @@ export function recordDetailedVisit() {
   const filteredRecords = records.filter(r => new Date(r.date) >= oneYearAgo);
   
   localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredRecords));
+  showDebugInfo(`localStorage 저장 완료`);
   
   // DB에 비동기 저장 (백그라운드, await 없음)
+  showDebugInfo(`DB 저장 시작...`);
   recordToDBAsync(date, hour).catch(err => {
-    console.log('방문 통계 DB 저장 실패 (무시):', err.message);
+    showDebugInfo(`❌ DB 저장 실패: ${err.message}`, true);
   });
 }
 
 // DB에 비동기로 저장 (사용자는 기다리지 않음)
 async function recordToDBAsync(date: string, hour: number) {
   try {
-    // 기존 데이터 조회
-    const { data: existing } = await supabase
-      .from('visitor_stats')
-      .select('visit_count')
-      .eq('visit_date', date)
-      .eq('visit_hour', hour)
-      .maybeSingle();
+    showDebugInfo(`DB RPC 호출: increment_visitor_stat`);
     
-    if (existing) {
-      // 이미 존재하면 count 증가
-      await supabase
-        .from('visitor_stats')
-        .update({ visit_count: existing.visit_count + 1 })
-        .eq('visit_date', date)
-        .eq('visit_hour', hour);
+    // RPC 함수 호출: increment_visitor_stat
+    // 이 함수는 UPSERT를 수행하여 중복 방지
+    const { data, error } = await supabase.rpc('increment_visitor_stat', {
+      p_visit_date: date,
+      p_visit_hour: hour
+    });
+    
+    if (error) {
+      showDebugInfo(`❌ DB RPC 실패: ${error.message}`, true);
+      showDebugInfo(`에러 코드: ${error.code || 'N/A'}`, true);
+      showDebugInfo(`에러 상세: ${JSON.stringify(error)}`, true);
     } else {
-      // 없으면 새로 삽입
-      await supabase
-        .from('visitor_stats')
-        .insert({
-          visit_date: date,
-          visit_hour: hour,
-          visit_count: 1
-        });
+      showDebugInfo(`✅ DB 저장 성공!`);
     }
-  } catch (err) {
+  } catch (err: any) {
     // 에러 무시 (통계만 누락, 사이트는 정상)
-    console.log('DB 저장 실패:', err);
+    showDebugInfo(`❌ DB 저장 예외: ${err.message}`, true);
   }
 }
 
