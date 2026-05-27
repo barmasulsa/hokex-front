@@ -237,6 +237,7 @@ export function EventCard({ event, onSave, onEdit, onDelete, showViewCount }: Ev
         <button 
           className="save-btn-content"
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onSave?.(event.id);
           }}

@@ -1,9 +1,9 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
-import { fetchEventById, updateEvent, fetchEventHistory, revertEventChange, incrementViewCount } from '../services/eventService';
+import { fetchEventById, updateEvent, fetchEventHistory, revertEventChange, incrementViewCount, saveEvent, unsaveEvent, fetchSavedEventIds } from '../services/eventService';
 import type { EventRecord } from '../types/core';
 import { calculateStatusBadge, calculateDaysUntilStart } from '../utils/badgeCalculator';
-import { Calendar, MapPin, ExternalLink, Share2, Copy, Edit2, Check, X, Image, History, RotateCcw } from 'lucide-react';
+import { Calendar, MapPin, ExternalLink, Share2, Copy, Edit2, Check, X, Image, History, RotateCcw, Heart } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
   // 킨텍스 전용: 운영시간 포맷팅 (날짜 + 시간)
@@ -26,9 +26,11 @@ const SUWONMESSE_DEFAULT_POSTER = '/images/suwonmesse-default.png';
 
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [event, setEvent] = useState<EventRecord | null>(null);
   const [loading, setLoading] = useState(true);
-  const { isAdmin } = useAuth();
+  const [isSaved, setIsSaved] = useState(false);
+  const { isAdmin, user } = useAuth();
   const viewCountedRef = useRef<string | null>(null); // 조회수 중복 카운트 방지 - 카운트한 이벤트 ID 저장
   
   // URL 편집 상태
@@ -81,6 +83,17 @@ export function EventDetailPage() {
       console.log('Event data loaded:', eventData); // 디버그: 전체 이벤트 데이터
       console.log('venueEventPageUrl:', eventData?.venueEventPageUrl); // 디버그: URL 확인
       setEvent(eventData);
+      
+      // 찜 상태 확인
+      if (user) {
+        try {
+          const savedEventIds = await fetchSavedEventIds(user.id);
+          setIsSaved(savedEventIds.includes(id));
+        } catch (error) {
+          console.error('Error checking saved status:', error);
+        }
+      }
+      
       setLoading(false);
       
       // 조회수 증가 (중복 호출 방지 - 이미 카운트한 이벤트인지 확인)
@@ -91,7 +104,7 @@ export function EventDetailPage() {
     }
     
     loadEvent();
-  }, [id]);
+  }, [id, user]);
 
   if (loading) {
     return (
@@ -245,6 +258,30 @@ export function EventDetailPage() {
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     alert('링크가 복사되었습니다');
+  };
+
+  // 찜 버튼 핸들러
+  const handleSaveToggle = async () => {
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
+    if (!event) return;
+
+    try {
+      if (isSaved) {
+        await unsaveEvent(user.id, event.id);
+        setIsSaved(false);
+      } else {
+        await saveEvent(user.id, event.id);
+        setIsSaved(true);
+      }
+    } catch (error) {
+      console.error('Error toggling save:', error);
+      alert('저장 중 오류가 발생했습니다.');
+    }
   };
 
   // URL 편집 시작
@@ -881,7 +918,36 @@ export function EventDetailPage() {
               </>
             )}
           </div>
-          <h1 className="event-hero-title">{event.title}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', width: '100%' }}>
+            <h1 className="event-hero-title" style={{ margin: 0, flex: 1 }}>{event.title}</h1>
+            <button
+              onClick={handleSaveToggle}
+              className={`save-button ${isSaved ? 'saved' : ''}`}
+              aria-label={isSaved ? '저장 취소' : '저장'}
+              style={{
+                background: 'rgba(255, 255, 255, 0.9)',
+                border: 'none',
+                borderRadius: '50%',
+                width: '48px',
+                height: '48px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+              }}
+            >
+              <Heart
+                size={24}
+                style={{
+                  fill: isSaved ? '#ff4757' : 'none',
+                  stroke: isSaved ? '#ff4757' : '#666',
+                  transition: 'all 0.2s ease'
+                }}
+              />
+            </button>
+          </div>
           <div className="event-hero-meta">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               {editingStartDate || editingEndDate ? (
