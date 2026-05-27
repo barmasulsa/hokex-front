@@ -161,7 +161,7 @@ async function recordToDBAsync(date: string, hour: number) {
     
     // RPC 함수 호출: increment_visitor_stat
     // 이 함수는 UPSERT를 수행하여 중복 방지
-    const { data, error } = await supabase.rpc('increment_visitor_stat', {
+    const { error } = await supabase.rpc('increment_visitor_stat', {
       p_visit_date: date,
       p_visit_hour: hour
     });
