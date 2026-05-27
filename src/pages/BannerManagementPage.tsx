@@ -220,13 +220,19 @@ export function BannerManagementPage() {
   const handleCreate = (type: BannerType) => {
     setIsCreating(true);
     setEditingBanner(null);
+    // 해당 타입의 배너 중 가장 큰 display_order를 찾아서 +1
+    const sameBanners = banners.filter(b => b.type === type);
+    const maxOrder = sameBanners.length > 0 
+      ? Math.max(...sameBanners.map(b => b.display_order))
+      : -1;
+    
     setFormData({
       type: type,
       title: '',
       content: '',
       link_url: '',
       is_active: true,
-      display_order: banners.filter(b => b.type === type).length
+      display_order: maxOrder + 1
     });
   };
 
