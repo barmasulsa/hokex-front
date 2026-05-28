@@ -553,10 +553,33 @@ export async function revertEventChange(eventId: string, historyId: string) {
   return true;
 }
 
-// 조회수 증가 (즉시 DB에 기록)
+// 조회수 증가 (즉시 DB에 기록) - 하루 1회, 관리자는 예외
 export async function incrementViewCount(eventId: string) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
+    
+    // 관리자 이메일 (하드코딩)
+    const ADMIN_EMAIL = 'lcw55@naver.com';
+    
+    // 관리자 여부 확인
+    const isAdmin = user?.email === ADMIN_EMAIL;
+    
+    // 관리자가 아닌 경우 중복 방지 체크 (하루 1회)
+    if (!isAdmin) {
+      const viewedKey = `event_viewed_${eventId}`;
+      const lastViewedDate = localStorage.getItem(viewedKey);
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
+      
+      if (lastViewedDate === today) {
+        console.log(`[ViewCount] Already viewed event ${eventId} today (non-admin)`);
+        return;
+      }
+      
+      // localStorage에 오늘 날짜 저장
+      localStorage.setItem(viewedKey, today);
+    } else {
+      console.log(`[ViewCount] Admin user - bypassing duplicate check for event ${eventId}`);
+    }
     
     const { error } = await supabase.rpc('increment_event_view_count', {
       p_event_id: eventId,
