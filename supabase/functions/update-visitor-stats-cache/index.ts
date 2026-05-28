@@ -110,10 +110,10 @@ Deno.serve(async (req) => {
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
     const oneYearAgoStr = oneYearAgo.toISOString().split('T')[0];
 
-    // DB에서 최근 1년 데이터 조회
+    // DB에서 최근 1년 데이터 조회 (visit_hour 포함)
     const { data: records, error } = await supabase
       .from('visitor_stats')
-      .select('visit_date, visit_count')
+      .select('visit_date, visit_hour, visit_count')
       .gte('visit_date', oneYearAgoStr)
       .order('visit_date', { ascending: true });
 
@@ -140,8 +140,11 @@ Deno.serve(async (req) => {
         const date = record.visit_date;
         const count = record.visit_count;
         
+        // 날짜별 합산
         const current = dailyMap.get(date) || 0;
         dailyMap.set(date, current + count);
+        
+        // 총 방문 수 누적
         totalVisits += count;
       });
 
