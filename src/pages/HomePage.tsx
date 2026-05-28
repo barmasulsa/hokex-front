@@ -42,6 +42,7 @@ export function HomePage() {
   const [showDeleteMode, setShowDeleteMode] = useState(false); // 삭제 모드 토글
   const [visitorStats, setVisitorStats] = useState({
     today: 0,
+    yesterday: 0,
     last7Days: 0,
     last30Days: 0
   });
@@ -1006,6 +1007,11 @@ export function HomePage() {
               <div className="stats-sidebar-card">
                 <div className="stats-sidebar-label">오늘</div>
                 <div className="stats-sidebar-value">{visitorStats.today.toLocaleString()}</div>
+                <div className="stats-sidebar-unit">명 방문</div>
+              </div>
+              <div className="stats-sidebar-card">
+                <div className="stats-sidebar-label">어제</div>
+                <div className="stats-sidebar-value">{visitorStats.yesterday.toLocaleString()}</div>
                 <div className="stats-sidebar-unit">명 방문</div>
               </div>
               <div className="stats-sidebar-card">
