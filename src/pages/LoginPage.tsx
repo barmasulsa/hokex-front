@@ -119,7 +119,7 @@ export function LoginPage() {
             <p>아직 구독하지 않으셨나요? <a href="https://page.stibee.com/subscriptions/289942" target="_blank" rel="noopener noreferrer">뉴스레터 구독하기</a></p>
           </div>
 
-          <p className="login-steps">1. 카페인판다 구독 및 확인 메일 발송 후 구독하기 클릭<br />2. 구독 후 <span style={{color: '#667eea', fontWeight: 'bold'}}>이메일 링크로 로그인</span> 실행 뒤 받은 링크로 호켁스 접속</p>
+          <p className="login-steps">1. 카페인판다 구독 및 확인 메일 발송 후 구독하기 클릭<br />2. 구독 후 <span style={{color: '#667eea', fontWeight: 'bold'}}>이메일 링크로 로그인</span> 실행 뒤 받은 링크로 호켁스 접속<br />3. 접속 후 프로필에서 비밀번호 설정 후 로그인하면 1년간 자동로그인</p>
 
           <div className="terms-agreement">
             <label className="checkbox-label">
