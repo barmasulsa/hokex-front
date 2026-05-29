@@ -224,7 +224,7 @@ export async function getCachedVisitorStats(): Promise<{ today: number; yesterda
   }
 }
 
-// 세부 통계 계산 (DB 기반)
+// 세부 통계 계산 (DB 기반 - 캐시 우선 사용)
 export async function getDetailedVisitorStats(): Promise<DetailedVisitorStats> {
   const now = new Date();
   const today = now.toISOString().split('T')[0];
@@ -248,7 +248,10 @@ export async function getDetailedVisitorStats(): Promise<DetailedVisitorStats> {
   const oneYearAgoStr = oneYearAgo.toISOString().split('T')[0];
   
   try {
-    // DB에서 최근 1년 데이터 조회
+    // 1단계: 캐시에서 기본 통계 가져오기 (빠름)
+    const cachedStats = await getCachedVisitorStats();
+    
+    // 2단계: DB에서 최근 1년 데이터 조회 (상세 통계용)
     const { data: records, error } = await supabase
       .from('visitor_stats')
       .select('visit_date, visit_hour, visit_count')
@@ -257,15 +260,21 @@ export async function getDetailedVisitorStats(): Promise<DetailedVisitorStats> {
     
     if (error) {
       console.error('DB 조회 실패:', error);
-      // 에러 시 빈 통계 반환
-      return getEmptyStats();
+      // 에러 시 캐시 데이터로 기본 통계만 반환
+      return {
+        ...getEmptyStats(),
+        today: cachedStats.today,
+        yesterday: cachedStats.yesterday,
+        last7Days: cachedStats.last7Days,
+        last30Days: cachedStats.last30Days
+      };
     }
     
-    // 기본 통계 계산
-    let todayCount = 0;
-    let yesterdayCount = 0;
-    let last7DaysCount = 0;
-    let last30DaysCount = 0;
+    // 기본 통계는 캐시 사용 (홈페이지와 동일)
+    let todayCount = cachedStats.today;
+    let yesterdayCount = cachedStats.yesterday;
+    let last7DaysCount = cachedStats.last7Days;
+    let last30DaysCount = cachedStats.last30Days;
     let last365DaysCount = 0;
     let totalVisits = 0;
     
@@ -283,31 +292,15 @@ export async function getDetailedVisitorStats(): Promise<DetailedVisitorStats> {
       const count = record.visit_count;
       totalVisits += count;
       
-      // 오늘
+      // 오늘 시간대별 통계
       if (recordDate === today) {
-        todayCount += count;
         hourlyToday[record.visit_hour].count += count;
-      }
-      
-      // 어제
-      if (recordDate === yesterdayStr) {
-        yesterdayCount += count;
-      }
-      
-      // 최근 7일
-      if (recordDate >= sevenDaysAgoStr) {
-        last7DaysCount += count;
-      }
-      
-      // 최근 30일
-      if (recordDate >= thirtyDaysAgoStr) {
-        last30DaysCount += count;
-        const current = dailyMap.get(recordDate) || 0;
-        dailyMap.set(recordDate, current + count);
       }
       
       // 최근 1년
       last365DaysCount += count;
+      
+      // 일별 통계 맵 구성
       if (!dailyMap.has(recordDate)) {
         dailyMap.set(recordDate, count);
       } else {
