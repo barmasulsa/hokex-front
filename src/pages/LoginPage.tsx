@@ -119,23 +119,6 @@ export function LoginPage() {
             <p>아직 구독하지 않으셨나요? <a href="https://page.stibee.com/subscriptions/289942" target="_blank" rel="noopener noreferrer">뉴스레터 구독하기</a></p>
           </div>
 
-          <div className="magic-link-info-box">
-            <h3>💡 이메일 링크 로그인 안내</h3>
-            <p>
-              이메일로 받은 로그인 링크를 클릭하면 자동으로 로그인됩니다. 첫 로그인 후 프로필 페이지에서 비밀번호를 설정 후 비밀번호로 로그인하면 매번 이메일 링크 로그인 없이도 1년간 자동 로그인으로 이용 가능합니다.
-            </p>
-            <p>
-              <strong>이메일이 안 오면:</strong><br />
-              1. 새로고침 및 대기<br />
-              2. 스팸 메일함 확인<br />
-              3. 위 두 개 시도 후에도 안 될 시 hokexpanda@gmail.com으로 구독 이메일과 함께 내용 제보 요청
-            </p>
-            <p>
-              <strong>이메일 전송 제한:</strong><br />
-              무료 플랜을 사용 중으로 일일 한도 500회 발송에 도달할 경우 나옵니다. 다음날에 다시 시도해주시기를 요청드립니다.
-            </p>
-          </div>
-
           <form onSubmit={handlePasswordLogin} className="login-form">
             <div className="form-group">
               <label htmlFor="email">구독 이메일</label>
@@ -209,6 +192,23 @@ export function LoginPage() {
             <span className="btn-icon">✉️</span>
             이메일 링크로 로그인
           </button>
+
+          <div className="magic-link-info-box">
+            <h3>💡 이메일 링크 로그인 안내</h3>
+            <p>
+              이메일로 받은 로그인 링크를 클릭하면 자동으로 로그인됩니다. 첫 로그인 후 프로필 페이지에서 비밀번호를 설정 후 비밀번호로 로그인하면 매번 이메일 링크 로그인 없이도 1년간 자동 로그인으로 이용 가능합니다(로그아웃 전까지).
+            </p>
+            <p>
+              <strong>이메일이 안 오면:</strong><br />
+              1. 새로고침 및 대기<br />
+              2. 스팸 메일함 확인<br />
+              3. 위 두 개 시도 후에도 안 될 시 hokexpanda@gmail.com으로 구독 이메일과 함께 내용 제보 요청
+            </p>
+            <p>
+              <strong>이메일 전송 제한:</strong><br />
+              무료 플랜을 사용 중으로 일일 한도 500회 발송에 도달할 경우 나옵니다. 다음날에 다시 시도해주시기를 요청드립니다.
+            </p>
+          </div>
 
           <div className="subscriber-notice">
             <p>💡 뉴스레터를 구독한 이메일 주소로 로그인해주세요.</p>
