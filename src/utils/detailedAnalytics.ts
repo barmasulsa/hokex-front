@@ -230,10 +230,6 @@ export async function getDetailedVisitorStats(): Promise<DetailedVisitorStats> {
   const today = now.toISOString().split('T')[0];
   
   // 기준 날짜들
-  const thirtyDaysAgo = new Date(now);
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
-  
   const oneYearAgo = new Date(now);
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
   const oneYearAgoStr = oneYearAgo.toISOString().split('T')[0];
