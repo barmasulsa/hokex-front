@@ -119,6 +119,36 @@ export function LoginPage() {
             <p>아직 구독하지 않으셨나요? <a href="https://page.stibee.com/subscriptions/289942" target="_blank" rel="noopener noreferrer">뉴스레터 구독하기</a></p>
           </div>
 
+          <p className="login-steps">1. 카페인판다 구독 및 확인 메일 발송 후 구독하기 클릭<br />2. 구독 후 <span style={{color: '#667eea', fontWeight: 'bold'}}>이메일 링크로 로그인</span> 실행 뒤 받은 링크로 호켁스 접속</p>
+
+          <div className="terms-agreement">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                disabled={isSubmitting}
+              />
+              <span>
+                <a href="/terms.html" target="_blank" rel="noopener noreferrer">이용약관</a> 및{' '}
+                <a href="/privacy.html" target="_blank" rel="noopener noreferrer">개인정보처리방침</a>에 동의합니다.
+              </span>
+            </label>
+          </div>
+
+          <button 
+            className="login-btn secondary-btn"
+            onClick={handleMagicLink}
+            disabled={isSubmitting || !agreedToTerms}
+          >
+            <span className="btn-icon">✉️</span>
+            이메일 링크로 로그인
+          </button>
+
+          <div className="divider">
+            <span>또는</span>
+          </div>
+
           <form onSubmit={handlePasswordLogin} className="login-form">
             <div className="form-group">
               <label htmlFor="email">구독 이메일</label>
@@ -164,34 +194,6 @@ export function LoginPage() {
               {isSubmitting ? '로그인 중...' : '로그인'}
             </button>
           </form>
-
-          <div className="divider">
-            <span>또는</span>
-          </div>
-
-          <div className="terms-agreement">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={agreedToTerms}
-                onChange={(e) => setAgreedToTerms(e.target.checked)}
-                disabled={isSubmitting}
-              />
-              <span>
-                <a href="/terms.html" target="_blank" rel="noopener noreferrer">이용약관</a> 및{' '}
-                <a href="/privacy.html" target="_blank" rel="noopener noreferrer">개인정보처리방침</a>에 동의합니다.
-              </span>
-            </label>
-          </div>
-
-          <button 
-            className="login-btn secondary-btn"
-            onClick={handleMagicLink}
-            disabled={isSubmitting || !agreedToTerms}
-          >
-            <span className="btn-icon">✉️</span>
-            이메일 링크로 로그인
-          </button>
 
           <div className="magic-link-info-box">
             <h3>💡 이메일 링크 로그인 안내</h3>
