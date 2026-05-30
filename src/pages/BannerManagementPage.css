@@ -1159,3 +1159,29 @@
   color: #6c757d;
   font-weight: 500;
 }
+
+/* 날짜 범위 입력 */
+.date-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.date-range-inputs .form-control {
+  flex: 1;
+}
+
+.date-range-inputs .date-separator {
+  color: #666;
+  font-weight: 500;
+}
+
+/* 테이블 날짜 범위 셀 */
+.date-range-cell {
+  font-size: 0.875rem;
+}
+
+.date-range-text {
+  color: #666;
+  white-space: nowrap;
+}

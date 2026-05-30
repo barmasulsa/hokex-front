@@ -3,18 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { EventCard } from '../components/EventCard';
 import { Banner } from '../components/Banner';
 import { BannerPopupModal } from '../components/BannerPopupModal';
-import { AnnouncementModal } from '../components/AnnouncementModal';
 import { fetchEvents, fetchSavedEventIds, toggleSaveEvent } from '../services/eventService';
-import { fetchActiveAnnouncements } from '../services/announcementService';
 import { fetchAllBanners } from '../services/bannerService';
-import { shouldShowAnnouncement, markAsViewed, hideUntilTomorrow, cleanupExpiredHides } from '../utils/announcementStorage';
-import { shouldShowBannerPopup, markAsShownToday, dismissBannerForWeek } from '../utils/bannerPopupStorage';
 import { useAuth } from '../contexts/AuthContext';
 import { getCachedVisitorStats } from '../utils/detailedAnalytics';
 import { PresenceManager } from '../utils/onlinePresence';
 import { supabase } from '../lib/supabase';
 import type { EventRecord, Venue } from '../types/core';
-import type { Announcement } from '../types/announcement';
 import type { Banner as BannerType } from '../types/banner';
 import { Region, Category, REGION_VENUE_MAP } from '../types/core';
 import { FilterEngine } from '../utils/filterEngine';
@@ -55,14 +50,7 @@ export function HomePage() {
     last30Days: 0
   });
   const [onlineCount, setOnlineCount] = useState<number>(0);
-  
-  // 알림 상태
-  const [currentAnnouncement, setCurrentAnnouncement] = useState<Announcement | null>(null);
-  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
-  
-  // 팝업 배너 상태
   const [popupBanner, setPopupBanner] = useState<BannerType | null>(null);
-  const [showBannerPopup, setShowBannerPopup] = useState(false);
   
   // 데이터 로드 여부를 추적하는 ref
   const hasLoadedData = useRef(false);
@@ -74,96 +62,65 @@ export function HomePage() {
     }
   }, [user, authLoading, navigate]);
   
-  // 알림 로드 및 표시
-  useEffect(() => {
-    async function loadAnnouncements() {
-      if (!user) return;
-      
-      // 만료된 "오늘 하루 보지 않기" 정리
-      cleanupExpiredHides();
-      
-      // 활성화된 알림 가져오기
-      const announcements = await fetchActiveAnnouncements();
-      
-      if (announcements.length > 0) {
-        const announcement = announcements[0]; // 가장 최근 알림
-        
-        // 표시해야 하는지 확인
-        if (shouldShowAnnouncement(announcement)) {
-          setCurrentAnnouncement(announcement);
-          setShowAnnouncementModal(true);
-        }
-      }
-    }
-    
-    if (user) {
-      loadAnnouncements();
-    }
-  }, [user]);
-  
   // 팝업 배너 로드 및 표시
   useEffect(() => {
-    async function loadPopupBanner() {
+    const loadPopupBanners = async () => {
       if (!user) return;
       
       try {
-        // 모든 배너 가져오기
-        const banners = await fetchAllBanners();
-        
-        // 팝업으로 표시할 배너 필터링
-        const today = new Date().toISOString().split('T')[0];
-        const popupBanners = banners.filter(banner => {
-          // text 타입이고, 활성화되어 있고, 팝업으로 표시하도록 설정된 배너
-          if (banner.type !== 'text' || !banner.is_active) return false;
+        const { data, error } = await supabase
+          .from('banners')
+          .select('*')
+          .eq('is_active', true)
+          .eq('show_as_popup', true)
+          .order('display_order', { ascending: true });
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          const today = new Date().toISOString().split('T')[0];
           
-          const bannerData = banner as any;
-          if (!bannerData.show_as_popup) return false;
+          // 게시 기간 필터링
+          const validPopups = data.filter(banner => {
+            // 시작일이 설정되어 있고 오늘이 시작일 이전이면 제외
+            if (banner.popup_start_date && today < banner.popup_start_date) {
+              return false;
+            }
+            // 종료일이 설정되어 있고 오늘이 종료일 이후면 제외
+            if (banner.popup_end_date && today > banner.popup_end_date) {
+              return false;
+            }
+            return true;
+          });
+
+          if (validPopups.length === 0) return;
+
+          // 오늘 이미 본 팝업인지 확인
+          const seenPopups = JSON.parse(sessionStorage.getItem('seenPopups') || '{}');
           
-          // 팝업 기간 확인
-          if (bannerData.popup_start_date && bannerData.popup_end_date) {
-            return today >= bannerData.popup_start_date && today <= bannerData.popup_end_date;
-          }
+          // 오늘 보지 않은 팝업만 표시
+          const unseenPopups = validPopups.filter(banner => seenPopups[banner.id] !== today);
           
-          return false;
-        });
-        
-        if (popupBanners.length > 0) {
-          const banner = popupBanners[0]; // 첫 번째 팝업 배너
-          
-          // 표시해야 하는지 확인 (다시 보지 않기, 오늘 이미 표시 여부)
-          if (shouldShowBannerPopup(banner.id)) {
-            setPopupBanner(banner);
-            setShowBannerPopup(true);
-            markAsShownToday(banner.id); // 오늘 표시했다고 기록
+          if (unseenPopups.length > 0) {
+            // 첫 번째 팝업만 표시
+            const popup = unseenPopups[0];
+            
+            // 팝업 표시 로직 (Banner 컴포넌트 사용)
+            // 여기서는 간단히 alert로 대체 (실제로는 모달 컴포넌트 사용)
+            const showPopup = confirm(`${popup.title}\n\n${popup.type === 'text' ? '내용을 확인하시겠습니까?' : '이미지를 확인하시겠습니까?'}`);
+            
+            // 오늘 본 팝업으로 기록
+            seenPopups[popup.id] = today;
+            sessionStorage.setItem('seenPopups', JSON.stringify(seenPopups));
           }
         }
       } catch (error) {
-        console.error('Failed to load popup banner:', error);
+        console.error('팝업 배너 로드 실패:', error);
       }
-    }
-    
-    if (user) {
-      loadPopupBanner();
-    }
+    };
+
+    loadPopupBanners();
   }, [user]);
-  
-  // 알림 모달 닫기 핸들러
-  const handleCloseAnnouncement = () => {
-    if (currentAnnouncement) {
-      markAsViewed(currentAnnouncement.id);
-    }
-    setShowAnnouncementModal(false);
-    setCurrentAnnouncement(null);
-  };
-  
-  // 오늘 하루 보지 않기 핸들러
-  const handleHideAnnouncementToday = () => {
-    if (currentAnnouncement) {
-      hideUntilTomorrow(currentAnnouncement.id);
-    }
-    setShowAnnouncementModal(false);
-    setCurrentAnnouncement(null);
-  };
   
   // sessionStorage에서 필터 상태 복원
   const getInitialFilterState = () => {
@@ -634,29 +591,24 @@ export function HomePage() {
 
   return (
     <>
-      {/* 알림 모달 */}
-      {showAnnouncementModal && currentAnnouncement && (
-        <AnnouncementModal
-          announcement={currentAnnouncement}
-          onClose={handleCloseAnnouncement}
-          onHideToday={handleHideAnnouncementToday}
-        />
-      )}
-
       {/* 팝업 배너 모달 */}
-      {showBannerPopup && popupBanner && (
+      {popupBanner && (
         <BannerPopupModal
           bannerId={popupBanner.id}
           title={popupBanner.title}
           content={popupBanner.content}
           linkUrl={popupBanner.link_url}
-          onClose={() => setShowBannerPopup(false)}
+          onClose={() => setPopupBanner(null)}
           onDismissForWeek={() => {
-            dismissBannerForWeek(popupBanner.id);
+            const dismissedKey = `popup_dismissed_${popupBanner.id}`;
+            const weekLater = new Date();
+            weekLater.setDate(weekLater.getDate() + 7);
+            localStorage.setItem(dismissedKey, weekLater.toISOString());
+            setPopupBanner(null);
           }}
         />
       )}
-
+      
       {/* 메인 컨텐츠 영역 (사이드바 + 행사 그리드 + 통계 사이드바) */}
       <div className="main-content-wrapper">
         {/* 왼쪽 사이드바 - 기간 + 검색 필터 */}

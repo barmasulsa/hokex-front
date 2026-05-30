@@ -11,7 +11,6 @@ interface BannerPopupModalProps {
 }
 
 export function BannerPopupModal({
-  bannerId,
   title,
   content,
   linkUrl,

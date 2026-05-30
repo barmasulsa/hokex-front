@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchAllBanners, createBanner, updateBanner, deleteBanner } from '../services/bannerService';
 import { fetchViewCountStats, fetchSavedEventStats, type ViewCountStats, type SavedEventStats, type ViewCountStatsFilters } from '../services/eventService';
-import { fetchAllAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement } from '../services/announcementService';
 import { Region, REGION_VENUE_MAP } from '../types/core';
 import { 
   getDetailedVisitorStats, 
@@ -13,12 +12,10 @@ import {
   type DetailedVisitorStats 
 } from '../utils/detailedAnalytics';
 import type { Banner, BannerType } from '../types/banner';
-import type { Announcement, AnnouncementInput, AnnouncementType } from '../types/announcement';
-import { ANNOUNCEMENT_CONFIG } from '../types/announcement';
 import { RichTextEditor } from '../components/RichTextEditor';
 import './BannerManagementPage.css';
 
-type ManagementTab = 'image' | 'youtube' | 'text' | 'statistics' | 'viewcounts' | 'announcements';
+type ManagementTab = 'image' | 'youtube' | 'text' | 'statistics' | 'viewcounts';
 
 export function BannerManagementPage() {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -36,20 +33,6 @@ export function BannerManagementPage() {
   const [loadingViewCounts, setLoadingViewCounts] = useState(false);
   const [savedEventStats, setSavedEventStats] = useState<SavedEventStats[]>([]);
   const [loadingSavedStats, setLoadingSavedStats] = useState(false);
-  
-  // 알림 관리 상태
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loadingAnnouncements, setLoadingAnnouncements] = useState(false);
-  const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
-  const [isCreatingAnnouncement, setIsCreatingAnnouncement] = useState(false);
-  const [announcementFormData, setAnnouncementFormData] = useState<AnnouncementInput>({
-    type: 'normal',
-    title: '',
-    content: '',
-    start_date: new Date().toISOString().split('T')[0],
-    end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7일 후
-    is_active: true
-  });
   
   // 조회수 통계 필터
   const [viewCountLimit, setViewCountLimit] = useState<number>(50);
@@ -72,8 +55,8 @@ export function BannerManagementPage() {
     is_active: true,
     display_order: 0,
     show_as_popup: false,
-    popup_start_date: undefined as string | undefined,
-    popup_end_date: undefined as string | undefined
+    popup_start_date: '',
+    popup_end_date: ''
   });
 
   // 관리자 권한 체크
@@ -88,20 +71,6 @@ export function BannerManagementPage() {
   useEffect(() => {
     loadBanners();
   }, []);
-
-  // 알림 목록 로드
-  useEffect(() => {
-    if (activeTab === 'announcements') {
-      loadAnnouncements();
-    }
-  }, [activeTab]);
-
-  const loadAnnouncements = async () => {
-    setLoadingAnnouncements(true);
-    const data = await fetchAllAnnouncements();
-    setAnnouncements(data);
-    setLoadingAnnouncements(false);
-  };
 
   // 방문자 통계 가져오기
   useEffect(() => {
@@ -268,8 +237,8 @@ export function BannerManagementPage() {
       is_active: true,
       display_order: maxOrder + 1,
       show_as_popup: false,
-      popup_start_date: undefined,
-      popup_end_date: undefined
+      popup_start_date: '',
+      popup_end_date: ''
     });
   };
 
@@ -432,9 +401,9 @@ export function BannerManagementPage() {
       link_url: banner.link_url || '',
       is_active: banner.is_active,
       display_order: banner.display_order,
-      show_as_popup: (banner as any).show_as_popup || false,
-      popup_start_date: (banner as any).popup_start_date || undefined,
-      popup_end_date: (banner as any).popup_end_date || undefined
+      show_as_popup: banner.show_as_popup || false,
+      popup_start_date: banner.popup_start_date || '',
+      popup_end_date: banner.popup_end_date || ''
     });
   };
 
@@ -449,8 +418,8 @@ export function BannerManagementPage() {
       is_active: true,
       display_order: 0,
       show_as_popup: false,
-      popup_start_date: undefined,
-      popup_end_date: undefined
+      popup_start_date: '',
+      popup_end_date: ''
     });
   };
 
@@ -542,8 +511,8 @@ export function BannerManagementPage() {
         is_active: formData.is_active,
         display_order: formData.display_order,
         show_as_popup: formData.show_as_popup,
-        popup_start_date: formData.show_as_popup ? formData.popup_start_date : undefined,
-        popup_end_date: formData.show_as_popup ? formData.popup_end_date : undefined
+        popup_start_date: formData.popup_start_date || undefined,
+        popup_end_date: formData.popup_end_date || undefined
       });
 
       if (newBanner) {
@@ -562,8 +531,8 @@ export function BannerManagementPage() {
         is_active: formData.is_active,
         display_order: formData.display_order,
         show_as_popup: formData.show_as_popup,
-        popup_start_date: formData.show_as_popup ? formData.popup_start_date : undefined,
-        popup_end_date: formData.show_as_popup ? formData.popup_end_date : undefined
+        popup_start_date: formData.popup_start_date || undefined,
+        popup_end_date: formData.popup_end_date || undefined
       });
 
       if (updated) {
@@ -602,101 +571,6 @@ export function BannerManagementPage() {
     }
   };
 
-  // 알림 관련 핸들러
-  const handleCreateAnnouncement = () => {
-    setIsCreatingAnnouncement(true);
-    setEditingAnnouncement(null);
-    setAnnouncementFormData({
-      type: 'normal',
-      title: '',
-      content: '',
-      start_date: new Date().toISOString().split('T')[0],
-      end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      is_active: true
-    });
-  };
-
-  const handleEditAnnouncement = (announcement: Announcement) => {
-    setEditingAnnouncement(announcement);
-    setIsCreatingAnnouncement(false);
-    setAnnouncementFormData({
-      type: announcement.type,
-      title: announcement.title,
-      content: announcement.content,
-      start_date: announcement.start_date,
-      end_date: announcement.end_date,
-      is_active: announcement.is_active
-    });
-  };
-
-  const handleCancelAnnouncement = () => {
-    setIsCreatingAnnouncement(false);
-    setEditingAnnouncement(null);
-    setAnnouncementFormData({
-      type: 'normal',
-      title: '',
-      content: '',
-      start_date: new Date().toISOString().split('T')[0],
-      end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      is_active: true
-    });
-  };
-
-  const handleSubmitAnnouncement = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!announcementFormData.title.trim() || !announcementFormData.content.trim()) {
-      alert('제목과 내용을 입력해주세요.');
-      return;
-    }
-
-    if (isCreatingAnnouncement) {
-      const newAnnouncement = await createAnnouncement(announcementFormData);
-      if (newAnnouncement) {
-        alert('알림이 생성되었습니다.');
-        loadAnnouncements();
-        handleCancelAnnouncement();
-      } else {
-        alert('알림 생성에 실패했습니다.');
-      }
-    } else if (editingAnnouncement) {
-      const updated = await updateAnnouncement(editingAnnouncement.id, announcementFormData);
-      if (updated) {
-        alert('알림이 수정되었습니다.');
-        loadAnnouncements();
-        handleCancelAnnouncement();
-      } else {
-        alert('알림 수정에 실패했습니다.');
-      }
-    }
-  };
-
-  const handleDeleteAnnouncement = async (id: string) => {
-    if (!confirm('정말 이 알림을 삭제하시겠습니까?')) {
-      return;
-    }
-
-    const success = await deleteAnnouncement(id);
-    if (success) {
-      alert('알림이 삭제되었습니다.');
-      loadAnnouncements();
-    } else {
-      alert('알림 삭제에 실패했습니다.');
-    }
-  };
-
-  const handleToggleAnnouncementActive = async (announcement: Announcement) => {
-    const updated = await updateAnnouncement(announcement.id, {
-      is_active: !announcement.is_active
-    });
-
-    if (updated) {
-      loadAnnouncements();
-    } else {
-      alert('알림 상태 변경에 실패했습니다.');
-    }
-  };
-
   if (authLoading || !isAdmin) {
     return null;
   }
@@ -731,12 +605,6 @@ export function BannerManagementPage() {
           onClick={() => setActiveTab('text')}
         >
           공지사항
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'announcements' ? 'active' : ''}`}
-          onClick={() => setActiveTab('announcements')}
-        >
-          🔔 알림 관리
         </button>
         <button
           className={`tab-btn ${activeTab === 'statistics' ? 'active' : ''}`}
@@ -1356,160 +1224,8 @@ export function BannerManagementPage() {
         </div>
       )}
 
-      {/* 알림 관리 탭 */}
-      {activeTab === 'announcements' && (
-        <div className="announcement-management-section">
-          {/* 새 알림 추가 버튼 */}
-          <div className="add-banner-section">
-            <button className="btn-primary" onClick={handleCreateAnnouncement}>
-              + 새 알림 추가
-            </button>
-          </div>
-
-          {/* 알림 폼 */}
-          {(isCreatingAnnouncement || editingAnnouncement) && (
-            <div className="banner-form-container">
-              <h2>{isCreatingAnnouncement ? '새 알림 추가' : '알림 수정'}</h2>
-              <form onSubmit={handleSubmitAnnouncement} className="banner-form">
-                <div className="form-group">
-                  <label>알림 종류</label>
-                  <select
-                    value={announcementFormData.type}
-                    onChange={(e) => setAnnouncementFormData({ ...announcementFormData, type: e.target.value as AnnouncementType })}
-                    className="form-control"
-                  >
-                    <option value="normal">🔔 일반 알림</option>
-                    <option value="important">⚠️ 중요 공지</option>
-                    <option value="update">✨ 업데이트 소식</option>
-                  </select>
-                  <p className="form-help-text">
-                    {announcementFormData.type === 'normal' && '일반적인 안내 사항 (파란색)'}
-                    {announcementFormData.type === 'important' && '중요한 공지사항 (빨간색)'}
-                    {announcementFormData.type === 'update' && '새로운 기능이나 업데이트 소식 (초록색)'}
-                  </p>
-                </div>
-
-                <div className="form-group">
-                  <label>제목</label>
-                  <input
-                    type="text"
-                    value={announcementFormData.title}
-                    onChange={(e) => setAnnouncementFormData({ ...announcementFormData, title: e.target.value })}
-                    className="form-control"
-                    placeholder="알림 제목"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>내용</label>
-                  <RichTextEditor
-                    value={announcementFormData.content}
-                    onChange={(html) => setAnnouncementFormData({ ...announcementFormData, content: html })}
-                    placeholder="알림 내용을 입력하세요 (텍스트 서식, 이미지 삽입 가능)"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>표시 시작일</label>
-                  <input
-                    type="date"
-                    value={announcementFormData.start_date}
-                    onChange={(e) => setAnnouncementFormData({ ...announcementFormData, start_date: e.target.value })}
-                    className="form-control"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>표시 종료일</label>
-                  <input
-                    type="date"
-                    value={announcementFormData.end_date}
-                    onChange={(e) => setAnnouncementFormData({ ...announcementFormData, end_date: e.target.value })}
-                    className="form-control"
-                  />
-                </div>
-
-                <div className="form-group-checkbox">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={announcementFormData.is_active}
-                      onChange={(e) => setAnnouncementFormData({ ...announcementFormData, is_active: e.target.checked })}
-                    />
-                    활성화
-                  </label>
-                </div>
-
-                <div className="form-actions">
-                  <button type="submit" className="btn-primary">
-                    {isCreatingAnnouncement ? '생성' : '수정'}
-                  </button>
-                  <button type="button" className="btn-secondary" onClick={handleCancelAnnouncement}>
-                    취소
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* 알림 목록 */}
-          <div className="banner-list">
-            <h2>알림 목록</h2>
-            {loadingAnnouncements ? (
-              <p>로딩 중...</p>
-            ) : announcements.length === 0 ? (
-              <p>등록된 알림이 없습니다.</p>
-            ) : (
-              <table className="banner-table">
-                <thead>
-                  <tr>
-                    <th>종류</th>
-                    <th>제목</th>
-                    <th>표시 기간</th>
-                    <th>상태</th>
-                    <th>작업</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {announcements.map((announcement) => {
-                    const config = ANNOUNCEMENT_CONFIG[announcement.type];
-                    return (
-                      <tr key={announcement.id}>
-                        <td>
-                          <span style={{ fontSize: '1.2em' }}>{config.icon}</span> {config.label}
-                        </td>
-                        <td>{announcement.title}</td>
-                        <td className="date-cell">
-                          {announcement.start_date} ~ {announcement.end_date}
-                        </td>
-                        <td>
-                          <button
-                            className={`status-badge ${announcement.is_active ? 'active' : 'inactive'}`}
-                            onClick={() => handleToggleAnnouncementActive(announcement)}
-                          >
-                            {announcement.is_active ? '활성' : '비활성'}
-                          </button>
-                        </td>
-                        <td>
-                          <button className="btn-edit" onClick={() => handleEditAnnouncement(announcement)}>
-                            수정
-                          </button>
-                          <button className="btn-delete" onClick={() => handleDeleteAnnouncement(announcement.id)}>
-                            삭제
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* 배너 관리 섹션 (기존 코드) */}
-      {activeTab !== 'statistics' && activeTab !== 'viewcounts' && activeTab !== 'announcements' && (
+      {activeTab !== 'statistics' && activeTab !== 'viewcounts' && (
         <div className="banner-management-section">
       {/* 새 배너 추가 버튼 */}
       <div className="add-banner-section">
@@ -1639,54 +1355,43 @@ export function BannerManagementPage() {
               </label>
             </div>
 
-            {/* 팝업 설정 (text 타입만) */}
-            {formData.type === 'text' && (
+            {(formData.type === 'image' || formData.type === 'text') && (
               <>
                 <div className="form-group-checkbox">
                   <label>
                     <input
                       type="checkbox"
                       checked={formData.show_as_popup}
-                      onChange={(e) => setFormData({ 
-                        ...formData, 
-                        show_as_popup: e.target.checked,
-                        popup_start_date: e.target.checked ? new Date().toISOString().split('T')[0] : undefined,
-                        popup_end_date: e.target.checked ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : undefined
-                      })}
+                      onChange={(e) => setFormData({ ...formData, show_as_popup: e.target.checked })}
                     />
-                    팝업으로 표시
+                    팝업으로 표시 (홈페이지 접속 시 자동으로 표시)
                   </label>
                 </div>
 
                 {formData.show_as_popup && (
-                  <>
-                    <div className="form-group">
-                      <label>팝업 시작일</label>
+                  <div className="form-group">
+                    <label>팝업 게시 기간 (선택사항)</label>
+                    <div className="date-range-inputs">
                       <input
                         type="date"
-                        value={formData.popup_start_date || ''}
+                        value={formData.popup_start_date}
                         onChange={(e) => setFormData({ ...formData, popup_start_date: e.target.value })}
                         className="form-control"
-                        required
+                        placeholder="시작일"
                       />
-                    </div>
-
-                    <div className="form-group">
-                      <label>팝업 종료일</label>
+                      <span className="date-separator">~</span>
                       <input
                         type="date"
-                        value={formData.popup_end_date || ''}
+                        value={formData.popup_end_date}
                         onChange={(e) => setFormData({ ...formData, popup_end_date: e.target.value })}
                         className="form-control"
-                        required
+                        placeholder="종료일"
                       />
                     </div>
-
-                    <div className="popup-info">
-                      💡 팝업은 설정한 기간 동안 하루에 한 번 자동으로 표시됩니다. 
-                      사용자가 "다시 보지 않기"를 선택하면 영구적으로 표시되지 않습니다.
-                    </div>
-                  </>
+                    <p className="form-help-text">
+                      💡 기간을 설정하지 않으면 항상 표시됩니다. 기간을 설정하면 해당 기간에만 팝업이 표시됩니다.
+                    </p>
+                  </div>
                 )}
               </>
             )}
@@ -1723,6 +1428,8 @@ export function BannerManagementPage() {
                 <th>내용</th>
                 {activeTab === 'text' && <th>조회수</th>}
                 {activeTab === 'image' && <th>링크 URL</th>}
+                <th>팝업</th>
+                <th>게시 기간</th>
                 <th>상태</th>
                 <th>작업</th>
               </tr>
@@ -1757,6 +1464,22 @@ export function BannerManagementPage() {
                       )}
                     </td>
                   )}
+                  <td>
+                    <span className={`status-badge ${banner.show_as_popup ? 'active' : 'inactive'}`}>
+                      {banner.show_as_popup ? '팝업' : '-'}
+                    </span>
+                  </td>
+                  <td className="date-range-cell">
+                    {banner.show_as_popup && (banner.popup_start_date || banner.popup_end_date) ? (
+                      <span className="date-range-text">
+                        {banner.popup_start_date || '시작일 없음'} ~ {banner.popup_end_date || '종료일 없음'}
+                      </span>
+                    ) : banner.show_as_popup ? (
+                      <span className="date-range-text">항상 표시</span>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
                   <td>
                     <button
                       className={`status-badge ${banner.is_active ? 'active' : 'inactive'}`}
