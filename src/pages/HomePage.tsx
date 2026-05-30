@@ -4,7 +4,6 @@ import { EventCard } from '../components/EventCard';
 import { Banner } from '../components/Banner';
 import { BannerPopupModal } from '../components/BannerPopupModal';
 import { fetchEvents, fetchSavedEventIds, toggleSaveEvent } from '../services/eventService';
-import { fetchAllBanners } from '../services/bannerService';
 import { useAuth } from '../contexts/AuthContext';
 import { getCachedVisitorStats } from '../utils/detailedAnalytics';
 import { PresenceManager } from '../utils/onlinePresence';
@@ -103,15 +102,7 @@ export function HomePage() {
           
           if (unseenPopups.length > 0) {
             // 첫 번째 팝업만 표시
-            const popup = unseenPopups[0];
-            
-            // 팝업 표시 로직 (Banner 컴포넌트 사용)
-            // 여기서는 간단히 alert로 대체 (실제로는 모달 컴포넌트 사용)
-            const showPopup = confirm(`${popup.title}\n\n${popup.type === 'text' ? '내용을 확인하시겠습니까?' : '이미지를 확인하시겠습니까?'}`);
-            
-            // 오늘 본 팝업으로 기록
-            seenPopups[popup.id] = today;
-            sessionStorage.setItem('seenPopups', JSON.stringify(seenPopups));
+            setPopupBanner(unseenPopups[0]);
           }
         }
       } catch (error) {
