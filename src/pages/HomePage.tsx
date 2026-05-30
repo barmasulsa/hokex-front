@@ -80,6 +80,7 @@ export function HomePage() {
   const [selectedCategories, setSelectedCategories] = useState<Category[]>(initialState?.selectedCategories || []); // 배열로 변경
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>(initialState?.selectedIndustries || []);
   const [searchQuery, setSearchQuery] = useState<string>(initialState?.searchQuery || '');
+  const [searchType, setSearchType] = useState<'title' | 'organizer' | 'supervisor'>(initialState?.searchType || 'title');
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(initialState?.dateRange || null);
   const [expandedRegion, setExpandedRegion] = useState<Region | null>(initialState?.expandedRegion || null);
   const [showIndustries, setShowIndustries] = useState(false);
@@ -246,12 +247,13 @@ export function HomePage() {
       selectedCategories, // 변경
       selectedIndustries,
       searchQuery,
+      searchType,
       dateRange,
       expandedRegion,
       showCurrentOnly
     };
     sessionStorage.setItem('homeFilterState', JSON.stringify(filterState));
-  }, [selectedRegion, selectedVenue, selectedMonth, selectedCategories, selectedIndustries, searchQuery, dateRange, expandedRegion, showCurrentOnly]);
+  }, [selectedRegion, selectedVenue, selectedMonth, selectedCategories, selectedIndustries, searchQuery, searchType, dateRange, expandedRegion, showCurrentOnly]);
 
   useEffect(() => {
     console.log('[HomePage] Filtering with:', {
@@ -340,9 +342,18 @@ export function HomePage() {
     // 검색어 필터링
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      processed = processed.filter(event => 
-        event.title.toLowerCase().includes(query)
-      );
+      processed = processed.filter(event => {
+        switch (searchType) {
+          case 'title':
+            return event.title.toLowerCase().includes(query);
+          case 'organizer':
+            return event.organizer?.toLowerCase().includes(query) || false;
+          case 'supervisor':
+            return event.supervisor?.toLowerCase().includes(query) || false;
+          default:
+            return event.title.toLowerCase().includes(query);
+        }
+      });
     }
     
     console.log('[HomePage] Final filtered:', processed.length);
@@ -360,7 +371,7 @@ export function HomePage() {
     setFilteredEvents(sortedEvents);
     // 필터가 변경되면 페이지를 1로 리셋
     setPage(1);
-  }, [events, selectedRegion, selectedVenue, selectedMonth, selectedCategories, selectedIndustries, searchQuery, dateRange, showCurrentOnly]);
+  }, [events, selectedRegion, selectedVenue, selectedMonth, selectedCategories, selectedIndustries, searchQuery, searchType, dateRange, showCurrentOnly]);
 
   // filteredEvents가 변경되거나 page가 변경될 때 displayedEvents 업데이트
   useEffect(() => {
@@ -707,11 +718,26 @@ export function HomePage() {
 
           {/* 검색 섹션 */}
           <div className="sidebar-section">
-            <h3 className="sidebar-title">검색</h3>
+            <div className="sidebar-title-row">
+              <h3 className="sidebar-title">검색</h3>
+              <select
+                className="search-type-select-inline"
+                value={searchType}
+                onChange={(e) => setSearchType(e.target.value as 'title' | 'organizer' | 'supervisor')}
+              >
+                <option value="title">행사명</option>
+                <option value="organizer">주최</option>
+                <option value="supervisor">주관</option>
+              </select>
+            </div>
             <div className="search-container-sidebar">
               <input
                 type="text"
-                placeholder="행사명 검색"
+                placeholder={
+                  searchType === 'title' ? '행사명 검색' :
+                  searchType === 'organizer' ? '주최 검색' :
+                  '주관 검색'
+                }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="search-input-sidebar"

@@ -280,6 +280,30 @@ body {
   margin-bottom: 0;
 }
 
+.search-type-select-inline {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  outline: none;
+  transition: all 0.3s;
+  background: #f8f9fa;
+  cursor: pointer;
+  color: #333;
+  font-weight: 500;
+  min-width: 80px;
+}
+
+.search-type-select-inline:hover {
+  border-color: #4A90E2;
+}
+
+.search-type-select-inline:focus {
+  border-color: #4A90E2;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
 .search-input-sidebar {
   width: 100%;
   padding: 0.6rem 2rem 0.6rem 0.75rem;
