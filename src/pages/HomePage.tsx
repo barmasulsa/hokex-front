@@ -94,11 +94,23 @@ export function HomePage() {
 
           if (validPopups.length === 0) return;
 
-          // 오늘 이미 본 팝업인지 확인
-          const seenPopups = JSON.parse(sessionStorage.getItem('seenPopups') || '{}');
-          
-          // 오늘 보지 않은 팝업만 표시
-          const unseenPopups = validPopups.filter(banner => seenPopups[banner.id] !== today);
+          // 24시간 이내에 본 팝업인지 확인 (localStorage 사용)
+          const unseenPopups = validPopups.filter(banner => {
+            const dismissedKey = `popup_dismissed_${banner.id}`;
+            const dismissedValue = localStorage.getItem(dismissedKey);
+            
+            if (!dismissedValue) return true; // 본 적 없으면 표시
+            
+            // "permanent"면 영구적으로 표시 안 함
+            if (dismissedValue === 'permanent') return false;
+            
+            // 날짜 형식이면 만료 시간 확인
+            const dismissedDate = new Date(dismissedValue);
+            const now = new Date();
+            
+            // 만료 시간이 지났으면 표시
+            return now >= dismissedDate;
+          });
           
           if (unseenPopups.length > 0) {
             // 첫 번째 팝업만 표시
@@ -589,12 +601,18 @@ export function HomePage() {
           title={popupBanner.title}
           content={popupBanner.content}
           linkUrl={popupBanner.link_url}
-          onClose={() => setPopupBanner(null)}
-          onDismissForWeek={() => {
+          onClose={() => {
+            // 팝업을 닫을 때 24시간 동안 표시하지 않음
             const dismissedKey = `popup_dismissed_${popupBanner.id}`;
-            const weekLater = new Date();
-            weekLater.setDate(weekLater.getDate() + 7);
-            localStorage.setItem(dismissedKey, weekLater.toISOString());
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            localStorage.setItem(dismissedKey, tomorrow.toISOString());
+            setPopupBanner(null);
+          }}
+          onDismissForWeek={() => {
+            // "다시 보지 않기" 버튼은 영구적으로 표시하지 않음
+            const dismissedKey = `popup_dismissed_${popupBanner.id}`;
+            localStorage.setItem(dismissedKey, 'permanent');
             setPopupBanner(null);
           }}
         />

@@ -17,18 +17,6 @@ export function BannerPopupModal({
   onClose,
   onDismissForWeek
 }: BannerPopupModalProps) {
-  // ESC 키로 닫기
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
-
   // 배경 스크롤 방지
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -38,8 +26,8 @@ export function BannerPopupModal({
   }, []);
 
   return (
-    <div className="banner-popup-overlay" onClick={onClose}>
-      <div className="banner-popup-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="banner-popup-overlay">
+      <div className="banner-popup-modal">
         <button className="banner-popup-close" onClick={onClose} aria-label="닫기">
           ×
         </button>
