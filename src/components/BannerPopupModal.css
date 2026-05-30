@@ -1,0 +1,241 @@
+/* 배너 팝업 모달 스타일 */
+
+.banner-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.banner-popup-modal {
+  background: white;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  position: relative;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.banner-popup-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 32px;
+  line-height: 1;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+  z-index: 1;
+}
+
+.banner-popup-close:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.banner-popup-header {
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.banner-popup-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  padding-right: 40px; /* 닫기 버튼 공간 확보 */
+}
+
+.banner-popup-content {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #555;
+}
+
+/* 콘텐츠 내부 스타일 */
+.banner-popup-content p {
+  margin: 0 0 12px;
+}
+
+.banner-popup-content p:last-child {
+  margin-bottom: 0;
+}
+
+.banner-popup-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+.banner-popup-content a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.banner-popup-content a:hover {
+  text-decoration: underline;
+}
+
+.banner-popup-footer {
+  padding: 16px 24px 24px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.banner-popup-link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  text-align: center;
+}
+
+.banner-popup-link-btn:hover {
+  background-color: #0056b3;
+}
+
+.banner-popup-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.banner-popup-dismiss-btn,
+.banner-popup-confirm-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.banner-popup-dismiss-btn {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.banner-popup-dismiss-btn:hover {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.banner-popup-confirm-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.banner-popup-confirm-btn:hover {
+  background-color: #218838;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .banner-popup-overlay {
+    padding: 12px;
+  }
+
+  .banner-popup-modal {
+    max-height: 90vh;
+    border-radius: 8px;
+  }
+
+  .banner-popup-header {
+    padding: 20px 20px 12px;
+  }
+
+  .banner-popup-header h2 {
+    font-size: 18px;
+  }
+
+  .banner-popup-content {
+    padding: 20px;
+    font-size: 14px;
+  }
+
+  .banner-popup-footer {
+    padding: 12px 20px 20px;
+  }
+
+  .banner-popup-actions {
+    flex-direction: column;
+  }
+
+  .banner-popup-dismiss-btn,
+  .banner-popup-confirm-btn {
+    width: 100%;
+  }
+}
+
+/* 스크롤바 스타일 */
+.banner-popup-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.banner-popup-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.banner-popup-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.banner-popup-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

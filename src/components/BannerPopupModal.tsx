@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import './BannerPopupModal.css';
 
 interface BannerPopupModalProps {
   bannerId: string;
