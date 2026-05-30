@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchAllBanners, createBanner, updateBanner, deleteBanner } from '../services/bannerService';
@@ -46,6 +46,9 @@ export function BannerManagementPage() {
   const [customStartDate, setCustomStartDate] = useState<string>('');
   const [customEndDate, setCustomEndDate] = useState<string>('');
 
+  // 종료일 input ref
+  const popupEndDateRef = useRef<HTMLInputElement>(null);
+
   // 새 배너 폼 상태
   const [formData, setFormData] = useState({
     type: 'image' as BannerType,
@@ -56,7 +59,8 @@ export function BannerManagementPage() {
     display_order: 0,
     show_as_popup: false,
     popup_start_date: '',
-    popup_end_date: ''
+    popup_end_date: '',
+    has_end_date: false // 종료일 설정 여부
   });
 
   // 관리자 권한 체크
@@ -88,6 +92,13 @@ export function BannerManagementPage() {
     
     return () => clearInterval(interval);
   }, []);
+
+  // 종료일 input 동기화 (formData.popup_end_date 변경 시 DOM 직접 업데이트)
+  useEffect(() => {
+    if (popupEndDateRef.current) {
+      popupEndDateRef.current.value = formData.popup_end_date || '';
+    }
+  }, [formData.popup_end_date]);
 
   // 기간 필터에 따른 날짜 범위 계산
   const getDateRange = (): { startDate?: string; endDate?: string } => {
@@ -238,7 +249,8 @@ export function BannerManagementPage() {
       display_order: maxOrder + 1,
       show_as_popup: false,
       popup_start_date: '',
-      popup_end_date: ''
+      popup_end_date: '',
+      has_end_date: false
     });
   };
 
@@ -403,7 +415,8 @@ export function BannerManagementPage() {
       display_order: banner.display_order,
       show_as_popup: banner.show_as_popup || false,
       popup_start_date: banner.popup_start_date || '',
-      popup_end_date: banner.popup_end_date || ''
+      popup_end_date: banner.popup_end_date || '', // DB에서 null이면 빈 문자열로 변환
+      has_end_date: !!banner.popup_end_date // 종료일이 있으면 true
     });
   };
 
@@ -419,7 +432,8 @@ export function BannerManagementPage() {
       display_order: 0,
       show_as_popup: false,
       popup_start_date: '',
-      popup_end_date: ''
+      popup_end_date: '',
+      has_end_date: false
     });
   };
 
@@ -502,6 +516,19 @@ export function BannerManagementPage() {
     // link_url 처리: 빈 문자열이면 명시적으로 undefined로 변환
     const linkUrl = formData.link_url?.trim() ? formData.link_url.trim() : undefined;
 
+    // popup_end_date 처리: has_end_date가 false이거나 값이 없으면 명시적으로 null 전달
+    let popupEndDate: string | null | undefined;
+    if (!formData.has_end_date) {
+      // 종료일 설정 체크박스가 해제되어 있으면 명시적으로 null
+      popupEndDate = null;
+    } else if (formData.popup_end_date) {
+      // 종료일이 설정되어 있으면 해당 값 사용
+      popupEndDate = formData.popup_end_date;
+    } else {
+      // 체크박스는 체크되어 있지만 날짜가 없으면 undefined (필드 업데이트 안 함)
+      popupEndDate = undefined;
+    }
+
     if (isCreating) {
       const newBanner = await createBanner({
         type: formData.type,
@@ -512,7 +539,7 @@ export function BannerManagementPage() {
         display_order: formData.display_order,
         show_as_popup: formData.show_as_popup,
         popup_start_date: formData.popup_start_date || undefined,
-        popup_end_date: formData.popup_end_date || undefined
+        popup_end_date: popupEndDate === null ? null : (popupEndDate || undefined)
       });
 
       if (newBanner) {
@@ -532,7 +559,7 @@ export function BannerManagementPage() {
         display_order: formData.display_order,
         show_as_popup: formData.show_as_popup,
         popup_start_date: formData.popup_start_date || undefined,
-        popup_end_date: formData.popup_end_date || undefined
+        popup_end_date: popupEndDate === null ? null : (popupEndDate || undefined)
       });
 
       if (updated) {
@@ -1362,7 +1389,25 @@ export function BannerManagementPage() {
                     <input
                       type="checkbox"
                       checked={formData.show_as_popup}
-                      onChange={(e) => setFormData({ ...formData, show_as_popup: e.target.checked })}
+                      onChange={(e) => {
+                        const isChecked = e.target.checked;
+                        if (isChecked) {
+                          // 체크 시: 날짜 필드 유지
+                          setFormData({ 
+                            ...formData, 
+                            show_as_popup: true
+                          });
+                        } else {
+                          // 체크 해제 시: 날짜 필드 완전히 초기화
+                          setFormData({ 
+                            ...formData, 
+                            show_as_popup: false,
+                            popup_start_date: '',
+                            popup_end_date: '',
+                            has_end_date: false
+                          });
+                        }
+                      }}
                     />
                     팝업으로 표시 (홈페이지 접속 시 자동으로 표시)
                   </label>
@@ -1371,25 +1416,41 @@ export function BannerManagementPage() {
                 {formData.show_as_popup && (
                   <div className="form-group">
                     <label>팝업 게시 기간 (선택사항)</label>
-                    <div className="date-range-inputs">
+                    <div className="popup-date-range">
                       <input
                         type="date"
-                        value={formData.popup_start_date}
+                        value={formData.popup_start_date || ''}
                         onChange={(e) => setFormData({ ...formData, popup_start_date: e.target.value })}
-                        className="form-control"
+                        className="form-control popup-date-input"
                         placeholder="시작일"
                       />
                       <span className="date-separator">~</span>
                       <input
                         type="date"
-                        value={formData.popup_end_date}
+                        value={formData.popup_end_date || ''}
                         onChange={(e) => setFormData({ ...formData, popup_end_date: e.target.value })}
-                        className="form-control"
+                        className="form-control popup-date-input"
                         placeholder="종료일"
+                        disabled={!formData.has_end_date}
                       />
+                      <label className="end-date-checkbox-inline">
+                        <input
+                          type="checkbox"
+                          checked={formData.has_end_date}
+                          onChange={(e) => {
+                            const isChecked = e.target.checked;
+                            setFormData({ 
+                              ...formData, 
+                              has_end_date: isChecked,
+                              popup_end_date: '' // 체크/해제 모두 빈 문자열로 초기화
+                            });
+                          }}
+                        />
+                        종료일 설정
+                      </label>
                     </div>
                     <p className="form-help-text">
-                      💡 기간을 설정하지 않으면 항상 표시됩니다. 기간을 설정하면 해당 기간에만 팝업이 표시됩니다.
+                      💡 종료일을 설정하지 않으면 시작일부터 계속 표시됩니다.
                     </p>
                   </div>
                 )}

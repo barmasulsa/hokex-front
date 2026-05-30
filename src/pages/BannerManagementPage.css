@@ -1176,6 +1176,28 @@
   font-weight: 500;
 }
 
+.date-range-inputs .checkbox-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 0.5rem;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.date-range-inputs .checkbox-inline input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.date-range-inputs .form-control:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 /* 테이블 날짜 범위 셀 */
 .date-range-cell {
   font-size: 0.875rem;
@@ -1184,4 +1206,58 @@
 .date-range-text {
   color: #666;
   white-space: nowrap;
+}
+
+/* 팝업 종료일 설정 스타일 */
+.popup-date-range {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.popup-date-input {
+  width: 180px;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.popup-date-input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.popup-date-input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.date-separator {
+  color: #666;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1;
+  margin: 0 4px;
+}
+
+.end-date-checkbox-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.end-date-checkbox-inline input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin: 0;
 }
