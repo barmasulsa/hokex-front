@@ -4,6 +4,7 @@ import { EventCard } from '../components/EventCard';
 import { Banner } from '../components/Banner';
 import { BannerPopupModal } from '../components/BannerPopupModal';
 import { fetchEvents, fetchSavedEventIds, toggleSaveEvent } from '../services/eventService';
+import { incrementBannerViewCount } from '../services/bannerService';
 import { useAuth } from '../contexts/AuthContext';
 import { getCachedVisitorStats } from '../utils/detailedAnalytics';
 import { PresenceManager } from '../utils/onlinePresence';
@@ -602,6 +603,9 @@ export function HomePage() {
           content={popupBanners[0].content}
           linkUrl={popupBanners[0].link_url}
           onClose={() => {
+            // 조회수 증가 (하루 1회) - 백그라운드에서 실행
+            incrementBannerViewCount(popupBanners[0].id);
+            
             // 팝업을 닫을 때 24시간 동안 표시하지 않음
             const dismissedKey = `popup_dismissed_${popupBanners[0].id}`;
             const tomorrow = new Date();
@@ -611,7 +615,10 @@ export function HomePage() {
             // 현재 팝업을 배열에서 제거하여 다음 팝업 표시
             setPopupBanners(prev => prev.slice(1));
           }}
-          onDismissForWeek={() => {
+          onDismissForWeek={async () => {
+            // 조회수 증가 (하루 1회)
+            await incrementBannerViewCount(popupBanners[0].id);
+            
             // "다시 보지 않기" 버튼은 영구적으로 표시하지 않음
             const dismissedKey = `popup_dismissed_${popupBanners[0].id}`;
             localStorage.setItem(dismissedKey, 'permanent');

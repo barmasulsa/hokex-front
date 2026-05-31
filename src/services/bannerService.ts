@@ -107,3 +107,40 @@ export async function deleteBanner(id: string): Promise<boolean> {
 
   return true;
 }
+
+/**
+ * 배너 조회수 증가 (하루 1회 중복 방지)
+ */
+export async function incrementBannerViewCount(bannerId: string): Promise<boolean> {
+  // 오늘 날짜 키 생성 (YYYY-MM-DD)
+  const today = new Date().toISOString().split('T')[0];
+  const viewKey = `banner_viewed_${bannerId}_${today}`;
+  
+  // 오늘 이미 조회했는지 확인
+  const alreadyViewed = localStorage.getItem(viewKey);
+  if (alreadyViewed) {
+    console.log(`배너 ${bannerId}는 오늘 이미 조회됨`);
+    return false;
+  }
+
+  try {
+    // 조회수 증가
+    const { error } = await supabase.rpc('increment_banner_view_count', {
+      banner_id: bannerId
+    });
+
+    if (error) {
+      console.error('배너 조회수 증가 실패:', error);
+      return false;
+    }
+
+    // 오늘 조회했다고 기록 (자정까지 유효)
+    localStorage.setItem(viewKey, 'true');
+    
+    console.log(`배너 ${bannerId} 조회수 증가 완료`);
+    return true;
+  } catch (error) {
+    console.error('배너 조회수 증가 중 오류:', error);
+    return false;
+  }
+}

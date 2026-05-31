@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchActiveBanners } from '../services/bannerService';
+import { fetchActiveBanners, incrementBannerViewCount } from '../services/bannerService';
 import { supabase } from '../lib/supabase';
 import type { Banner as BannerType } from '../types/banner';
 import './Banner.css';
@@ -87,39 +87,31 @@ export function Banner() {
     return sanitized;
   };
 
-  // 모달 열기 및 조회수 증가
+  // 모달 열기 및 조회수 증가 (하루 1회)
   const openModal = async (banner: BannerType) => {
     setModalContent({ title: banner.title, content: banner.content });
     setIsModalOpen(true);
 
-    // 배너 조회수 증가
+    // 배너 조회수 증가 (하루 1회 중복 방지)
     console.log(`[Banner] Incrementing view count for banner ${banner.id} (${banner.title})`);
-    try {
-      const { error } = await supabase.rpc('increment_banner_view_count', { banner_id: banner.id });
-      if (error) {
-        console.error('[Banner] Failed to increment banner view count:', error);
-      } else {
-        console.log('[Banner] Banner view count incremented successfully');
-      }
-    } catch (err) {
-      console.error('[Banner] Exception incrementing banner view count:', err);
-    }
+    await incrementBannerViewCount(banner.id);
   };
 
   // 공지사항 클릭 핸들러 (link_url이 있으면 바로 이동)
   const handleNoticeClick = async (banner: BannerType) => {
+    // 조회수 증가 (하루 1회 중복 방지)
+    await incrementBannerViewCount(banner.id);
+
     if (banner.link_url) {
-      // link_url이 있으면 조회수 증가 후 바로 이동
+      // link_url이 있으면 바로 이동
       console.log(`[Banner] Redirecting to: ${banner.link_url}`);
-      try {
-        await supabase.rpc('increment_banner_view_count', { banner_id: banner.id });
-      } catch (err) {
-        console.error('[Banner] Exception incrementing banner view count:', err);
-      }
       window.open(banner.link_url, '_blank', 'noopener,noreferrer');
     } else {
       // link_url이 없으면 모달 열기
-      openModal(banner);
+      setModalContent({ title: banner.title, content: banner.content });
+      setIsModalOpen(true);
+    }
+  };
     }
   };
 
