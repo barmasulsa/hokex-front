@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { fetchActiveBanners, incrementBannerViewCount } from '../services/bannerService';
-import { supabase } from '../lib/supabase';
 import type { Banner as BannerType } from '../types/banner';
 import './Banner.css';
 
@@ -87,16 +86,6 @@ export function Banner() {
     return sanitized;
   };
 
-  // 모달 열기 및 조회수 증가 (하루 1회)
-  const openModal = async (banner: BannerType) => {
-    setModalContent({ title: banner.title, content: banner.content });
-    setIsModalOpen(true);
-
-    // 배너 조회수 증가 (하루 1회 중복 방지)
-    console.log(`[Banner] Incrementing view count for banner ${banner.id} (${banner.title})`);
-    await incrementBannerViewCount(banner.id);
-  };
-
   // 공지사항 클릭 핸들러 (link_url이 있으면 바로 이동)
   const handleNoticeClick = async (banner: BannerType) => {
     // 조회수 증가 (하루 1회 중복 방지)
@@ -110,8 +99,6 @@ export function Banner() {
       // link_url이 없으면 모달 열기
       setModalContent({ title: banner.title, content: banner.content });
       setIsModalOpen(true);
-    }
-  };
     }
   };
 
