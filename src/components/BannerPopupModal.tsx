@@ -5,7 +5,7 @@ interface BannerPopupModalProps {
   bannerId: string;
   title: string;
   content: string; // HTML 콘텐츠
-  linkUrl?: string;
+  linkUrl?: string | null;
   onClose: () => void;
   onDismissForWeek: () => void;
 }

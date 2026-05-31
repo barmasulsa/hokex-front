@@ -539,7 +539,7 @@ export function BannerManagementPage() {
         display_order: formData.display_order,
         show_as_popup: formData.show_as_popup,
         popup_start_date: formData.popup_start_date || undefined,
-        popup_end_date: popupEndDate || undefined
+        popup_end_date: popupEndDate
       });
 
       if (newBanner) {
@@ -559,7 +559,7 @@ export function BannerManagementPage() {
         display_order: formData.display_order,
         show_as_popup: formData.show_as_popup,
         popup_start_date: formData.popup_start_date || undefined,
-        popup_end_date: popupEndDate || undefined
+        popup_end_date: popupEndDate
       });
 
       if (updated) {

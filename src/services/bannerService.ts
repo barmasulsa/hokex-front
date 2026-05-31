@@ -65,10 +65,14 @@ export async function createBanner(banner: Omit<Banner, 'id' | 'created_at' | 'u
  */
 export async function updateBanner(id: string, updates: Partial<Banner>): Promise<Banner | null> {
   // link_url이 빈 문자열이거나 null/undefined이면 null로 통일
+  // popup_end_date도 명시적으로 null 처리
   const cleanedUpdates = {
     ...updates,
     link_url: updates.link_url !== undefined 
       ? (updates.link_url?.trim() || null)
+      : undefined,
+    popup_end_date: updates.popup_end_date !== undefined
+      ? (updates.popup_end_date || null)
       : undefined
   };
 

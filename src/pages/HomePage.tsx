@@ -49,7 +49,7 @@ export function HomePage() {
     last30Days: 0
   });
   const [onlineCount, setOnlineCount] = useState<number>(0);
-  const [popupBanner, setPopupBanner] = useState<BannerType | null>(null);
+  const [popupBanners, setPopupBanners] = useState<BannerType[]>([]); // 배열로 변경
   
   // 데이터 로드 여부를 추적하는 ref
   const hasLoadedData = useRef(false);
@@ -113,8 +113,8 @@ export function HomePage() {
           });
           
           if (unseenPopups.length > 0) {
-            // 첫 번째 팝업만 표시
-            setPopupBanner(unseenPopups[0]);
+            // 모든 미확인 팝업을 배열로 저장
+            setPopupBanners(unseenPopups);
           }
         }
       } catch (error) {
@@ -594,26 +594,30 @@ export function HomePage() {
 
   return (
     <>
-      {/* 팝업 배너 모달 */}
-      {popupBanner && (
+      {/* 팝업 배너 모달 - 첫 번째 팝업만 표시 */}
+      {popupBanners.length > 0 && (
         <BannerPopupModal
-          bannerId={popupBanner.id}
-          title={popupBanner.title}
-          content={popupBanner.content}
-          linkUrl={popupBanner.link_url}
+          bannerId={popupBanners[0].id}
+          title={popupBanners[0].title}
+          content={popupBanners[0].content}
+          linkUrl={popupBanners[0].link_url}
           onClose={() => {
             // 팝업을 닫을 때 24시간 동안 표시하지 않음
-            const dismissedKey = `popup_dismissed_${popupBanner.id}`;
+            const dismissedKey = `popup_dismissed_${popupBanners[0].id}`;
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             localStorage.setItem(dismissedKey, tomorrow.toISOString());
-            setPopupBanner(null);
+            
+            // 현재 팝업을 배열에서 제거하여 다음 팝업 표시
+            setPopupBanners(prev => prev.slice(1));
           }}
           onDismissForWeek={() => {
             // "다시 보지 않기" 버튼은 영구적으로 표시하지 않음
-            const dismissedKey = `popup_dismissed_${popupBanner.id}`;
+            const dismissedKey = `popup_dismissed_${popupBanners[0].id}`;
             localStorage.setItem(dismissedKey, 'permanent');
-            setPopupBanner(null);
+            
+            // 현재 팝업을 배열에서 제거하여 다음 팝업 표시
+            setPopupBanners(prev => prev.slice(1));
           }}
         />
       )}
