@@ -51,12 +51,14 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // 세션 내 중복 호출 방지 플래그
 let hasRecordedThisSession = false;
 
-// 디버그 정보를 콘솔에만 출력 (화면 표시 제거)
+// 디버그 정보를 콘솔 + 화면 알림으로 출력
 function showDebugInfo(message: string, isError = false) {
   if (isError) {
     console.error(message);
+    alert('🔴 에러: ' + message);
   } else {
     console.log(message);
+    alert('🟢 ' + message);
   }
 }
 

@@ -6,7 +6,7 @@ import { BannerPopupModal } from '../components/BannerPopupModal';
 import { fetchEvents, fetchSavedEventIds, toggleSaveEvent } from '../services/eventService';
 import { incrementBannerViewCount } from '../services/bannerService';
 import { useAuth } from '../contexts/AuthContext';
-import { getCachedVisitorStats } from '../utils/detailedAnalytics';
+import { getCachedVisitorStats, recordDetailedVisit } from '../utils/detailedAnalytics';
 import { PresenceManager } from '../utils/onlinePresence';
 import { supabase } from '../lib/supabase';
 import type { EventRecord, Venue } from '../types/core';
@@ -218,6 +218,12 @@ export function HomePage() {
       loadEvents();
     }
   }, [user]);
+
+  // 방문자 추적 - 페이지 로드 시 1회 실행
+  useEffect(() => {
+    console.log('[HomePage] Recording visit...');
+    recordDetailedVisit();
+  }, []);
 
   // 방문자 통계 가져오기 (캐시 사용 - 빠름)
   useEffect(() => {
