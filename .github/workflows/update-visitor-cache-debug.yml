@@ -50,25 +50,40 @@ jobs:
           
           FULL_URL="${{ secrets.SUPABASE_URL }}/functions/v1/update-visitor-stats-cache"
           echo "Target: Edge Function endpoint"
+          echo "Full URL (masked project ref): ${FULL_URL:0:30}...${FULL_URL: -20}"
           
-          response=$(curl -v -s -w "\n%{http_code}" -X POST \
+          # Simplified curl with direct output
+          echo ""
+          echo "Executing curl request..."
+          http_code=$(curl -s -o /tmp/response.txt -w "%{http_code}" -X POST \
             "$FULL_URL" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H 'Content-Type: application/json' \
-            -d '{"type": "today"}' 2>&1)
+            -H "Content-Type: application/json" \
+            -d '{"type": "today"}')
           
-          http_code=$(echo "$response" | tail -n1)
-          body=$(echo "$response" | sed '$d')
+          curl_exit=$?
           
           echo ""
           echo "========================"
+          echo "Curl exit code: $curl_exit"
           echo "HTTP Status Code: $http_code"
           echo "========================"
           echo ""
           echo "Response Body:"
-          echo "$body"
+          cat /tmp/response.txt
           echo ""
           
+          # Check curl execution first
+          if [ $curl_exit -ne 0 ]; then
+            echo "❌ FAIL: Curl command failed with exit code $curl_exit"
+            echo "This usually means:"
+            echo "  - DNS resolution failed"
+            echo "  - Network connection issue"
+            echo "  - SSL certificate problem"
+            exit 1
+          fi
+          
+          # Now check HTTP status
           if [ "$http_code" == "200" ]; then
             echo "✅ SUCCESS: Edge Function working!"
             exit 0
@@ -83,5 +98,6 @@ jobs:
             exit 1
           else
             echo "⚠️ Unexpected status: $http_code"
+            cat /tmp/response.txt
             exit 1
           fi
