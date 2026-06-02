@@ -1,0 +1,64 @@
+name: Update Visitor Stats Cache
+
+on:
+  schedule:
+    # 매 30분마다 (00분, 30분)
+    - cron: '0,30 * * * *'
+    # 새벽 4시 KST = UTC 19시 (전날)
+    - cron: '0 19 * * *'
+  workflow_dispatch: # 수동 실행 가능
+
+jobs:
+  update-today-stats:
+    runs-on: ubuntu-latest
+    # 30분마다 실행되는 스케줄에만 적용
+    if: github.event.schedule == '0,30 * * * *' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Update Today Visitor Stats
+        run: |
+          echo "Updating today's visitor stats..."
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            '${{ secrets.SUPABASE_URL }}/functions/v1/update-visitor-stats-cache' \
+            -H 'Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}' \
+            -H 'Content-Type: application/json' \
+            -d '{"type": "today"}')
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "HTTP Status: $http_code"
+          echo "Response: $body"
+          
+          if [ "$http_code" != "200" ]; then
+            echo "❌ Failed to update stats"
+            exit 1
+          fi
+          
+          echo "✅ Today stats updated successfully"
+  
+  update-full-stats:
+    runs-on: ubuntu-latest
+    # 새벽 4시(UTC 19시) 스케줄에만 적용
+    if: github.event.schedule == '0 19 * * *' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Update Full Visitor Stats
+        run: |
+          echo "Updating full visitor stats..."
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            '${{ secrets.SUPABASE_URL }}/functions/v1/update-visitor-stats-cache' \
+            -H 'Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}' \
+            -H 'Content-Type: application/json' \
+            -d '{"type": "full"}')
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "HTTP Status: $http_code"
+          echo "Response: $body"
+          
+          if [ "$http_code" != "200" ]; then
+            echo "❌ Failed to update full stats"
+            exit 1
+          fi
+          
+          echo "✅ Full stats updated successfully"
