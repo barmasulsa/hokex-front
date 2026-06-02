@@ -145,6 +145,10 @@ export function LoginPage() {
             이메일 링크로 로그인
           </button>
 
+          <p className="email-link-notice">
+            메일이 안 올 시 스팸 처리 주의 및 스팸 메일함 확인
+          </p>
+
           <div className="divider">
             <span>또는</span>
           </div>
