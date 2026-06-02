@@ -1,0 +1,87 @@
+name: Update Visitor Stats Cache (DEBUG)
+
+on:
+  workflow_dispatch: # 수동 실행만
+
+jobs:
+  debug-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Secrets (Masked)
+        run: |
+          echo "🔍 Checking if secrets are set..."
+          
+          # URL 길이만 확인 (보안상 값은 출력하지 않음)
+          if [ -z "${{ secrets.SUPABASE_URL }}" ]; then
+            echo "❌ SUPABASE_URL is EMPTY!"
+          else
+            echo "✅ SUPABASE_URL is set (length: ${#SUPABASE_URL})"
+          fi
+          
+          if [ -z "${{ secrets.SUPABASE_ANON_KEY }}" ]; then
+            echo "❌ SUPABASE_ANON_KEY is EMPTY!"
+          else
+            echo "✅ SUPABASE_ANON_KEY is set"
+          fi
+          
+          # URL 형식 확인 (마스킹된 형태로)
+          URL="${{ secrets.SUPABASE_URL }}"
+          if [[ "$URL" == https://* ]]; then
+            echo "✅ URL starts with https://"
+          else
+            echo "❌ URL does NOT start with https://"
+          fi
+          
+          if [[ "$URL" == */ ]]; then
+            echo "⚠️ URL ends with / (trailing slash - may cause issues)"
+          else
+            echo "✅ URL does NOT end with /"
+          fi
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+
+  test-connection:
+    runs-on: ubuntu-latest
+    needs: debug-secrets
+    steps:
+      - name: Test Edge Function Call
+        run: |
+          echo "🔌 Testing connection to Edge Function..."
+          
+          FULL_URL="${{ secrets.SUPABASE_URL }}/functions/v1/update-visitor-stats-cache"
+          echo "Target: Edge Function endpoint"
+          
+          response=$(curl -v -s -w "\n%{http_code}" -X POST \
+            "$FULL_URL" \
+            -H 'Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}' \
+            -H 'Content-Type: application/json' \
+            -d '{"type": "today"}' 2>&1)
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo ""
+          echo "========================"
+          echo "HTTP Status Code: $http_code"
+          echo "========================"
+          echo ""
+          echo "Response Body:"
+          echo "$body"
+          echo ""
+          
+          if [ "$http_code" == "200" ]; then
+            echo "✅ SUCCESS: Edge Function working!"
+            exit 0
+          elif [ "$http_code" == "401" ]; then
+            echo "❌ FAIL: 401 Unauthorized - Check SUPABASE_ANON_KEY"
+            exit 1
+          elif [ "$http_code" == "404" ]; then
+            echo "❌ FAIL: 404 Not Found - Edge Function not deployed or wrong URL"
+            exit 1
+          elif [ "$http_code" == "000" ]; then
+            echo "❌ FAIL: Connection failed - Check SUPABASE_URL format"
+            exit 1
+          else
+            echo "⚠️ Unexpected status: $http_code"
+            exit 1
+          fi
