@@ -53,7 +53,7 @@ jobs:
           
           response=$(curl -v -s -w "\n%{http_code}" -X POST \
             "$FULL_URL" \
-            -H 'Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}' \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H 'Content-Type: application/json' \
             -d '{"type": "today"}' 2>&1)
           
