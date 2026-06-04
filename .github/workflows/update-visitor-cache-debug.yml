@@ -1,7 +1,9 @@
-name: Update Visitor Stats Cache (DEBUG)
+name: Update Visitor Stats Cache (AUTO)
 
 on:
-  workflow_dispatch: # 수동 실행만
+  schedule:
+    - cron: '*/30 * * * *'  # 30분마다 실행
+  workflow_dispatch: # 수동 실행도 가능
 
 jobs:
   debug-secrets:
