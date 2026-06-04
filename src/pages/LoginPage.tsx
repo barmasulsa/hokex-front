@@ -38,7 +38,9 @@ export function LoginPage() {
       // 로그인 성공 시 자동으로 리다이렉트됨
     } catch (error: any) {
       console.error('Login error:', error);
-      if (error.message === 'SUBSCRIBER_ONLY') {
+      if (error.message === 'NEEDS_APPROVAL') {
+        setError('⚠️ 승인이 필요한 계정입니다.\n\n관리자에게 승인을 요청해주세요.\n\n승인되면 로그인이 가능합니다.\n\n문의: hokexpanda@gmail.com');
+      } else if (error.message === 'SUBSCRIBER_ONLY') {
         setError('⚠️ 뉴스레터 구독자만 이용할 수 있습니다.\n\n방금 구독하셨다면: 데이터 동기화가 진행 중으로 10초~1분 사이에 동기화가 진행되어 대기 후 이용 가능합니다.');
       } else if (error.message === 'Invalid login credentials') {
         setError('이메일 또는 비밀번호가 올바르지 않습니다.');
@@ -62,7 +64,11 @@ export function LoginPage() {
         await signInWithMagicLink(emailInput);
         alert('이메일로 로그인 링크를 전송했습니다. 이메일을 확인해주세요.');
       } catch (error: any) {
-        if (error.message === 'SUBSCRIBER_ONLY') {
+        if (error.message === 'EMAIL_BLOCKED') {
+          alert('⚠️ 이메일 전송이 차단되었습니다.\n\n회사 이메일 서버에서 스팸으로 차단한 것으로 보입니다.\n\n관리자에게 승인 요청이 자동으로 전달되었습니다.\n\n승인 후에는 비밀번호 로그인을 사용해주세요.\n\n문의: hokexpanda@gmail.com');
+        } else if (error.message === 'NEEDS_APPROVAL') {
+          alert('⚠️ 승인이 필요한 계정입니다.\n\n관리자에게 승인을 요청해주세요.\n\n승인되면 이메일 링크 또는 비밀번호로 로그인할 수 있습니다.\n\n문의: hokexpanda@gmail.com');
+        } else if (error.message === 'SUBSCRIBER_ONLY') {
           alert('⚠️ 뉴스레터 구독자만 이용할 수 있습니다.\n\n스티비 뉴스레터를 구독한 이메일 주소로 로그인해주세요.\n\n방금 구독하셨다면: 데이터 동기화가 진행 중으로 10초~1분 사이에 동기화가 진행되어 대기 후 이용 가능합니다.');
         } else if (error.message?.includes('rate limit')) {
           alert('⚠️ 이메일 전송 제한에 도달했습니다.\n\n비밀번호 로그인을 사용하거나 잠시 후 다시 시도해주세요.');

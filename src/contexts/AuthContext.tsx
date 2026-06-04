@@ -167,16 +167,88 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // 비밀번호 로그인 - 구독자만 허용
+  // 승인된 이메일인지 확인
+  const checkApprovedEmail = async (email: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from('approved_emails')
+        .select('email')
+        .eq('email', email)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No rows returned - 승인되지 않음
+          return false;
+        }
+        console.error('Error checking approved email:', error);
+        return false;
+      }
+
+      return !!data;
+    } catch (error) {
+      console.error('Error checking approved email:', error);
+      return false;
+    }
+  };
+
+  // 대기 명단에 추가 (이메일 전송 실패 시 자동으로 호출)
+  const addToPendingList = async (
+    email: string,
+    reason: string,
+    errorMessage: string
+  ): Promise<void> => {
+    try {
+      // 이미 대기 중인지 확인
+      const { data: existing } = await supabase
+        .from('pending_approvals')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (existing) {
+        // 이미 있으면 request_count와 last_requested_at 업데이트
+        await supabase
+          .from('pending_approvals')
+          .update({
+            request_count: existing.request_count + 1,
+            last_requested_at: new Date().toISOString(),
+            error_message: errorMessage, // 최신 에러 메시지로 업데이트
+          })
+          .eq('email', email);
+      } else {
+        // 없으면 새로 추가
+        await supabase
+          .from('pending_approvals')
+          .insert({
+            email,
+            reason,
+            error_message: errorMessage,
+            request_count: 1,
+          });
+      }
+
+      console.log('Added to pending list:', email);
+    } catch (error) {
+      console.error('Error adding to pending list:', error);
+    }
+  };
+
+  // 비밀번호 로그인 - 구독자 또는 승인된 이메일만 허용
   const signInWithPassword = async (email: string, password: string) => {
     // 1. 먼저 스티비 구독자인지 확인
     const isSubscriber = await checkSubscription(email);
     
+    // 2. 구독자가 아니면 승인된 이메일인지 확인
     if (!isSubscriber) {
-      throw new Error('SUBSCRIBER_ONLY');
+      const isApproved = await checkApprovedEmail(email);
+      
+      if (!isApproved) {
+        throw new Error('NEEDS_APPROVAL');
+      }
     }
 
-    // 2. 비밀번호 로그인 진행
+    // 3. 비밀번호 로그인 진행
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -313,25 +385,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Magic Link 로그인 (이메일 전용) - 구독자만 허용
+  // Magic Link 로그인 (이메일 전용) - 구독자만 허용, 실패 시 자동으로 대기 명단 추가
   const signInWithMagicLink = async (email: string) => {
     // 1. 먼저 스티비 구독자인지 확인
     const isSubscriber = await checkSubscription(email);
     
     if (!isSubscriber) {
-      throw new Error('SUBSCRIBER_ONLY');
+      // 승인된 이메일인지 확인
+      const isApproved = await checkApprovedEmail(email);
+      
+      if (!isApproved) {
+        throw new Error('NEEDS_APPROVAL');
+      }
     }
 
-    // Magic Link 전송
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: import.meta.env.VITE_APP_URL || window.location.origin,
-      },
-    });
-    
-    if (error) {
-      console.error('Error sending magic link:', error);
+    // 2. Magic Link 전송
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: import.meta.env.VITE_APP_URL || window.location.origin,
+        },
+      });
+      
+      if (error) {
+        console.error('Error sending magic link:', error);
+        
+        // 에러 메시지 분석하여 스팸 차단 관련인지 확인
+        const errorMsg = error.message?.toLowerCase() || '';
+        const isBlocked = 
+          errorMsg.includes('blocked') || 
+          errorMsg.includes('spam') || 
+          errorMsg.includes('553') ||
+          error.status === 429;
+
+        if (isBlocked) {
+          // 스팸 차단 또는 rate limit으로 추정되면 자동으로 대기 명단에 추가
+          await addToPendingList(
+            email,
+            error.status === 429 ? 'RATE_LIMIT' : 'EMAIL_BLOCKED',
+            error.message
+          );
+          throw new Error('EMAIL_BLOCKED');
+        }
+        
+        throw error;
+      }
+    } catch (error: any) {
+      // 이미 처리한 에러는 그대로 던지기
+      if (error.message === 'EMAIL_BLOCKED' || error.message === 'NEEDS_APPROVAL') {
+        throw error;
+      }
+
+      // 기타 네트워크 에러나 예상치 못한 에러도 대기 명단 추가
+      await addToPendingList(
+        email,
+        'UNKNOWN_ERROR',
+        error.message || '알 수 없는 오류'
+      );
+      
       throw error;
     }
   };
