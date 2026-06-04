@@ -68,9 +68,12 @@ export function recordDetailedVisit() {
     return;
   }
   
+  // 한국 시간(KST, UTC+9) 사용
   const now = new Date();
-  const date = now.toISOString().split('T')[0]; // YYYY-MM-DD
-  const hour = now.getHours(); // 0-23
+  const kstOffset = 9 * 60; // 9시간을 분으로 변환
+  const kstTime = new Date(now.getTime() + kstOffset * 60 * 1000);
+  const date = kstTime.toISOString().split('T')[0]; // YYYY-MM-DD (한국 날짜)
+  const hour = kstTime.getUTCHours(); // 0-23 (한국 시간대)
   
   showDebugInfo(`현재 시간: ${date} ${hour}시`);
   
@@ -224,21 +227,33 @@ export async function getCachedVisitorStats(): Promise<{ today: number; yesterda
   }
 }
 
-// 세부 통계 계산 (DB 기반 - 캐시 우선 사용)
-export async function getDetailedVisitorStats(): Promise<DetailedVisitorStats> {
+// 세부 통계 계산 (DB 기반 - useCache 파라미터로 캐시/실시간 선택)
+export async function getDetailedVisitorStats(useCache: boolean = true): Promise<DetailedVisitorStats> {
+  // 한국 시간(KST, UTC+9) 사용 - recordDetailedVisit와 동일
   const now = new Date();
-  const today = now.toISOString().split('T')[0];
+  const kstOffset = 9 * 60; // 9시간을 분으로 변환
+  const kstNow = new Date(now.getTime() + kstOffset * 60 * 1000);
+  const today = kstNow.toISOString().split('T')[0]; // KST 기준 오늘 날짜
   
-  // 기준 날짜들
-  const oneYearAgo = new Date(now);
+  // 기준 날짜들 (KST 기준)
+  const yesterday = new Date(kstNow);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  
+  const sevenDaysAgo = new Date(kstNow);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+  
+  const thirtyDaysAgo = new Date(kstNow);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+  
+  const oneYearAgo = new Date(kstNow);
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
   const oneYearAgoStr = oneYearAgo.toISOString().split('T')[0];
   
   try {
-    // 1단계: 캐시에서 기본 통계 가져오기 (빠름)
-    const cachedStats = await getCachedVisitorStats();
-    
-    // 2단계: DB에서 최근 1년 데이터 조회 (상세 통계용)
+    // DB에서 최근 1년 데이터 조회 (상세 통계용)
     const { data: records, error } = await supabase
       .from('visitor_stats')
       .select('visit_date, visit_hour, visit_count')
@@ -247,21 +262,56 @@ export async function getDetailedVisitorStats(): Promise<DetailedVisitorStats> {
     
     if (error) {
       console.error('DB 조회 실패:', error);
-      // 에러 시 캐시 데이터로 기본 통계만 반환
-      return {
-        ...getEmptyStats(),
-        today: cachedStats.today,
-        yesterday: cachedStats.yesterday,
-        last7Days: cachedStats.last7Days,
-        last30Days: cachedStats.last30Days
-      };
+      
+      // 에러 시 캐시가 활성화되어 있으면 캐시 사용
+      if (useCache) {
+        const cachedStats = await getCachedVisitorStats();
+        return {
+          ...getEmptyStats(),
+          today: cachedStats.today,
+          yesterday: cachedStats.yesterday,
+          last7Days: cachedStats.last7Days,
+          last30Days: cachedStats.last30Days
+        };
+      } else {
+        // 캐시 비활성화 시 빈 통계 반환
+        return getEmptyStats();
+      }
     }
     
-    // 기본 통계는 캐시 사용 (홈페이지와 동일)
-    let todayCount = cachedStats.today;
-    let yesterdayCount = cachedStats.yesterday;
-    let last7DaysCount = cachedStats.last7Days;
-    let last30DaysCount = cachedStats.last30Days;
+    // useCache가 true이면 캐시에서 기본 통계 가져오기, false이면 DB에서 직접 계산
+    let todayCount = 0;
+    let yesterdayCount = 0;
+    let last7DaysCount = 0;
+    let last30DaysCount = 0;
+    
+    if (useCache) {
+      // 캐시에서 기본 통계 가져오기 (빠름)
+      const cachedStats = await getCachedVisitorStats();
+      todayCount = cachedStats.today;
+      yesterdayCount = cachedStats.yesterday;
+      last7DaysCount = cachedStats.last7Days;
+      last30DaysCount = cachedStats.last30Days;
+    } else {
+      // DB에서 직접 실시간 계산 (최신 데이터)
+      records?.forEach(record => {
+        const recordDate = record.visit_date;
+        const count = record.visit_count;
+        
+        if (recordDate === today) {
+          todayCount += count;
+        }
+        if (recordDate === yesterdayStr) {
+          yesterdayCount += count;
+        }
+        if (recordDate >= sevenDaysAgoStr && recordDate <= today) {
+          last7DaysCount += count;
+        }
+        if (recordDate >= thirtyDaysAgoStr && recordDate <= today) {
+          last30DaysCount += count;
+        }
+      });
+    }
     let last365DaysCount = 0;
     let totalVisits = 0;
     
@@ -295,10 +345,10 @@ export async function getDetailedVisitorStats(): Promise<DetailedVisitorStats> {
       }
     });
     
-    // 일별 통계 배열로 변환 (최근 30일)
+    // 일별 통계 배열로 변환 (최근 30일) - KST 기준
     const dailyLast30Days: DailyVisit[] = [];
     for (let i = 29; i >= 0; i--) {
-      const date = new Date(now);
+      const date = new Date(kstNow);
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
       dailyLast30Days.push({
@@ -307,10 +357,10 @@ export async function getDetailedVisitorStats(): Promise<DetailedVisitorStats> {
       });
     }
     
-    // 일별 통계 배열로 변환 (최근 1년)
+    // 일별 통계 배열로 변환 (최근 1년) - KST 기준
     const dailyLast365Days: DailyVisit[] = [];
     for (let i = 364; i >= 0; i--) {
-      const date = new Date(now);
+      const date = new Date(kstNow);
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
       dailyLast365Days.push({
@@ -349,10 +399,14 @@ function getEmptyStats(): DetailedVisitorStats {
     count: 0
   }));
   
+  // KST 기준 날짜 사용
   const now = new Date();
+  const kstOffset = 9 * 60;
+  const kstNow = new Date(now.getTime() + kstOffset * 60 * 1000);
+  
   const dailyLast30Days: DailyVisit[] = [];
   for (let i = 29; i >= 0; i--) {
-    const date = new Date(now);
+    const date = new Date(kstNow);
     date.setDate(date.getDate() - i);
     dailyLast30Days.push({
       date: date.toISOString().split('T')[0],
@@ -362,7 +416,7 @@ function getEmptyStats(): DetailedVisitorStats {
   
   const dailyLast365Days: DailyVisit[] = [];
   for (let i = 364; i >= 0; i--) {
-    const date = new Date(now);
+    const date = new Date(kstNow);
     date.setDate(date.getDate() - i);
     dailyLast365Days.push({
       date: date.toISOString().split('T')[0],

@@ -76,16 +76,17 @@ export function BannerManagementPage() {
     loadBanners();
   }, []);
 
-  // 방문자 통계 가져오기
+  // 방문자 통계 가져오기 (초기 로드 시에는 캐시 사용)
   useEffect(() => {
     const loadStats = async () => {
-      const detailed = await getDetailedVisitorStats();
+      // 초기 로드 및 자동 갱신은 캐시 사용 (useCache=true, 기본값)
+      const detailed = await getDetailedVisitorStats(true);
       setDetailedStats(detailed);
     };
     
     loadStats();
     
-    // 1분마다 통계 업데이트
+    // 1분마다 통계 업데이트 (캐시 기반)
     const interval = setInterval(() => {
       loadStats();
     }, 60000); // 60초
@@ -286,9 +287,49 @@ export function BannerManagementPage() {
   const handleLoadLatestStats = async () => {
     setLoadingLatestStats(true);
     try {
-      const detailed = await getDetailedVisitorStats();
+      console.log('[최신 통계] 실시간 DB 조회 시작 (useCache=false)');
+      console.log('[최신 통계] 현재 화면에 표시된 통계:', {
+        today: detailedStats?.today,
+        yesterday: detailedStats?.yesterday,
+        last7Days: detailedStats?.last7Days,
+        last30Days: detailedStats?.last30Days
+      });
+      
+      const startTime = performance.now();
+      
+      // useCache=false로 호출하여 캐시를 거치지 않고 DB에서 직접 실시간 통계 가져오기
+      const detailed = await getDetailedVisitorStats(false);
+      
+      const endTime = performance.now();
+      const loadTime = ((endTime - startTime) / 1000).toFixed(2);
+      
+      console.log('[최신 통계] 실시간 DB 조회 완료 (새로 불러온 데이터):', {
+        today: detailed.today,
+        yesterday: detailed.yesterday,
+        last7Days: detailed.last7Days,
+        last30Days: detailed.last30Days,
+        totalVisits: detailed.totalVisits
+      });
+      console.log(`[최신 통계] 소요 시간: ${loadTime}초`);
+      
+      // 변화 감지
+      const todayChanged = detailedStats?.today !== detailed.today;
+      const yesterdayChanged = detailedStats?.yesterday !== detailed.yesterday;
+      
+      console.log('[최신 통계] 변화 감지:', {
+        todayChanged,
+        yesterdayChanged,
+        todayDiff: detailed.today - (detailedStats?.today || 0),
+        yesterdayDiff: detailed.yesterday - (detailedStats?.yesterday || 0)
+      });
+      
       setDetailedStats(detailed);
-      alert('최신 통계를 불러왔습니다.');
+      
+      const changeMessage = todayChanged || yesterdayChanged
+        ? `\n\n변화: 오늘 ${todayChanged ? `${detailed.today - (detailedStats?.today || 0)}명 증가` : '변화 없음'}, 어제 ${yesterdayChanged ? `${detailed.yesterday - (detailedStats?.yesterday || 0)}명 증가` : '변화 없음'}`
+        : '\n\n⚠️ 캐시와 실시간 조회 결과가 동일합니다. DB에 새로운 방문 데이터가 없습니다.';
+      
+      alert(`최신 통계를 불러왔습니다 (실시간 DB 조회)\n\n소요 시간: ${loadTime}초\n오늘 방문: ${detailed.today}명\n어제: ${detailed.yesterday}명${changeMessage}`);
     } catch (err) {
       console.error('최신 통계 로드 실패:', err);
       alert('최신 통계 로드에 실패했습니다.');
