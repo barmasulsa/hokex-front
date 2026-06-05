@@ -1867,7 +1867,14 @@ export function EventDetailPage() {
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', flexDirection: 'column' }}>
               {/* 경주화백컨벤션센터는 HICO 홈페이지 링크 표시 */}
               {event.venue === '경주화백컨벤션센터' ? (
-                <a href="https://www.hico.or.kr/" target="_blank" rel="noopener noreferrer" className="btn-venue-page">
+                <a 
+                  href="https://www.hico.or.kr/" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.open('https://www.hico.or.kr/', '_blank', 'width=1000,height=800,scrollbars=yes,resizable=yes');
+                  }}
+                  className="btn-venue-page"
+                >
                   <ExternalLink size={20} /> 전시장 홈페이지
                 </a>
               ) : (
@@ -1926,7 +1933,14 @@ export function EventDetailPage() {
                   ) : (
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                       {event.venueEventPageUrl ? (
-                        <a href={event.venueEventPageUrl} target="_blank" rel="noopener noreferrer" className="btn-venue-page">
+                        <a 
+                          href={event.venueEventPageUrl} 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.open(event.venueEventPageUrl!, '_blank', 'width=1000,height=800,scrollbars=yes,resizable=yes');
+                          }}
+                          className="btn-venue-page"
+                        >
                           <ExternalLink size={20} /> 전시장 행사 페이지
                         </a>
                       ) : (
