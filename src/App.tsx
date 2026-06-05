@@ -11,7 +11,6 @@ import { DeletedEventsPage } from './pages/DeletedEventsPage';
 import { AdminApprovalPage } from './pages/AdminApprovalPage';
 
 import { initGA4, recordVisit } from './utils/analytics';
-import { recordDetailedVisit } from './utils/detailedAnalytics';
 import './App.css';
 
 // 스크롤 복원 컴포넌트 (이벤트 ID 기반)

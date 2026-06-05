@@ -1,4 +1,3 @@
-import React from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { AnalyticsStats } from '../components/AnalyticsStats'
 import { Navigate } from 'react-router-dom'

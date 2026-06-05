@@ -1,6 +1,5 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useGoogleAnalytics } from '../hooks/useGoogleAnalytics'
-import type { GAStats } from '../hooks/useGoogleAnalytics'
 import './AnalyticsStats.css'
 
 type TabType = 'domestic' | 'international'
