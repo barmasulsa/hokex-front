@@ -100,11 +100,12 @@ export async function cleanupInactiveSessions(): Promise<void> {
 export function subscribeToOnlineUsers(
   onCountChange: (count: number) => void
 ): RealtimeChannel {
-  // 채널 생성
-  const channel = supabase.channel('online_users_changes');
+  // 고유한 채널 이름 생성 (타임스탬프 포함)
+  const channelName = `online_users_changes_${Date.now()}`;
   
-  // 이벤트 리스너 등록 후 구독 시작
-  channel
+  // 채널 생성 및 이벤트 리스너 등록 (subscribe 전에)
+  const channel = supabase
+    .channel(channelName)
     .on(
       'postgres_changes',
       {
@@ -118,7 +119,7 @@ export function subscribeToOnlineUsers(
         onCountChange(count);
       }
     )
-    .subscribe();
+    .subscribe(); // 리스너 등록 후 구독
   
   return channel;
 }
