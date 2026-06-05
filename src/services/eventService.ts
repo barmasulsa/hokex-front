@@ -3,6 +3,22 @@ import type { EventRecord } from '../types/core';
 
 // Supabase 데이터를 EventRecord 타입으로 변환
 function mapSupabaseEventToEventRecord(event: any): EventRecord {
+  // exhibit_items 파싱: DB에 JSON 문자열로 저장되어 있음
+  let parsedExhibitItems: string[] | undefined;
+  if (event.exhibit_items) {
+    try {
+      // JSON 문자열이면 파싱
+      if (typeof event.exhibit_items === 'string') {
+        parsedExhibitItems = JSON.parse(event.exhibit_items);
+      } else if (Array.isArray(event.exhibit_items)) {
+        parsedExhibitItems = event.exhibit_items;
+      }
+    } catch {
+      // 파싱 실패하면 undefined
+      parsedExhibitItems = undefined;
+    }
+  }
+  
   return {
     id: event.id,
     title: event.title,
@@ -20,6 +36,7 @@ function mapSupabaseEventToEventRecord(event: any): EventRecord {
     description: event.description,
     admissionFee: event.admission_fee,
     exhibitItems: event.exhibit_items,
+    exhibit_items: parsedExhibitItems, // 파싱된 배열
     exhibitProducts: event.exhibit_products,
     organizer: event.organizer,
     supervisor: event.supervisor,
@@ -717,6 +734,8 @@ export async function fetchViewCountStats(
 
   return results;
 }
+
+// 전시품목 목록은 하드코딩된 상수를 사용 (types/core.ts의 EXHIBIT_ITEMS)
 
 // 찜 목록 통계 가져오기 (관리자 전용)
 export interface SavedEventStats {

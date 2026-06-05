@@ -407,6 +407,7 @@ input, select { font-family: inherit; outline: none; }
 }
 .tag-category { background: #EEF2FF; color: var(--hokex-primary); }
 .tag-industry { background: #F1F5F9; color: #64748B; }
+.tag-exhibit { background: #FCE7F3; color: #BE185D; }
 
 .card-title {
   font-size: 1.5rem;

@@ -11,30 +11,8 @@ import { PresenceManager } from '../utils/onlinePresence';
 import { supabase } from '../lib/supabase';
 import type { EventRecord, Venue } from '../types/core';
 import type { Banner as BannerType } from '../types/banner';
-import { Region, Category, REGION_VENUE_MAP } from '../types/core';
+import { Region, Category, REGION_VENUE_MAP, EXHIBIT_ITEMS } from '../types/core';
 import { FilterEngine } from '../utils/filterEngine';
-
-// KOSIS 18개 품목 카테고리
-const INDUSTRIES = [
-  '농수축산/식음료',
-  '에너지/환경',
-  '섬유/의류/쥬얼리',
-  '금속/기계/장비',
-  '전기/전자/정보통신/방송',
-  '보건/의료/광학/정밀',
-  '건설/건축/인테리어',
-  '운송장비/서비스',
-  '가정용품/선물용품',
-  '뷰티/화장품',
-  '금융/부동산/전문서비스',
-  '공공/국방',
-  '교육',
-  '임신/출산/육아',
-  '웨딩',
-  '문화/예술',
-  '레저/관광/스포츠',
-  '기타'
-];
 
 export function HomePage() {
   const { user, loading: authLoading, isAdmin } = useAuth();
@@ -365,15 +343,12 @@ export function HomePage() {
     
     console.log('[HomePage] After category filter:', processed.length);
     
-    // 전시품목 필터링
+    // 전시품목 필터링 (exhibit_items 배열 필드와 연동)
     if (selectedIndustries.length > 0) {
       processed = processed.filter(event => {
-        if (!event.exhibitItems) return false;
-        // exhibitItems는 string 타입이므로 배열로 변환
-        const items: string[] = Array.isArray(event.exhibitItems) 
-          ? event.exhibitItems 
-          : [event.exhibitItems];
-        return items.some((item: string) => selectedIndustries.includes(item));
+        if (!event.exhibit_items || !Array.isArray(event.exhibit_items)) return false;
+        // exhibit_items 배열에 선택된 품목 중 하나라도 포함되어 있는지 확인
+        return event.exhibit_items.some(item => selectedIndustries.includes(item));
       });
     }
     
@@ -1010,13 +985,13 @@ export function HomePage() {
               </button>
               {showIndustries && (
                 <div className="accordion-content">
-                  {INDUSTRIES.map((industry) => (
+                  {EXHIBIT_ITEMS.map((item) => (
                     <button
-                      key={industry}
-                      className={`venue-btn ${selectedIndustries.includes(industry) ? 'active' : ''}`}
-                      onClick={() => handleIndustryToggle(industry)}
+                      key={item}
+                      className={`venue-btn ${selectedIndustries.includes(item) ? 'active' : ''}`}
+                      onClick={() => handleIndustryToggle(item)}
                     >
-                      {industry}
+                      {item}
                     </button>
                   ))}
                 </div>

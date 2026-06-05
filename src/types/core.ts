@@ -64,6 +64,7 @@ export interface EventRecord {
   eventPurpose?: string; // 행사목적 (킨텍스 전용)
   admissionFee?: string;
   exhibitItems?: string; // 전시품목 (전시되는 품목/내용)
+  exhibit_items?: string[]; // KOSIS 18개 품목 배열 (필터/배지용)
   exhibitProducts?: string; // 전시제품 (전시되는 제품)
   organizer?: string;
   supervisor?: string; // 주관 (행사를 주관하는 기관/단체)
@@ -81,7 +82,31 @@ export interface FilterCriteria {
   month?: string | "전체"; // "2026-01" 형식
   category?: Category | "전체";
   industries?: Industry[]; // 다중 선택
+  exhibitItems?: string[]; // 전시품목 필터 (다중 선택)
 }
+
+// 전시품목 19개 카테고리 (하드코딩)
+export const EXHIBIT_ITEMS = [
+  "전체",
+  "농수축산/식음료",
+  "에너지/환경",
+  "섬유/의류/쥬얼리",
+  "금속/기계/장비",
+  "전기/전자/정보통신/방송",
+  "보건/의료/광학/정밀",
+  "건설/건축/인테리어",
+  "운송장비/서비스",
+  "가정용품/선물용품",
+  "뷰티/화장품",
+  "금융/부동산/전문서비스",
+  "공공/국방",
+  "교육",
+  "임신/출산/육아",
+  "웨딩",
+  "문화/예술",
+  "레저/관광/스포츠",
+  "기타"
+] as const;
 
 // 지역-장소 매핑
 export const REGION_VENUE_MAP: Record<Region, Venue[]> = {

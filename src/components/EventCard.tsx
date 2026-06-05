@@ -250,13 +250,15 @@ export function EventCard({ event, onSave, onEdit, onDelete, showViewCount }: Ev
 
         <div className="card-tags">
           <span className="card-tag tag-industry">{event.industry}</span>
-          {/* 다중 카테고리 지원 - 각 카테고리를 별도 배지로 렌더링 */}
+          {/* 카테고리 배지 - 단일 배지만 표시 */}
           {Array.isArray(event.category) ? (
-            event.category.map((cat, index) => (
-              <span key={`${event.id}-cat-${index}`} className="card-tag tag-category">{cat}</span>
-            ))
+            <span className="card-tag tag-category">{event.category[0]}</span>
           ) : (
             <span className="card-tag tag-category">{event.category}</span>
+          )}
+          {/* 전시품목 배지 - 첫 번째 항목만 표시 */}
+          {event.exhibit_items && Array.isArray(event.exhibit_items) && event.exhibit_items.length > 0 && (
+            <span className="card-tag tag-exhibit">{event.exhibit_items[0]}</span>
           )}
         </div>
 
