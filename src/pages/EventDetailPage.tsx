@@ -127,7 +127,13 @@ export function EventDetailPage() {
 
   // 포스터 URL 결정: 포스터 없으면 venue별 기본 이미지
   const getPosterUrl = () => {
-    if (!event.poster || event.poster.trim() === '') {
+    // Vercel 절대 경로를 상대 경로로 변환
+    let posterUrl = event.poster;
+    if (posterUrl && posterUrl.startsWith('https://hokex-front.vercel.app')) {
+      posterUrl = posterUrl.replace('https://hokex-front.vercel.app', '');
+    }
+    
+    if (!posterUrl || posterUrl.trim() === '') {
       // 송도컨벤시아
       if (event.venue === '송도컨벤시아') return SONGDO_DEFAULT_POSTER;
       
@@ -158,10 +164,15 @@ export function EventDetailPage() {
       // 수원메쎄
       if (event.venue === '수원메쎄') return SUWONMESSE_DEFAULT_POSTER;
       
-      // 다른 venue는 빈 문자열 반환 (포스터 없음)
-      return '';
+      // 다른 venue는 업종별 기본 포스터 반환
+      // COEX, 킨텍스 등 다른 venue도 기본 이미지 제공
+      const category = Array.isArray(event.category) ? event.category[0] : event.category;
+      if (category === '전시') return '/images/default-exhibition.png';
+      if (category === '회의') return '/images/default-conference.png';
+      if (category === '행사/공연') return '/images/default-event.png';
+      return '/images/default-conference.png'; // 기본값
     }
-    return event.poster;
+    return posterUrl;
   };
 
   const posterUrl = getPosterUrl();
