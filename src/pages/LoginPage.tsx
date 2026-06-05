@@ -28,6 +28,8 @@ export function LoginPage() {
     }
   }, []);
 
+  // OTP 기능 비활성화됨
+
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -51,6 +53,8 @@ export function LoginPage() {
       setIsSubmitting(false);
     }
   };
+
+  // OTP 기능 비활성화됨 - 문서는 보존
 
   const handleMagicLink = async () => {
     if (!agreedToTerms) {
@@ -125,7 +129,7 @@ export function LoginPage() {
             <p>아직 구독하지 않으셨나요? <a href="https://page.stibee.com/subscriptions/289942" target="_blank" rel="noopener noreferrer">뉴스레터 구독하기</a></p>
           </div>
 
-          <p className="login-steps">1. 카페인판다 구독 및 확인 메일 발송 후 구독하기 클릭<br />2. 구독 후 <span style={{color: '#667eea', fontWeight: 'bold'}}>이메일 링크로 로그인</span> 실행 뒤 받은 링크로 호켁스 접속<br />3. 접속 후 프로필에서 비밀번호 설정 후 로그인하면 1년간 자동로그인</p>
+          <p className="login-steps">1. 카페인판다 구독 및 확인 메일 발송 후 구독하기 클릭<br />2. 구독 후 <span style={{color: '#667eea', fontWeight: 'bold'}}>이메일 링크로 로그인</span> 버튼 클릭 후 받은 링크로 호켁스 접속<br />3. 접속 후 프로필에서 비밀번호 설정 후 로그인하면 1년간 자동로그인</p>
 
           <div className="terms-agreement">
             <label className="checkbox-label">
@@ -152,7 +156,7 @@ export function LoginPage() {
           </button>
 
           <p className="email-link-notice">
-            메일이 안 올 시 스팸 처리 주의 및 스팸 메일함 확인
+            메일함과 스팸 처리 주의 및 스팸 메일함 확인
           </p>
 
           <div className="divider">
@@ -208,7 +212,7 @@ export function LoginPage() {
           <div className="magic-link-info-box">
             <h3>💡 이메일 링크 로그인 안내</h3>
             <p>
-              이메일로 받은 로그인 링크를 클릭하면 자동으로 로그인됩니다. 첫 로그인 후 프로필 페이지에서 비밀번호를 설정 후 비밀번호로 로그인하면 매번 이메일 링크 로그인 없이도 1년간 자동 로그인으로 이용 가능합니다(로그아웃 전까지).
+              이메일로 받은 로그인 링크를 클릭하면 자동으로 로그인됩니다. 첫 로그인 후 프로필 페이지에서 비밀번호를 설정 후 비밀번호로 로그인하면 매번 이메일 링크 로그인 없이 1년간 자동 로그인으로 이용 가능합니다(로그아웃 전까지).
             </p>
             <p>
               <strong>이메일이 안 오면:</strong><br />
@@ -218,7 +222,7 @@ export function LoginPage() {
             </p>
             <p>
               <strong>이메일 전송 제한:</strong><br />
-              무료 플랜을 사용 중으로 일일 한도 500회 발송에 도달할 경우 나옵니다. 다음날에 다시 시도해주시기를 요청드립니다.
+              무분별한 사용 중으로 하루 시도 500번 발송에 도달한 경우 차단됩니다. 다음날에 다시 시도해주시기를 요청드립니다.
             </p>
           </div>
 

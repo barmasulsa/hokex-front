@@ -26,3 +26,6 @@ dist-ssr
 .vercel
 .env
 .env*.local
+
+# Google Analytics 서비스 계정 키
+hokex-*.json

@@ -323,6 +323,146 @@
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
 }
 
+.tertiary-btn {
+  background: #f3f4f6;
+  color: #667eea;
+  border: 2px solid #e5e7eb;
+}
+
+.tertiary-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+/* OTP 입력 화면 */
+.otp-input-section {
+  margin-top: 24px;
+}
+
+.otp-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.otp-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.otp-header p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.otp-email {
+  font-weight: 600 !important;
+  color: #667eea !important;
+  font-size: 15px !important;
+}
+
+.otp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.otp-input {
+  font-size: 24px !important;
+  text-align: center;
+  letter-spacing: 8px;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+}
+
+.otp-timer {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.timer-active {
+  color: #059669;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.timer-expired {
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.otp-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.otp-action-btn {
+  padding: 10px 20px;
+  border: 2px solid #667eea;
+  background: white;
+  color: #667eea;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.otp-action-btn:hover:not(:disabled) {
+  background: #f8f9ff;
+  transform: translateY(-2px);
+}
+
+.otp-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.otp-action-btn.cancel {
+  border-color: #e5e7eb;
+  color: #6b7280;
+}
+
+.otp-action-btn.cancel:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.otp-info-box {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 20px;
+}
+
+.otp-info-box h4 {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0369a1;
+}
+
+.otp-info-box ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style-type: disc;
+}
+
+.otp-info-box li {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #0369a1;
+  line-height: 1.5;
+}
+
 .email-link-notice {
   margin: 8px 0 0 0;
   font-size: 14px;

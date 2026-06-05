@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GA4 Property ID 확인</title>
+</head>
+<body>
+    <h1>GA4 Property ID 확인 방법</h1>
+    
+    <h2>1. Google Analytics 접속</h2>
+    <ol>
+        <li><a href="https://analytics.google.com/" target="_blank">https://analytics.google.com/</a> 접속</li>
+        <li>왼쪽 하단 ⚙️ "관리" 클릭</li>
+        <li>"속성" 열에서 현재 선택된 속성명 확인</li>
+        <li>"속성 설정" 클릭</li>
+        <li><strong>속성 ID</strong> 확인 (예: 538348093)</li>
+    </ol>
+
+    <h2>2. 현재 설정된 Property ID</h2>
+    <div style="background: #f0f0f0; padding: 20px; border-radius: 5px;">
+        <code style="font-size: 18px; color: #d63031;">538348093</code>
+    </div>
+
+    <h2>3. Service Account 확인</h2>
+    <div style="background: #f0f0f0; padding: 20px; border-radius: 5px;">
+        <code style="font-size: 14px;">hokex-analytics@hokex-498415.iam.gserviceaccount.com</code>
+    </div>
+
+    <h2>4. 스크린샷에서 확인한 내용</h2>
+    <ul>
+        <li>✅ Service Account가 이미 추가되어 있음</li>
+        <li>✅ "뷰어" 역할 부여됨</li>
+        <li>⚠️ <strong>Property ID가 일치하는지 재확인 필요</strong></li>
+    </ul>
+
+    <h2>5. 다른 가능성</h2>
+    <ul>
+        <li><strong>잘못된 속성에 추가:</strong> 다른 GA4 속성에 권한을 추가했을 가능성</li>
+        <li><strong>Service Account Key 문제:</strong> Supabase에 설정한 Key가 다른 Service Account의 것일 가능성</li>
+        <li><strong>GA4 API 활성화:</strong> GCP 프로젝트에서 GA4 API가 활성화되어 있는지 확인</li>
+    </ul>
+
+    <h2>6. 확인해야 할 것</h2>
+    <ol style="background: #fffbea; padding: 20px; border-left: 4px solid #f39c12;">
+        <li><strong>GCP 콘솔에서 Service Account 확인</strong>
+            <ul>
+                <li><a href="https://console.cloud.google.com/iam-admin/serviceaccounts?project=hokex-498415" target="_blank">GCP IAM Service Accounts</a></li>
+                <li>Service Account 이메일이 정확히 <code>hokex-analytics@hokex-498415.iam.gserviceaccount.com</code>인지 확인</li>
+            </ul>
+        </li>
+        <li><strong>Google Analytics Data API 활성화 확인</strong>
+            <ul>
+                <li><a href="https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com?project=hokex-498415" target="_blank">Analytics Data API</a></li>
+                <li>"사용 설정" 되어 있는지 확인</li>
+            </ul>
+        </li>
+        <li><strong>GA4에서 정확한 Property에 권한 추가 확인</strong>
+            <ul>
+                <li>관리 → 속성 → 속성 설정 → 속성 ID가 <code>538348093</code>인지 확인</li>
+                <li>해당 속성의 "속성 액세스 관리"에 Service Account가 있는지 재확인</li>
+            </ul>
+        </li>
+    </ol>
+</body>
+</html>

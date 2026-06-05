@@ -25,5 +25,5 @@
     "noUncheckedSideEffectImports": true
   },
   "include": ["src"],
-  "exclude": ["supabase/functions/**"]
+  "exclude": ["supabase/functions/**", "OTP_EDGE_FUNCTION_CODE.deno.ts", "**/OTP_EDGE_FUNCTION_CODE.deno.ts"]
 }

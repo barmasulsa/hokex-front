@@ -48,8 +48,8 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// 세션 내 중복 호출 방지 플래그
-let hasRecordedThisSession = false;
+// 세션 내 중복 호출 방지 - sessionStorage 사용 (탭/창별 격리)
+const SESSION_KEY = 'visitor_recorded_this_session';
 
 // 디버그 정보를 콘솔로만 출력
 function showDebugInfo(message: string, isError = false) {
@@ -62,9 +62,14 @@ function showDebugInfo(message: string, isError = false) {
 
 // 방문 기록 저장 (시간대별) - 하루에 한 번만 카운트
 export function recordDetailedVisit() {
-  // 이미 이번 세션에서 기록했으면 중복 실행 방지
-  if (hasRecordedThisSession) {
-    showDebugInfo('Already recorded in this session, skipping');
+  // ========================================
+  // 중복 방지 3단계 체크 (강화)
+  // ========================================
+  
+  // 1단계: 세션 체크 (탭/창별 중복 방지)
+  const sessionRecorded = sessionStorage.getItem(SESSION_KEY);
+  if (sessionRecorded === 'true') {
+    showDebugInfo('[중복방지] 이번 세션에서 이미 기록됨 - 스킵');
     return;
   }
   
@@ -77,48 +82,59 @@ export function recordDetailedVisit() {
   
   showDebugInfo(`현재 시간: ${date} ${hour}시`);
   
-  // 오늘 이미 방문했는지 확인
+  // 2단계: localStorage 날짜 체크 (같은 날짜 중복 방지)
   const lastVisitDate = localStorage.getItem('last_visit_date');
   showDebugInfo(`localStorage last_visit_date: ${lastVisitDate || '없음'}`);
   
   if (lastVisitDate === date) {
-    // 오늘 이미 방문했으면 카운트하지 않음
-    showDebugInfo('Already visited today, skipping');
-    hasRecordedThisSession = true; // 세션 플래그 설정
+    showDebugInfo('[중복방지] 오늘 이미 방문 기록됨 - 스킵');
+    sessionStorage.setItem(SESSION_KEY, 'true'); // 세션 플래그도 설정
     return;
   }
   
-  // 오늘 첫 방문이므로 기록
-  showDebugInfo(`✅ Recording new visit for ${date} ${hour}시`);
-  localStorage.setItem('last_visit_date', date);
-  hasRecordedThisSession = true; // 세션 플래그 설정
-  
-  // localStorage에 저장 (즉시, 동기)
-  const records = getVisitRecords();
-  const key = `${date}-${hour}`;
-  const existingIndex = records.findIndex(r => `${r.date}-${r.hour}` === key);
-  
-  if (existingIndex >= 0) {
-    records[existingIndex].count++;
-    showDebugInfo(`localStorage: 기존 기록 업데이트 (count: ${records[existingIndex].count})`);
-  } else {
-    records.push({ date, hour, count: 1 });
-    showDebugInfo(`localStorage: 새 기록 추가`);
+  // 3단계: 함수 실행 중 플래그 (동시 호출 방지)
+  if ((window as any).__recordingVisit) {
+    showDebugInfo('[중복방지] 현재 기록 진행 중 - 스킵');
+    return;
   }
+  (window as any).__recordingVisit = true;
   
-  // 1년 이전 데이터 삭제
-  const oneYearAgo = new Date();
-  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-  const filteredRecords = records.filter(r => new Date(r.date) >= oneYearAgo);
-  
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredRecords));
-  showDebugInfo(`localStorage 저장 완료`);
-  
-  // DB에 비동기 저장 (백그라운드, await 없음)
-  showDebugInfo(`DB 저장 시작...`);
-  recordToDBAsync(date, hour).catch(err => {
-    showDebugInfo(`❌ DB 저장 실패: ${err.message}`, true);
-  });
+  try {
+    // 오늘 첫 방문이므로 기록
+    showDebugInfo(`✅ Recording new visit for ${date} ${hour}시`);
+    localStorage.setItem('last_visit_date', date);
+    sessionStorage.setItem(SESSION_KEY, 'true'); // 세션 플래그 설정
+    
+    // localStorage에 저장 (즉시, 동기)
+    const records = getVisitRecords();
+    const key = `${date}-${hour}`;
+    const existingIndex = records.findIndex(r => `${r.date}-${r.hour}` === key);
+    
+    if (existingIndex >= 0) {
+      records[existingIndex].count++;
+      showDebugInfo(`localStorage: 기존 기록 업데이트 (count: ${records[existingIndex].count})`);
+    } else {
+      records.push({ date, hour, count: 1 });
+      showDebugInfo(`localStorage: 새 기록 추가`);
+    }
+    
+    // 1년 이전 데이터 삭제
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    const filteredRecords = records.filter(r => new Date(r.date) >= oneYearAgo);
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredRecords));
+    showDebugInfo(`localStorage 저장 완료`);
+    
+    // DB에 비동기 저장 (백그라운드, await 없음)
+    showDebugInfo(`DB 저장 시작...`);
+    recordToDBAsync(date, hour).catch(err => {
+      showDebugInfo(`❌ DB 저장 실패: ${err.message}`, true);
+    });
+  } finally {
+    // 실행 완료 플래그 해제
+    (window as any).__recordingVisit = false;
+  }
 }
 
 // DB에 비동기로 저장 (사용자는 기다리지 않음)
@@ -294,6 +310,7 @@ export async function getDetailedVisitorStats(useCache: boolean = true): Promise
       last30DaysCount = cachedStats.last30Days;
     } else {
       // DB에서 직접 실시간 계산 (최신 데이터)
+      // 날짜별 visit_count의 실제 합계 계산
       records?.forEach(record => {
         const recordDate = record.visit_date;
         const count = record.visit_count;

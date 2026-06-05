@@ -14,12 +14,15 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@google-analytics/data": "^6.1.0",
     "@supabase/supabase-js": "^2.105.4",
     "date-fns": "^4.1.0",
+    "googleapis": "^173.0.0",
     "lucide-react": "^0.577.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-router-dom": "^7.14.2"
+    "react-router-dom": "^7.14.2",
+    "readline": "^1.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

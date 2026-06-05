@@ -4,15 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { fetchAllBanners, createBanner, updateBanner, deleteBanner } from '../services/bannerService';
 import { fetchViewCountStats, fetchSavedEventStats, type ViewCountStats, type SavedEventStats, type ViewCountStatsFilters } from '../services/eventService';
 import { Region, REGION_VENUE_MAP } from '../types/core';
-import { 
-  getDetailedVisitorStats, 
-  downloadStatsAsCSV, 
-  downloadStatsAsJSON,
-  clearAllStats,
-  type DetailedVisitorStats 
-} from '../utils/detailedAnalytics';
 import type { Banner, BannerType } from '../types/banner';
 import { RichTextEditor } from '../components/RichTextEditor';
+import { AnalyticsStats } from '../components/AnalyticsStats';
 import './BannerManagementPage.css';
 
 type ManagementTab = 'image' | 'youtube' | 'text' | 'statistics' | 'viewcounts';
@@ -26,9 +20,6 @@ export function BannerManagementPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState<ManagementTab>('image'); // 탭 상태
-  const [detailedStats, setDetailedStats] = useState<DetailedVisitorStats | null>(null);
-  const [statsView, setStatsView] = useState<'daily' | 'hourly' | 'yearly'>('daily');
-  const [loadingLatestStats, setLoadingLatestStats] = useState(false);
   const [viewCountStats, setViewCountStats] = useState<ViewCountStats[]>([]);
   const [loadingViewCounts, setLoadingViewCounts] = useState(false);
   const [savedEventStats, setSavedEventStats] = useState<SavedEventStats[]>([]);
@@ -74,24 +65,6 @@ export function BannerManagementPage() {
   // 배너 목록 로드
   useEffect(() => {
     loadBanners();
-  }, []);
-
-  // 방문자 통계 가져오기 (초기 로드 시에는 캐시 사용)
-  useEffect(() => {
-    const loadStats = async () => {
-      // 초기 로드 및 자동 갱신은 캐시 사용 (useCache=true, 기본값)
-      const detailed = await getDetailedVisitorStats(true);
-      setDetailedStats(detailed);
-    };
-    
-    loadStats();
-    
-    // 1분마다 통계 업데이트 (캐시 기반)
-    const interval = setInterval(() => {
-      loadStats();
-    }, 60000); // 60초
-    
-    return () => clearInterval(interval);
   }, []);
 
   // 종료일 input 동기화 (formData.popup_end_date 변경 시 DOM 직접 업데이트)
@@ -253,89 +226,6 @@ export function BannerManagementPage() {
       popup_end_date: '',
       has_end_date: false
     });
-  };
-
-  const handleDownloadCSV = () => {
-    if (detailedStats) {
-      downloadStatsAsCSV(detailedStats);
-    }
-  };
-
-  const handleDownloadJSON = () => {
-    if (detailedStats) {
-      downloadStatsAsJSON(detailedStats);
-    }
-  };
-
-  const handleClearStats = async () => {
-    const cleared = await clearAllStats();
-    if (cleared) {
-      const detailed = await getDetailedVisitorStats();
-      setDetailedStats(detailed);
-    }
-  };
-
-  const handleRestoreStats = async () => {
-    const { restoreStatsFromBackup } = await import('../utils/detailedAnalytics');
-    const restored = restoreStatsFromBackup();
-    if (restored) {
-      const detailed = await getDetailedVisitorStats();
-      setDetailedStats(detailed);
-    }
-  };
-
-  const handleLoadLatestStats = async () => {
-    setLoadingLatestStats(true);
-    try {
-      console.log('[최신 통계] 실시간 DB 조회 시작 (useCache=false)');
-      console.log('[최신 통계] 현재 화면에 표시된 통계:', {
-        today: detailedStats?.today,
-        yesterday: detailedStats?.yesterday,
-        last7Days: detailedStats?.last7Days,
-        last30Days: detailedStats?.last30Days
-      });
-      
-      const startTime = performance.now();
-      
-      // useCache=false로 호출하여 캐시를 거치지 않고 DB에서 직접 실시간 통계 가져오기
-      const detailed = await getDetailedVisitorStats(false);
-      
-      const endTime = performance.now();
-      const loadTime = ((endTime - startTime) / 1000).toFixed(2);
-      
-      console.log('[최신 통계] 실시간 DB 조회 완료 (새로 불러온 데이터):', {
-        today: detailed.today,
-        yesterday: detailed.yesterday,
-        last7Days: detailed.last7Days,
-        last30Days: detailed.last30Days,
-        totalVisits: detailed.totalVisits
-      });
-      console.log(`[최신 통계] 소요 시간: ${loadTime}초`);
-      
-      // 변화 감지
-      const todayChanged = detailedStats?.today !== detailed.today;
-      const yesterdayChanged = detailedStats?.yesterday !== detailed.yesterday;
-      
-      console.log('[최신 통계] 변화 감지:', {
-        todayChanged,
-        yesterdayChanged,
-        todayDiff: detailed.today - (detailedStats?.today || 0),
-        yesterdayDiff: detailed.yesterday - (detailedStats?.yesterday || 0)
-      });
-      
-      setDetailedStats(detailed);
-      
-      const changeMessage = todayChanged || yesterdayChanged
-        ? `\n\n변화: 오늘 ${todayChanged ? `${detailed.today - (detailedStats?.today || 0)}명 증가` : '변화 없음'}, 어제 ${yesterdayChanged ? `${detailed.yesterday - (detailedStats?.yesterday || 0)}명 증가` : '변화 없음'}`
-        : '\n\n⚠️ 캐시와 실시간 조회 결과가 동일합니다. DB에 새로운 방문 데이터가 없습니다.';
-      
-      alert(`최신 통계를 불러왔습니다 (실시간 DB 조회)\n\n소요 시간: ${loadTime}초\n오늘 방문: ${detailed.today}명\n어제: ${detailed.yesterday}명${changeMessage}`);
-    } catch (err) {
-      console.error('최신 통계 로드 실패:', err);
-      alert('최신 통계 로드에 실패했습니다.');
-    } finally {
-      setLoadingLatestStats(false);
-    }
   };
 
   // 조회수/찜 목록 통계 CSV 다운로드
@@ -688,235 +578,9 @@ export function BannerManagementPage() {
         </button>
       </div>
 
-      {/* 통계 탭 */}
-      {activeTab === 'statistics' && detailedStats && (
-        <div className="statistics-tab-content">
-          {/* 요약 통계 */}
-          <div className="stats-summary">
-            <h2>요약 통계</h2>
-            <div className="stats-grid">
-              <div className="stat-card-large">
-                <div className="stat-label">총 방문 수</div>
-                <div className="stat-value-large">{detailedStats.totalVisits.toLocaleString()}</div>
-                <div className="stat-desc">
-                  {detailedStats.firstVisitDate && `${detailedStats.firstVisitDate}부터`}
-                </div>
-              </div>
-              <div className="stat-card-large">
-                <div className="stat-label">오늘</div>
-                <div className="stat-value-large">{detailedStats.today.toLocaleString()}</div>
-                <div className="stat-desc">명 방문</div>
-              </div>
-              <div className="stat-card-large">
-                <div className="stat-label">어제</div>
-                <div className="stat-value-large">{detailedStats.yesterday.toLocaleString()}</div>
-                <div className="stat-desc">명 방문</div>
-              </div>
-              <div className="stat-card-large">
-                <div className="stat-label">최근 7일</div>
-                <div className="stat-value-large">{detailedStats.last7Days.toLocaleString()}</div>
-                <div className="stat-desc">명 방문</div>
-              </div>
-              <div className="stat-card-large">
-                <div className="stat-label">최근 30일</div>
-                <div className="stat-value-large">{detailedStats.last30Days.toLocaleString()}</div>
-                <div className="stat-desc">명 방문</div>
-              </div>
-              <div className="stat-card-large">
-                <div className="stat-label">최근 1년</div>
-                <div className="stat-value-large">{detailedStats.last365Days.toLocaleString()}</div>
-                <div className="stat-desc">명 방문</div>
-              </div>
-            </div>
-          </div>
-
-          {/* 데이터 다운로드 */}
-          <div className="stats-actions">
-            <h3>데이터 관리</h3>
-            <div className="download-buttons">
-              <button 
-                className="btn-primary" 
-                onClick={handleLoadLatestStats}
-                disabled={loadingLatestStats}
-              >
-                {loadingLatestStats ? '⏳ 로딩 중...' : '🔄 최신 통계 보기'}
-              </button>
-              <button className="btn-download" onClick={handleDownloadCSV}>
-                📥 CSV 다운로드
-              </button>
-              <button className="btn-download" onClick={handleDownloadJSON}>
-                📥 JSON 다운로드
-              </button>
-              <button className="btn-secondary" onClick={handleRestoreStats}>
-                ♻️ 백업에서 복구
-              </button>
-              <button className="btn-danger" onClick={handleClearStats}>
-                🗑️ 통계 데이터 초기화
-              </button>
-            </div>
-            <p className="stats-info-note">
-              💡 통계는 30분마다 자동 업데이트됩니다. 최신 데이터를 즉시 확인하려면 "🔄 최신 통계 보기" 버튼을 클릭하세요.
-            </p>
-            <p className="stats-warning">
-              ⚠️ 초기화 시 자동으로 백업됩니다. 실수로 삭제해도 복구 가능합니다.
-            </p>
-          </div>
-
-          {/* 상세 통계 뷰 선택 */}
-          <div className="stats-view-selector">
-            <h3>상세 통계</h3>
-            <div className="view-buttons">
-              <button
-                className={`view-btn ${statsView === 'hourly' ? 'active' : ''}`}
-                onClick={() => setStatsView('hourly')}
-              >
-                시간대별 (오늘)
-              </button>
-              <button
-                className={`view-btn ${statsView === 'daily' ? 'active' : ''}`}
-                onClick={() => setStatsView('daily')}
-              >
-                일별 (최근 30일)
-              </button>
-              <button
-                className={`view-btn ${statsView === 'yearly' ? 'active' : ''}`}
-                onClick={() => setStatsView('yearly')}
-              >
-                일별 (최근 1년)
-              </button>
-            </div>
-          </div>
-
-          {/* 시간대별 통계 */}
-          {statsView === 'hourly' && (
-            <div className="stats-detail-section">
-              <h3>오늘 시간대별 방문</h3>
-              <div className="stats-table-container">
-                <table className="stats-table">
-                  <thead>
-                    <tr>
-                      <th>시간</th>
-                      <th>방문 수</th>
-                      <th>비율</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {detailedStats.hourlyToday.map((h) => {
-                      const percentage = detailedStats.today > 0 
-                        ? ((h.count / detailedStats.today) * 100).toFixed(1)
-                        : '0.0';
-                      return (
-                        <tr key={h.hour}>
-                          <td>{h.hour}시</td>
-                          <td>{h.count.toLocaleString()}</td>
-                          <td>
-                            <div className="percentage-bar-container">
-                              <div 
-                                className="percentage-bar" 
-                                style={{ width: `${percentage}%` }}
-                              />
-                              <span className="percentage-text">{percentage}%</span>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* 일별 통계 (최근 30일) */}
-          {statsView === 'daily' && (
-            <div className="stats-detail-section">
-              <h3>최근 30일 일별 방문</h3>
-              <div className="stats-table-container">
-                <table className="stats-table">
-                  <thead>
-                    <tr>
-                      <th>날짜</th>
-                      <th>방문 수</th>
-                      <th>비율</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {detailedStats.dailyLast30Days.slice().reverse().map((d) => {
-                      const maxCount = Math.max(...detailedStats.dailyLast30Days.map(x => x.count));
-                      const percentage = maxCount > 0 
-                        ? ((d.count / maxCount) * 100).toFixed(1)
-                        : '0.0';
-                      return (
-                        <tr key={d.date}>
-                          <td>{d.date}</td>
-                          <td>{d.count.toLocaleString()}</td>
-                          <td>
-                            <div className="percentage-bar-container">
-                              <div 
-                                className="percentage-bar" 
-                                style={{ width: `${percentage}%` }}
-                              />
-                              <span className="percentage-text">{percentage}%</span>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* 일별 통계 (최근 1년) */}
-          {statsView === 'yearly' && (
-            <div className="stats-detail-section">
-              <h3>최근 1년 일별 방문</h3>
-              <p className="stats-info-text">
-                총 {detailedStats.dailyLast365Days.length}일 중 방문이 있었던 날: {' '}
-                {detailedStats.dailyLast365Days.filter(d => d.count > 0).length}일
-              </p>
-              <div className="stats-table-container">
-                <table className="stats-table">
-                  <thead>
-                    <tr>
-                      <th>날짜</th>
-                      <th>방문 수</th>
-                      <th>비율</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {detailedStats.dailyLast365Days
-                      .slice()
-                      .reverse()
-                      .filter(d => d.count > 0) // 방문이 있었던 날만 표시
-                      .map((d) => {
-                        const maxCount = Math.max(...detailedStats.dailyLast365Days.map(x => x.count));
-                        const percentage = maxCount > 0 
-                          ? ((d.count / maxCount) * 100).toFixed(1)
-                          : '0.0';
-                        return (
-                          <tr key={d.date}>
-                            <td>{d.date}</td>
-                            <td>{d.count.toLocaleString()}</td>
-                            <td>
-                              <div className="percentage-bar-container">
-                                <div 
-                                  className="percentage-bar" 
-                                  style={{ width: `${percentage}%` }}
-                                />
-                                <span className="percentage-text">{percentage}%</span>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
+      {/* 통계 탭 - 새로운 Analytics 컴포넌트 */}
+      {activeTab === 'statistics' && (
+        <AnalyticsStats />
       )}
 
       {/* 행사 조회수 통계 탭 */}

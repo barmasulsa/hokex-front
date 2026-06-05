@@ -1261,3 +1261,311 @@
   cursor: pointer;
   margin: 0;
 }
+
+/* Google Analytics 스타일 */
+.ga-notice {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+}
+
+.ga-notice h2 {
+  margin: 0 0 15px 0;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.ga-description {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  opacity: 0.95;
+}
+
+.ga-description code {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+}
+
+.ga-info-box {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.ga-info-box h3 {
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ga-info-box ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style: none;
+}
+
+.ga-info-box li {
+  margin-bottom: 10px;
+  font-size: 15px;
+  line-height: 1.5;
+  position: relative;
+  padding-left: 5px;
+}
+
+.ga-actions {
+  text-align: center;
+}
+
+.btn-ga-primary {
+  background: white;
+  color: #667eea;
+  border: none;
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-ga-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  background: #f8f9ff;
+}
+
+.ga-help-text {
+  margin-top: 15px;
+  font-size: 14px;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+
+/* 커스텀 통계 사용 중단 안내 */
+.custom-stats-notice {
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.custom-stats-notice h3 {
+  color: #856404;
+  margin: 0 0 10px 0;
+  font-size: 18px;
+}
+
+.custom-stats-notice > p {
+  color: #856404;
+  margin: 0 0 15px 0;
+  line-height: 1.6;
+}
+
+.custom-stats-notice details {
+  margin-top: 10px;
+}
+
+.custom-stats-notice summary {
+  cursor: pointer;
+  color: #856404;
+  font-weight: 600;
+  padding: 10px;
+  background: rgba(255, 193, 7, 0.1);
+  border-radius: 4px;
+  user-select: none;
+}
+
+.custom-stats-notice summary:hover {
+  background: rgba(255, 193, 7, 0.2);
+}
+
+.deprecated-stats {
+  padding: 20px 0;
+}
+
+.stat-card-large.deprecated {
+  opacity: 0.6;
+  border: 2px dashed #ffc107;
+}
+
+.deprecated-warning {
+  background: #dc3545;
+  color: white;
+  padding: 12px;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 600;
+  margin-top: 20px;
+}
+
+/* Google Analytics 실시간 통계 카드 */
+.ga-live-stats {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 25px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.ga-live-stats h3 {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: white;
+  text-align: center;
+}
+
+.ga-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.ga-stat-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ga-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.ga-stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ga-stat-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 5px;
+  font-family: 'Arial', sans-serif;
+}
+
+.ga-stat-desc {
+  font-size: 12px;
+  color: #888;
+  font-weight: 500;
+}
+
+.ga-update-info {
+  text-align: center;
+  font-size: 13px;
+  margin: 10px 0 0 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
+/* GA 로딩 상태 */
+.ga-stats-loading {
+  text-align: center;
+  padding: 30px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.ga-stats-loading .spinner {
+  font-size: 32px;
+  margin-bottom: 10px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.ga-stats-loading p {
+  margin: 0;
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* GA 에러 상태 */
+.ga-stats-error {
+  background: rgba(220, 53, 69, 0.1);
+  border: 2px solid rgba(220, 53, 69, 0.3);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.ga-stats-error h3 {
+  margin: 0 0 10px 0;
+  color: #dc3545;
+  font-size: 18px;
+}
+
+.ga-stats-error p {
+  margin: 8px 0;
+  color: #721c24;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.ga-setup-hint {
+  margin-top: 15px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 6px;
+}
+
+.ga-setup-hint a {
+  color: #007bff;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.ga-setup-hint a:hover {
+  color: #0056b3;
+}
+
+/* 반응형 GA 통계 */
+@media (max-width: 768px) {
+  .ga-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .ga-stat-value {
+    font-size: 28px;
+  }
+
+  .ga-stat-label {
+    font-size: 12px;
+  }
+
+  .ga-stat-desc {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ga-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

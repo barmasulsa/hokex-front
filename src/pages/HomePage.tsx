@@ -6,7 +6,7 @@ import { BannerPopupModal } from '../components/BannerPopupModal';
 import { fetchEvents, fetchSavedEventIds, toggleSaveEvent } from '../services/eventService';
 import { incrementBannerViewCount } from '../services/bannerService';
 import { useAuth } from '../contexts/AuthContext';
-import { getCachedVisitorStats, recordDetailedVisit } from '../utils/detailedAnalytics';
+import { recordDetailedVisit } from '../utils/detailedAnalytics';
 import { PresenceManager } from '../utils/onlinePresence';
 import { supabase } from '../lib/supabase';
 import type { EventRecord, Venue } from '../types/core';
@@ -43,12 +43,6 @@ export function HomePage() {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteMode, setShowDeleteMode] = useState(false); // 삭제 모드 토글
-  const [visitorStats, setVisitorStats] = useState({
-    today: 0,
-    yesterday: 0,
-    last7Days: 0,
-    last30Days: 0
-  });
   const [onlineCount, setOnlineCount] = useState<number>(0);
   const [popupBanners, setPopupBanners] = useState<BannerType[]>([]); // 배열로 변경
   
@@ -223,23 +217,6 @@ export function HomePage() {
   useEffect(() => {
     console.log('[HomePage] Recording visit...');
     recordDetailedVisit();
-  }, []);
-
-  // 방문자 통계 가져오기 (캐시 사용 - 빠름)
-  useEffect(() => {
-    const loadStats = async () => {
-      const stats = await getCachedVisitorStats();
-      setVisitorStats(stats);
-    };
-    
-    loadStats();
-    
-    // 1분마다 통계 업데이트 (캐시에서 읽기만 하므로 빠름)
-    const interval = setInterval(() => {
-      loadStats();
-    }, 60000); // 60초
-    
-    return () => clearInterval(interval);
   }, []);
 
   // 현재 접속 인원 추적 (Supabase Realtime)
@@ -1125,10 +1102,10 @@ export function HomePage() {
           </div>
         </div>
 
-        {/* 오른쪽 사이드바 - 방문자 통계 */}
+        {/* 오른쪽 사이드바 - 현재 접속 */}
         <aside className="stats-sidebar">
           <div className="stats-sidebar-section">
-            <h3 className="stats-sidebar-title">📊 방문자 통계</h3>
+            <h3 className="stats-sidebar-title">👥 현재 접속</h3>
             <div className="stats-sidebar-cards">
               <div className="stats-sidebar-card stats-sidebar-card-online">
                 <div className="stats-sidebar-label">
@@ -1137,26 +1114,6 @@ export function HomePage() {
                 </div>
                 <div className="stats-sidebar-value stats-sidebar-value-online">{onlineCount.toLocaleString()}</div>
                 <div className="stats-sidebar-unit">명 온라인</div>
-              </div>
-              <div className="stats-sidebar-card">
-                <div className="stats-sidebar-label">오늘</div>
-                <div className="stats-sidebar-value">{visitorStats.today.toLocaleString()}</div>
-                <div className="stats-sidebar-unit">명 방문</div>
-              </div>
-              <div className="stats-sidebar-card">
-                <div className="stats-sidebar-label">어제</div>
-                <div className="stats-sidebar-value">{visitorStats.yesterday.toLocaleString()}</div>
-                <div className="stats-sidebar-unit">명 방문</div>
-              </div>
-              <div className="stats-sidebar-card">
-                <div className="stats-sidebar-label">최근 7일</div>
-                <div className="stats-sidebar-value">{visitorStats.last7Days.toLocaleString()}</div>
-                <div className="stats-sidebar-unit">명 방문</div>
-              </div>
-              <div className="stats-sidebar-card">
-                <div className="stats-sidebar-label">최근 30일</div>
-                <div className="stats-sidebar-value">{visitorStats.last30Days.toLocaleString()}</div>
-                <div className="stats-sidebar-unit">명 방문</div>
               </div>
             </div>
           </div>

@@ -9,6 +9,7 @@ import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { BannerManagementPage } from './pages/BannerManagementPage';
 import { DeletedEventsPage } from './pages/DeletedEventsPage';
 import { AdminApprovalPage } from './pages/AdminApprovalPage';
+
 import { initGA4, recordVisit } from './utils/analytics';
 import { recordDetailedVisit } from './utils/detailedAnalytics';
 import './App.css';
@@ -71,7 +72,7 @@ function AppContent() {
   useEffect(() => {
     initGA4();
     recordVisit();
-    recordDetailedVisit(); // 세부 통계 기록
+    // recordDetailedVisit()는 HomePage에서만 호출 (중복 방지)
     
     // 기존 localStorage 데이터를 DB로 마이그레이션 (한 번만 실행)
     const migrated = localStorage.getItem('visitor_data_migrated');

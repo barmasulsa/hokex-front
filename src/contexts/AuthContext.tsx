@@ -385,6 +385,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // OTP 기능 비활성화됨 - 문서와 Edge Function 코드는 보존
+  // const sendOTPCode = async (email: string): Promise<{ expiresIn: number }> => { ... }
+  // const verifyOTPCode = async (email: string, code: string): Promise<void> => { ... }
+
   // Magic Link 로그인 (이메일 전용) - 구독자만 허용, 실패 시 자동으로 대기 명단 추가
   const signInWithMagicLink = async (email: string) => {
     // 1. 먼저 스티비 구독자인지 확인

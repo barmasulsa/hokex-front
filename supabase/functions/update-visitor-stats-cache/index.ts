@@ -34,8 +34,13 @@ Deno.serve(async (req) => {
       }
     }
 
+    // 한국 시간(KST, UTC+9) 사용
     const now = new Date();
-    const today = now.toISOString().split('T')[0];
+    const kstOffset = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
+    const kstNow = new Date(now.getTime() + kstOffset);
+    const today = kstNow.toISOString().split('T')[0]; // KST 기준 오늘
+    
+    console.log(`[update-visitor-stats-cache] UTC: ${now.toISOString()}, KST: ${kstNow.toISOString()}, Today: ${today}`);
 
     
     if (updateType === 'today') {
@@ -93,22 +98,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 새벽 4시: 전체 통계 업데이트
-    const yesterday = new Date(now);
+    // 새벽 4시: 전체 통계 업데이트 (KST 기준)
+    const yesterday = new Date(kstNow);
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
     
-    const sevenDaysAgo = new Date(now);
+    const sevenDaysAgo = new Date(kstNow);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
     
-    const thirtyDaysAgo = new Date(now);
+    const thirtyDaysAgo = new Date(kstNow);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
     
-    const oneYearAgo = new Date(now);
+    const oneYearAgo = new Date(kstNow);
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
     const oneYearAgoStr = oneYearAgo.toISOString().split('T')[0];
+    
+    console.log(`[update-visitor-stats-cache] Yesterday: ${yesterdayStr}, 7 days ago: ${sevenDaysAgoStr}`);
 
     // DB에서 최근 1년 데이터 조회 (visit_hour 포함)
     const { data: records, error } = await supabase
