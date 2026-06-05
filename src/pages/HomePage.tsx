@@ -373,9 +373,15 @@ export function HomePage() {
           case 'title':
             return event.title.toLowerCase().includes(query);
           case 'organizer':
-            return event.organizer?.toLowerCase().includes(query) || false;
+            // "주최" 검색 시: organizer 필드와 supervisor 필드 모두 확인
+            // (일부 전시장은 "주최주관" 통합 필드를 사용하여 organizer에 저장)
+            return (event.organizer?.toLowerCase().includes(query) || false) ||
+                   (event.supervisor?.toLowerCase().includes(query) || false);
           case 'supervisor':
-            return event.supervisor?.toLowerCase().includes(query) || false;
+            // "주관" 검색 시: supervisor 필드와 organizer 필드 모두 확인
+            // (일부 전시장은 "주최주관" 통합 필드를 사용하여 organizer에 저장)
+            return (event.supervisor?.toLowerCase().includes(query) || false) ||
+                   (event.organizer?.toLowerCase().includes(query) || false);
           default:
             return event.title.toLowerCase().includes(query);
         }
