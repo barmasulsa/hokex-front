@@ -1149,7 +1149,9 @@ function AddEventModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
       region = '대전/충청';
     } else if (['김대중컨벤션센터', '군산새만금컨벤션센터'].includes(venue)) {
       region = '광주/전남';
-    } else if (['벡스코', '엑스코', '창원컨벤션센터', '유에코', '경주화백컨벤션센터', '구미코'].includes(venue)) {
+    } else if (['엑스코', '경주화백컨벤션센터', '구미코'].includes(venue)) {
+      region = '대구/경북';
+    } else if (['벡스코', '창원컨벤션센터', '유에코'].includes(venue)) {
       region = '부산/경남';
     } else if (venue === '제주국제컨벤션센터') {
       region = '제주';
