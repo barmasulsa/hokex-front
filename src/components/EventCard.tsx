@@ -249,16 +249,13 @@ export function EventCard({ event, onSave, onEdit, onDelete, showViewCount }: Ev
         </button>
 
         <div className="card-tags">
+          {/* industry 배지 (원본 카테고리) */}
           <span className="card-tag tag-industry">{event.industry}</span>
-          {/* 카테고리 배지 - 단일 배지만 표시 */}
+          {/* category 배지 (HOKEX 표준 카테고리) */}
           {Array.isArray(event.category) ? (
             <span className="card-tag tag-category">{event.category[0]}</span>
           ) : (
             <span className="card-tag tag-category">{event.category}</span>
-          )}
-          {/* 전시품목 배지 - 첫 번째 항목만 표시 */}
-          {event.exhibit_items && Array.isArray(event.exhibit_items) && event.exhibit_items.length > 0 && (
-            <span className="card-tag tag-exhibit">{event.exhibit_items[0]}</span>
           )}
         </div>
 
