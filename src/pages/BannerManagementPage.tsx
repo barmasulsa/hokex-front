@@ -6,7 +6,7 @@ import { fetchViewCountStats, fetchSavedEventStats, type ViewCountStats, type Sa
 import { Region, REGION_VENUE_MAP } from '../types/core';
 import type { Banner, BannerType } from '../types/banner';
 import { RichTextEditor } from '../components/RichTextEditor';
-import { AnalyticsStats } from '../components/AnalyticsStats';
+import { VisitorStatisticsDashboard } from '../components/VisitorStatisticsDashboard';
 import './BannerManagementPage.css';
 
 type ManagementTab = 'image' | 'youtube' | 'text' | 'statistics' | 'viewcounts';
@@ -578,9 +578,9 @@ export function BannerManagementPage() {
         </button>
       </div>
 
-      {/* 통계 탭 - 새로운 Analytics 컴포넌트 */}
+      {/* 통계 탭 - 방문자 통계 대시보드 */}
       {activeTab === 'statistics' && (
-        <AnalyticsStats />
+        <VisitorStatisticsDashboard />
       )}
 
       {/* 행사 조회수 통계 탭 */}

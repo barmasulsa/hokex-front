@@ -11,6 +11,7 @@ import { DeletedEventsPage } from './pages/DeletedEventsPage';
 import { AdminApprovalPage } from './pages/AdminApprovalPage';
 
 import { initGA4, recordVisit } from './utils/analytics';
+import { trackVisit as recordVisitorCounter } from './utils/visitorCounter';
 import './App.css';
 
 // 스크롤 복원 컴포넌트 (이벤트 ID 기반)
@@ -71,19 +72,17 @@ function AppContent() {
   useEffect(() => {
     initGA4();
     recordVisit();
-    // recordDetailedVisit()는 HomePage에서만 호출 (중복 방지)
     
-    // 기존 localStorage 데이터를 DB로 마이그레이션 (한 번만 실행)
-    const migrated = localStorage.getItem('visitor_data_migrated');
-    if (!migrated) {
-      import('./utils/detailedAnalytics').then(({ migrateOldDataToDB }) => {
-        migrateOldDataToDB().then(result => {
-          if (result.success) {
-            console.log(`방문자 통계 마이그레이션 완료: ${result.migrated}개 날짜`);
-          }
+    // 새로운 방문자 카운터 API 호출
+    recordVisitorCounter().then(stats => {
+      if (stats) {
+        console.log('[방문자 카운터] 통계:', {
+          오늘: stats.todayCount,
+          전체: stats.totalCount,
+          대시보드: stats.dashboardUrl
         });
-      });
-    }
+      }
+    });
   }, []);
 
   // URL 해시 정리 (에러 파라미터 제거)
