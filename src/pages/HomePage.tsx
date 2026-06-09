@@ -6,7 +6,6 @@ import { BannerPopupModal } from '../components/BannerPopupModal';
 import { fetchEvents, fetchSavedEventIds, toggleSaveEvent } from '../services/eventService';
 import { incrementBannerViewCount } from '../services/bannerService';
 import { useAuth } from '../contexts/AuthContext';
-import { recordDetailedVisit } from '../utils/detailedAnalytics';
 import { PresenceManager } from '../utils/onlinePresence';
 import { supabase } from '../lib/supabase';
 import type { EventRecord, Venue } from '../types/core';
@@ -192,10 +191,7 @@ export function HomePage() {
   }, [user]);
 
   // 방문자 추적 - 페이지 로드 시 1회 실행
-  useEffect(() => {
-    console.log('[HomePage] Recording visit...');
-    recordDetailedVisit();
-  }, []);
+  // Visit recording removed - feature deprecated
 
   // 현재 접속 인원 추적 (Supabase Realtime)
   useEffect(() => {
@@ -1084,8 +1080,9 @@ export function HomePage() {
         </div>
 
         {/* 오른쪽 사이드바 - 현재 접속 */}
-        <aside className="stats-sidebar">
-          <div className="stats-sidebar-section">
+        <div className="stats-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* 현재 접속 */}
+          <aside className="stats-sidebar-section">
             <h3 className="stats-sidebar-title">👥 현재 접속</h3>
             <div className="stats-sidebar-cards">
               <div className="stats-sidebar-card stats-sidebar-card-online">
@@ -1097,8 +1094,8 @@ export function HomePage() {
                 <div className="stats-sidebar-unit">명 온라인</div>
               </div>
             </div>
-          </div>
-        </aside>
+          </aside>
+        </div>
       </div>
 
       {/* 행사 추가 모달 */}

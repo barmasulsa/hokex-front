@@ -246,6 +246,12 @@ export async function fetchEventById(id: string) {
     return null;
   }
 
+  // deleted_at이 null이 아니면 삭제된 행사이므로 null 반환
+  if (data.deleted_at !== null) {
+    console.log('Event is deleted:', id);
+    return null;
+  }
+
   return mapSupabaseEventToEventRecord(data);
 }
 

@@ -296,7 +296,8 @@ export function EventCard({ event, onSave, onEdit, onDelete, showViewCount }: Ev
             <button
               className="delete-event-btn"
               onClick={(e) => {
-                e.stopPropagation();
+                e.preventDefault(); // 링크 이동 방지
+                e.stopPropagation(); // 이벤트 버블링 방지
                 if (showDeleteConfirm) {
                   onDelete(event.id);
                   setShowDeleteConfirm(false);

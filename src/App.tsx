@@ -78,8 +78,7 @@ function AppContent() {
       if (stats) {
         console.log('[방문자 카운터] 통계:', {
           오늘: stats.todayCount,
-          전체: stats.totalCount,
-          대시보드: stats.dashboardUrl
+          전체: stats.totalCount
         });
       }
     });
