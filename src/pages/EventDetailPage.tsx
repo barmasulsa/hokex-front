@@ -2026,7 +2026,7 @@ export function EventDetailPage() {
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                     {(event.websiteUrl || event.targetLink) ? (
                       <a href={event.websiteUrl || event.targetLink} target="_blank" rel="noopener noreferrer" className="btn-official-website">
-                        <ExternalLink size={20} /> {(event.venue === 'COEX' || event.venue === '코엑스') ? '홈페이지' : '공식 웹사이트 방문'}
+                        <ExternalLink size={20} /> {(String(event.venue) === 'COEX' || String(event.venue) === '코엑스') ? '홈페이지' : '공식 웹사이트 방문'}
                       </a>
                     ) : (
                       <div style={{ color: '#999', padding: '10px' }}>
