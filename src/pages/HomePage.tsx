@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { EventCard } from '../components/EventCard';
 import { Banner } from '../components/Banner';
 import { BannerPopupModal } from '../components/BannerPopupModal';
+import { VisitorStats } from '../components/VisitorStats';
 import { fetchEvents, fetchSavedEventIds, toggleSaveEvent } from '../services/eventService';
 import { incrementBannerViewCount } from '../services/bannerService';
 import { useAuth } from '../contexts/AuthContext';
@@ -1079,7 +1080,7 @@ export function HomePage() {
           </div>
         </div>
 
-        {/* 오른쪽 사이드바 - 현재 접속 */}
+        {/* 오른쪽 사이드바 - 현재 접속 & 방문자 통계 */}
         <div className="stats-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {/* 현재 접속 */}
           <aside className="stats-sidebar-section">
@@ -1095,6 +1096,9 @@ export function HomePage() {
               </div>
             </div>
           </aside>
+
+          {/* 방문자 통계 */}
+          <VisitorStats />
         </div>
       </div>
 

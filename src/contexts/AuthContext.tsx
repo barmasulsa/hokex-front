@@ -88,12 +88,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 세션 변경 리스너
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      console.log('Auth state change event:', event);
       
-      if (session?.user) {
-        fetchUserProfile(session.user.id).then(profile => {
+      // 매직 링크나 OTP 로그인 시도 시 이미 로그인된 사용자가 있는지 확인
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        const currentUser = user;
+        const newUser = newSession?.user;
+        
+        // 현재 로그인된 사용자와 새로 로그인하려는 사용자가 다른 경우
+        if (currentUser && newUser && currentUser.id !== newUser.id) {
+          console.warn('Attempted login as different user while already logged in');
+          
+          // 새 세션을 거부하고 기존 세션 유지
+          await supabase.auth.signOut();
+          
+          // 사용자에게 경고 메시지 표시
+          alert(
+            '다른 계정의 로그인 링크입니다.\n' +
+            '현재 로그인된 계정을 유지합니다.\n\n' +
+            '다른 계정으로 전환하려면 먼저 로그아웃해주세요.'
+          );
+          
+          // 기존 세션 유지 (상태 변경 없음)
+          return;
+        }
+      }
+      
+      // 정상적인 세션 업데이트
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+      
+      if (newSession?.user) {
+        fetchUserProfile(newSession.user.id).then(profile => {
           setUserProfile(profile);
         });
       } else {

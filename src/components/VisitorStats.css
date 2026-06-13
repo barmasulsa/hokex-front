@@ -1,0 +1,96 @@
+.visitor-stats-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 16px;
+}
+
+.visitor-stats-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.visitor-stats-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.visitor-stats-loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-size: 14px;
+}
+
+.visitor-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #007bff;
+}
+
+.visitor-stats-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e9ecef;
+  font-size: 12px;
+  color: #666;
+}
+
+.visitor-stats-footer svg {
+  color: #28a745;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .visitor-stats-card {
+    padding: 16px;
+  }
+  
+  .visitor-stats-grid {
+    gap: 12px;
+  }
+  
+  .stat-item {
+    padding: 10px;
+  }
+  
+  .stat-value {
+    font-size: 20px;
+  }
+}

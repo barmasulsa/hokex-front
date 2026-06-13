@@ -103,19 +103,21 @@ Deno.serve(async (req) => {
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
     
+    // 최근 7일: 오늘 포함 6일 전부터 (총 7일)
     const sevenDaysAgo = new Date(kstNow);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // -6으로 변경 (오늘 포함 7일)
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
     
+    // 최근 30일: 오늘 포함 29일 전부터 (총 30일)
     const thirtyDaysAgo = new Date(kstNow);
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29); // -29로 변경 (오늘 포함 30일)
     const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
     
     const oneYearAgo = new Date(kstNow);
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
     const oneYearAgoStr = oneYearAgo.toISOString().split('T')[0];
     
-    console.log(`[update-visitor-stats-cache] Yesterday: ${yesterdayStr}, 7 days ago: ${sevenDaysAgoStr}`);
+    console.log(`[update-visitor-stats-cache] Today: ${today}, Yesterday: ${yesterdayStr}, 7 days range: ${sevenDaysAgoStr} ~ ${today}, 30 days range: ${thirtyDaysAgoStr} ~ ${today}`);
 
     // DB에서 최근 1년 데이터 조회 (visit_hour 포함)
     const { data: records, error } = await supabase

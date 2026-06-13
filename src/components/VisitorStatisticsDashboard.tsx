@@ -93,7 +93,7 @@ export function VisitorStatisticsDashboard() {
     );
   }
 
-  if (error || !stats) {
+  if (error || !stats || !stats.stats) {
     return (
       <div className="visitor-stats-dashboard">
         <div className="error-message">
