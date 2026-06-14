@@ -156,102 +156,160 @@ export interface DailyStats {
   count: number;
 }
 
+// 커스텀 날짜 범위 통계 인터페이스
+export interface CustomRangeStats {
+  start_date: string;
+  end_date: string;
+  unique_visitors: number;
+}
+
+// 월별 통계 인터페이스
+export interface MonthlyStats {
+  year: number;
+  month: number;
+  month_label: string;
+  unique_visitors: number;
+}
+
 /**
- * 시간대별 방문자 통계 조회 (오늘)
+ * 시간대별 방문자 통계 조회 (오늘) - 고유 방문자 기준
  */
 export async function getHourlyVisitorStats(domain: string = DOMAIN): Promise<HourlyStats[]> {
   try {
-    const { data: site } = await supabase
-      .from('visitor_sites')
-      .select('id')
-      .eq('domain', domain)
-      .single();
-
-    if (!site) return [];
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
     const { data, error } = await supabase
-      .from('visitor_logs')
-      .select('created_at')
-      .eq('site_id', site.id)
-      .gte('created_at', today.toISOString());
+      .rpc('get_hourly_unique_visitors', { p_domain: domain });
 
     if (error) throw error;
 
-    // 시간대별로 그룹화
-    const hourlyMap: { [key: number]: number } = {};
-    for (let i = 0; i < 24; i++) {
-      hourlyMap[i] = 0;
-    }
-
-    data?.forEach((log: any) => {
-      const hour = new Date(log.created_at).getHours();
-      hourlyMap[hour]++;
-    });
-
-    return Object.entries(hourlyMap).map(([hour, count]) => ({
-      hour: parseInt(hour),
-      count
-    }));
+    console.log('[시간대별 통계] 조회 성공:', data);
+    return data || [];
   } catch (error) {
     console.error('[시간대별 통계] 조회 실패:', error);
+    // Fallback: 빈 배열 반환
+    return Array.from({ length: 24 }, (_, i) => ({ hour: i, count: 0 }));
+  }
+}
+
+/**
+ * 날짜별 방문자 통계 조회 (최근 N일) - 고유 방문자 기준
+ */
+export async function getDailyVisitorStats(domain: string = DOMAIN, days: number = 30): Promise<DailyStats[]> {
+  try {
+    const { data, error } = await supabase
+      .rpc('get_daily_unique_visitors', { 
+        p_domain: domain,
+        p_days: days 
+      });
+
+    if (error) throw error;
+
+    console.log('[날짜별 통계] 조회 성공:', data);
+    return data || [];
+  } catch (error) {
+    console.error('[날짜별 통계] 조회 실패:', error);
+    // Fallback: 빈 배열 반환
     return [];
   }
 }
 
 /**
- * 날짜별 방문자 통계 조회 (최근 N일)
+ * 커스텀 날짜 범위의 고유 방문자 수 조회
  */
-export async function getDailyVisitorStats(domain: string = DOMAIN, days: number = 30): Promise<DailyStats[]> {
+export async function getCustomDateRangeStats(
+  domain: string = DOMAIN,
+  startDate: string, // YYYY-MM-DD 형식
+  endDate: string     // YYYY-MM-DD 형식
+): Promise<CustomRangeStats | null> {
   try {
-    const { data: site } = await supabase
-      .from('visitor_sites')
-      .select('id')
-      .eq('domain', domain)
-      .single();
-
-    if (!site) return [];
-
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-    startDate.setHours(0, 0, 0, 0);
-
     const { data, error } = await supabase
-      .from('visitor_logs')
-      .select('created_at')
-      .eq('site_id', site.id)
-      .gte('created_at', startDate.toISOString())
-      .order('created_at', { ascending: true });
+      .rpc('get_custom_date_range_visitors', {
+        p_domain: domain,
+        p_start_date: startDate,
+        p_end_date: endDate
+      });
 
     if (error) throw error;
 
-    // 날짜별로 그룹화
-    const dailyMap: { [key: string]: number } = {};
-    
-    // 초기화: 모든 날짜에 0 설정
-    for (let i = 0; i < days; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() - (days - 1 - i));
-      const dateStr = date.toISOString().split('T')[0];
-      dailyMap[dateStr] = 0;
-    }
-
-    // 데이터 집계
-    data?.forEach((log: any) => {
-      const dateStr = log.created_at.split('T')[0];
-      if (dailyMap.hasOwnProperty(dateStr)) {
-        dailyMap[dateStr]++;
-      }
-    });
-
-    return Object.entries(dailyMap).map(([date, count]) => ({
-      date,
-      count
-    }));
+    console.log('[커스텀 날짜 범위] 조회 성공:', data);
+    return data?.[0] || null;
   } catch (error) {
-    console.error('[날짜별 통계] 조회 실패:', error);
+    console.error('[커스텀 날짜 범위] 조회 실패:', error);
+    return null;
+  }
+}
+
+/**
+ * 특정 월의 고유 방문자 수 조회
+ */
+export async function getMonthlyStats(
+  domain: string = DOMAIN,
+  year: number,
+  month: number // 1-12
+): Promise<MonthlyStats | null> {
+  try {
+    const { data, error } = await supabase
+      .rpc('get_monthly_unique_visitors', {
+        p_domain: domain,
+        p_year: year,
+        p_month: month
+      });
+
+    if (error) throw error;
+
+    console.log('[월별 통계] 조회 성공:', data);
+    return data?.[0] || null;
+  } catch (error) {
+    console.error('[월별 통계] 조회 실패:', error);
+    return null;
+  }
+}
+
+/**
+ * 특정 년도의 전체 월별 통계 조회
+ */
+export async function getYearlyMonthlyStats(
+  domain: string = DOMAIN,
+  year: number
+): Promise<MonthlyStats[]> {
+  try {
+    const { data, error } = await supabase
+      .rpc('get_yearly_monthly_stats', {
+        p_domain: domain,
+        p_year: year
+      });
+
+    if (error) throw error;
+
+    console.log('[년도별 월 통계] 조회 성공:', data);
+    return data || [];
+  } catch (error) {
+    console.error('[년도별 월 통계] 조회 실패:', error);
+    return [];
+  }
+}
+
+/**
+ * 커스텀 날짜 범위의 날짜별 고유 방문자 수 조회
+ */
+export async function getDailyVisitorsInRange(
+  domain: string = DOMAIN,
+  startDate: string, // YYYY-MM-DD 형식
+  endDate: string     // YYYY-MM-DD 형식
+): Promise<DailyStats[]> {
+  try {
+    const { data, error } = await supabase
+      .rpc('get_daily_visitors_in_range', {
+        p_domain: domain,
+        p_start_date: startDate,
+        p_end_date: endDate
+      });
+
+    if (error) throw error;
+
+    console.log('[기간 내 날짜별 통계] 조회 성공:', data);
+    return data || [];
+  } catch (error) {
+    console.error('[기간 내 날짜별 통계] 조회 실패:', error);
     return [];
   }
 }

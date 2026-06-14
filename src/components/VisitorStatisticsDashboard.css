@@ -542,3 +542,408 @@
     font-size: 0.6rem;
   }
 }
+
+/* 커스텀 날짜 범위 섹션 */
+.custom-range-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 인라인 필터 컨트롤 그룹 (드롭다운, 날짜 입력, 조회 버튼, 연도 선택을 같은 줄에) */
+.filter-controls-group {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.date-input-inline {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  min-width: 130px;
+  transition: all 0.3s;
+}
+
+.date-input-inline:hover {
+  border-color: #4CAF50;
+}
+
+.date-input-inline:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.date-separator {
+  color: #666;
+  font-weight: 500;
+  padding: 0 0.25rem;
+}
+
+.search-btn-inline {
+  padding: 0.5rem 1rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.search-btn-inline:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.search-btn-inline:active {
+  transform: translateY(0);
+}
+
+.year-select-inline {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  background: white;
+  transition: all 0.3s;
+  min-width: 100px;
+}
+
+.year-select-inline:hover {
+  border-color: #4CAF50;
+}
+
+.year-select-inline:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.result-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+}
+
+.result-badge-label {
+  opacity: 0.9;
+}
+
+.result-badge-value {
+  font-size: 1.1rem;
+}
+
+/* 월별 통계 인라인 그리드 (컴팩트 버전) */
+.monthly-stats-grid-inline {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.monthly-card-inline {
+  background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+  color: white;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.3s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.monthly-card-inline:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(161, 140, 209, 0.4);
+}
+
+.monthly-card-inline:nth-child(even) {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.monthly-card-inline:nth-child(3n) {
+  background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+}
+
+.monthly-card-inline .stat-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.monthly-card-inline .stat-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+}
+
+.monthly-card-inline .stat-unit {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 0.25rem;
+}
+
+.custom-range-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.date-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.date-input-group label {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.date-input {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  min-width: 160px;
+  transition: all 0.3s;
+}
+
+.date-input:hover {
+  border-color: #4CAF50;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.search-btn {
+  padding: 0.75rem 1.5rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.search-btn:hover {
+  background: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.search-btn:active {
+  transform: translateY(0);
+}
+
+.custom-range-result {
+  margin-top: 1.5rem;
+}
+
+.custom-range-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.custom-range-card .stat-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 1rem;
+  justify-content: center;
+}
+
+.custom-range-card .stat-value {
+  font-size: 3rem;
+  color: white;
+}
+
+.custom-range-card .stat-unit {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+}
+
+.custom-range-daily-chart {
+  margin-top: 1.5rem;
+}
+
+.custom-range-daily-chart h4 {
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+/* 월별 통계 섹션 */
+.monthly-stats-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.year-select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background: white;
+  transition: all 0.3s;
+}
+
+.year-select:hover {
+  border-color: #4CAF50;
+}
+
+.year-select:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.monthly-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.monthly-card {
+  background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+  color: white;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem;
+  transition: all 0.3s;
+}
+
+.monthly-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(161, 140, 209, 0.4);
+}
+
+.monthly-card:nth-child(even) {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.monthly-card:nth-child(3n) {
+  background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+}
+
+.monthly-card .stat-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.75rem;
+  justify-content: center;
+}
+
+.monthly-card .stat-value {
+  font-size: 2rem;
+  color: white;
+}
+
+.monthly-card .stat-unit {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  /* 인라인 컨트롤 반응형 - 모바일에서는 세로 정렬 */
+  .filter-controls-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .date-input-inline,
+  .search-btn-inline,
+  .year-select-inline {
+    width: 100%;
+  }
+
+  .date-separator {
+    display: none;
+  }
+
+  .result-badge {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .monthly-stats-grid-inline {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .custom-range-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .date-input-group {
+    width: 100%;
+  }
+
+  .date-input {
+    width: 100%;
+  }
+
+  .search-btn {
+    width: 100%;
+  }
+
+  .monthly-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .custom-range-card .stat-value {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 모바일에서 월별 카드를 1열로 */
+  .monthly-stats-grid,
+  .monthly-stats-grid-inline {
+    grid-template-columns: 1fr;
+  }
+
+  .custom-range-card {
+    padding: 1.5rem;
+  }
+
+  .custom-range-card .stat-value {
+    font-size: 2rem;
+  }
+}
