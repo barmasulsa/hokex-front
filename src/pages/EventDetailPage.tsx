@@ -1869,10 +1869,8 @@ export function EventDetailPage() {
               {event.venue === '경주화백컨벤션센터' ? (
                 <a 
                   href="https://www.hico.or.kr/" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    window.open('https://www.hico.or.kr/', '_blank', 'width=1000,height=800,scrollbars=yes,resizable=yes');
-                  }}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="btn-venue-page"
                 >
                   <ExternalLink size={20} /> 전시장 홈페이지
