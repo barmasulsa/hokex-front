@@ -168,24 +168,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     alert('네이버 로그인은 아직 구현되지 않았습니다.');
   };
 
-  // 스티비 구독자 확인
+  // 스티비 구독자 확인 (DB 테이블 직접 확인으로 임시 변경)
   const checkSubscription = async (email: string): Promise<boolean> => {
     try {
       console.log('Checking subscription for:', email);
       
-      const { data, error } = await supabase.functions.invoke('check-stibee-subscriber', {
-        body: { email },
+      // Edge Function 대신 DB 직접 확인 (테스트 환경을 위한 임시 변경)
+      const { data, error } = await supabase.rpc('check_subscriber_in_db', {
+        user_email: email,
       });
 
-      console.log('Edge Function response:', data);
+      console.log('DB check response:', data, error);
 
       if (error) {
         console.error('Error checking subscription:', error);
         return false;
       }
 
-      const isSubscriber = data?.isSubscriber === true;
-      console.log('Is subscriber:', isSubscriber, 'Status:', data?.status);
+      const isSubscriber = data === true;
+      console.log('Is subscriber:', isSubscriber);
       
       return isSubscriber;
     } catch (error) {
@@ -194,30 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // 승인된 이메일인지 확인
-  const checkApprovedEmail = async (email: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase
-        .from('approved_emails')
-        .select('email')
-        .eq('email', email)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // No rows returned - 승인되지 않음
-          return false;
-        }
-        console.error('Error checking approved email:', error);
-        return false;
-      }
-
-      return !!data;
-    } catch (error) {
-      console.error('Error checking approved email:', error);
-      return false;
-    }
-  };
+  // 승인 시스템 제거 - 구독자 확인만 사용
 
   // 대기 명단에 추가 (이메일 전송 실패 시 자동으로 호출)
   const addToPendingList = async (
@@ -261,21 +239,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // 비밀번호 로그인 - 구독자 또는 승인된 이메일만 허용
+  // 비밀번호 로그인 - 구독자만 허용
   const signInWithPassword = async (email: string, password: string) => {
-    // 1. 먼저 스티비 구독자인지 확인
+    // 스티비 구독자인지 확인
     const isSubscriber = await checkSubscription(email);
     
-    // 2. 구독자가 아니면 승인된 이메일인지 확인
     if (!isSubscriber) {
-      const isApproved = await checkApprovedEmail(email);
-      
-      if (!isApproved) {
-        throw new Error('NEEDS_APPROVAL');
-      }
+      throw new Error('SUBSCRIBER_ONLY');
     }
 
-    // 3. 비밀번호 로그인 진행
+    // 비밀번호 로그인 진행
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -416,21 +389,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // const sendOTPCode = async (email: string): Promise<{ expiresIn: number }> => { ... }
   // const verifyOTPCode = async (email: string, code: string): Promise<void> => { ... }
 
-  // Magic Link 로그인 (이메일 전용) - 구독자만 허용, 실패 시 자동으로 대기 명단 추가
+  // Magic Link 로그인 (이메일 전용) - 구독자만 허용
   const signInWithMagicLink = async (email: string) => {
-    // 1. 먼저 스티비 구독자인지 확인
+    // 스티비 구독자인지 확인
     const isSubscriber = await checkSubscription(email);
     
     if (!isSubscriber) {
-      // 승인된 이메일인지 확인
-      const isApproved = await checkApprovedEmail(email);
-      
-      if (!isApproved) {
-        throw new Error('NEEDS_APPROVAL');
-      }
+      throw new Error('SUBSCRIBER_ONLY');
     }
 
-    // 2. Magic Link 전송
+    // Magic Link 전송
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
@@ -464,7 +432,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error: any) {
       // 이미 처리한 에러는 그대로 던지기
-      if (error.message === 'EMAIL_BLOCKED' || error.message === 'NEEDS_APPROVAL') {
+      if (error.message === 'EMAIL_BLOCKED' || error.message === 'SUBSCRIBER_ONLY') {
         throw error;
       }
 
