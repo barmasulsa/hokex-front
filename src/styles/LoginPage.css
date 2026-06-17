@@ -561,3 +561,127 @@
     font-size: 14px;
   }
 }
+
+/* 점검 팝업 스타일 */
+.maintenance-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.maintenance-popup {
+  background: white;
+  border-radius: 16px;
+  padding: 40px 30px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  animation: slideUp 0.3s ease-in-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.maintenance-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.maintenance-popup h2 {
+  margin: 0 0 20px 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.maintenance-message {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: #374151;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.maintenance-submessage {
+  margin: 0 0 32px 0;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.maintenance-close-btn {
+  padding: 14px 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  max-width: 200px;
+}
+
+.maintenance-close-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.maintenance-close-btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 480px) {
+  .maintenance-popup {
+    padding: 30px 20px;
+  }
+  
+  .maintenance-icon {
+    font-size: 56px;
+  }
+  
+  .maintenance-popup h2 {
+    font-size: 20px;
+  }
+  
+  .maintenance-message {
+    font-size: 15px;
+  }
+  
+  .maintenance-submessage {
+    font-size: 13px;
+  }
+  
+  .maintenance-close-btn {
+    padding: 12px 32px;
+    font-size: 15px;
+  }
+}
