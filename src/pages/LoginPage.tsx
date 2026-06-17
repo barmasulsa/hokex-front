@@ -12,7 +12,6 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [showMaintenancePopup, setShowMaintenancePopup] = useState(true);
 
   useEffect(() => {
     if (!loading && user) {
@@ -112,30 +111,6 @@ export function LoginPage() {
 
   return (
     <div className="login-container">
-      {/* 로그인 시스템 점검 팝업 */}
-      {showMaintenancePopup && (
-        <div className="maintenance-overlay">
-          <div className="maintenance-popup">
-            <div className="maintenance-icon">⚠️</div>
-            <h2>시스템 점검 안내</h2>
-            <p className="maintenance-message">
-              현재 로그인 시스템 점검 중입니다.<br />
-              로그인이 일시적으로 불가능합니다.
-            </p>
-            <p className="maintenance-submessage">
-              점검이 완료되는대로 다시 이용하실 수 있습니다.<br />
-              불편을 드려 죄송합니다.
-            </p>
-            <button 
-              className="maintenance-close-btn"
-              onClick={() => setShowMaintenancePopup(false)}
-            >
-              확인
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className="login-box">
         <div className="login-header">
           <h1>HOKEX</h1>
