@@ -12,7 +12,7 @@
   background: white;
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  max-width: 440px;
+  max-width: 550px;
   width: 100%;
   overflow: hidden;
 }
@@ -84,9 +84,41 @@
 .login-steps {
   margin-top: 0;
   margin-bottom: 8px;
-  font-size: 12px;
+  font-size: 14px;
   color: #64748b;
   line-height: 1.6;
+}
+
+.initial-password-notice {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 20px;
+  margin-bottom: 24px;
+}
+
+.initial-password-notice h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #856404;
+}
+
+.initial-password-notice p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #856404;
+  line-height: 1.6;
+}
+
+.initial-password-notice p:first-of-type {
+  margin-bottom: 24px;
+}
+
+.initial-password-notice .password-change-notice {
+  margin-top: 16px;
+  font-size: 13px;
 }
 
 .magic-link-info-box {

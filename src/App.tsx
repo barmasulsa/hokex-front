@@ -8,7 +8,6 @@ import { LoginPage } from './pages/LoginPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { BannerManagementPage } from './pages/BannerManagementPage';
 import { DeletedEventsPage } from './pages/DeletedEventsPage';
-import { AdminApprovalPage } from './pages/AdminApprovalPage';
 
 import { initGA4, recordVisit } from './utils/analytics';
 import { trackVisit as recordVisitorCounter } from './utils/visitorCounter';
@@ -132,7 +131,6 @@ function AppContent() {
               {isAdmin && (
                 <>
                   <span className="admin-badge">관리자</span>
-                  <Link to="/admin/approvals" className="nav-link">🔐 승인 관리</Link>
                   <Link to="/admin/banners" className="nav-link">배너 관리</Link>
                   <Link to="/admin/deleted-events" className="nav-link">🗑️ 삭제된 행사</Link>
                 </>
@@ -169,7 +167,6 @@ function AppContent() {
         <Route path="/profile" element={<UserProfilePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/admin/approvals" element={<AdminApprovalPage />} />
         <Route path="/admin/banners" element={<BannerManagementPage />} />
         <Route path="/admin/deleted-events" element={<DeletedEventsPage />} />
       </Routes>
