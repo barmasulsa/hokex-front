@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>커뮤니티 API 테스트</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: 'Malgun Gothic', sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+    .success {
+      color: green;
+      font-weight: bold;
+    }
+    .warning {
+      color: orange;
+      font-weight: bold;
+    }
+    h2 {
+      color: #333;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 커뮤니티 기능 API 테스트</h1>
+  
+  <div class="section">
+    <h2>⚙️ Supabase 연결 설정</h2>
+    <p>Supabase URL과 Anon Key를 입력하세요 (환경변수에서 자동으로 가져옵니다)</p>
+    <div id="config-status"></div>
+  </div>
+
+  <div class="section">
+    <h2>1️⃣ 테이블 존재 확인</h2>
+    <button onclick="checkTables()">테이블 확인</button>
+    <pre id="tables-result">결과가 여기 표시됩니다...</pre>
+  </div>
+
+  <div class="section">
+    <h2>2️⃣ board_categories 데이터 조회</h2>
+    <button onclick="fetchCategories()">카테고리 조회</button>
+    <pre id="categories-result">결과가 여기 표시됩니다...</pre>
+  </div>
+
+  <div class="section">
+    <h2>3️⃣ 진단 요약</h2>
+    <button onclick="runDiagnostics()">전체 진단 실행</button>
+    <pre id="diagnostics-result">결과가 여기 표시됩니다...</pre>
+  </div>
+
+  <script>
+    // Supabase 클라이언트 초기화
+    // 실제 프로젝트의 환경변수 값으로 변경하세요
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // 예: https://xxxxx.supabase.co
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+    let supabase;
+
+    // 초기화
+    function initSupabase() {
+      if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
+        document.getElementById('config-status').innerHTML = `
+          <p class="error">❌ Supabase 설정이 필요합니다!</p>
+          <p>이 파일을 편집하여 SUPABASE_URL과 SUPABASE_ANON_KEY를 설정하세요.</p>
+          <p>또는 src/lib/supabase.ts 파일에서 환경변수를 확인하세요.</p>
+        `;
+        return false;
+      }
+
+      try {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        document.getElementById('config-status').innerHTML = `
+          <p class="success">✅ Supabase 연결 성공</p>
+          <p>URL: ${SUPABASE_URL}</p>
+        `;
+        return true;
+      } catch (error) {
+        document.getElementById('config-status').innerHTML = `
+          <p class="error">❌ Supabase 초기화 실패: ${error.message}</p>
+        `;
+        return false;
+      }
+    }
+
+    // 테이블 존재 확인
+    async function checkTables() {
+      if (!supabase) {
+        document.getElementById('tables-result').textContent = '❌ Supabase가 초기화되지 않았습니다.';
+        return;
+      }
+
+      const result = document.getElementById('tables-result');
+      result.textContent = '확인 중...';
+
+      try {
+        // board_categories 테이블 확인
+        const { data: categories, error: catError } = await supabase
+          .from('board_categories')
+          .select('count')
+          .limit(1);
+
+        // posts 테이블 확인
+        const { data: posts, error: postError } = await supabase
+          .from('posts')
+          .select('count')
+          .limit(1);
+
+        // user_profiles 테이블 확인
+        const { data: profiles, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('count')
+          .limit(1);
+
+        const results = {
+          board_categories: catError ? `❌ 없음 (${catError.message})` : '✅ 존재',
+          posts: postError ? `❌ 없음 (${postError.message})` : '✅ 존재',
+          user_profiles: profileError ? `❌ 없음 (${profileError.message})` : '✅ 존재',
+        };
+
+        result.textContent = JSON.stringify(results, null, 2);
+      } catch (error) {
+        result.textContent = `❌ 오류: ${error.message}`;
+      }
+    }
+
+    // 카테고리 조회
+    async function fetchCategories() {
+      if (!supabase) {
+        document.getElementById('categories-result').textContent = '❌ Supabase가 초기화되지 않았습니다.';
+        return;
+      }
+
+      const result = document.getElementById('categories-result');
+      result.textContent = '조회 중...';
+
+      try {
+        const { data, error } = await supabase
+          .from('board_categories')
+          .select('*')
+          .eq('is_active', true)
+          .order('order', { ascending: true });
+
+        if (error) {
+          result.innerHTML = `<span class="error">❌ 오류: ${error.message}</span>\n\n${JSON.stringify(error, null, 2)}`;
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          result.innerHTML = `<span class="warning">⚠️ 카테고리 데이터가 없습니다.</span>\n\nQUICK_FIX_COMMUNITY.sql의 옵션 2를 실행하세요.`;
+          return;
+        }
+
+        result.innerHTML = `<span class="success">✅ 카테고리 ${data.length}개 조회 성공!</span>\n\n${JSON.stringify(data, null, 2)}`;
+      } catch (error) {
+        result.textContent = `❌ 오류: ${error.message}`;
+      }
+    }
+
+    // 전체 진단
+    async function runDiagnostics() {
+      if (!supabase) {
+        document.getElementById('diagnostics-result').textContent = '❌ Supabase가 초기화되지 않았습니다.';
+        return;
+      }
+
+      const result = document.getElementById('diagnostics-result');
+      result.textContent = '진단 중...';
+
+      const diagnostics = {
+        timestamp: new Date().toISOString(),
+        checks: {}
+      };
+
+      try {
+        // 1. board_categories 확인
+        const { data: categories, error: catError } = await supabase
+          .from('board_categories')
+          .select('*')
+          .eq('is_active', true);
+
+        diagnostics.checks.board_categories = {
+          table_exists: !catError,
+          data_count: categories?.length || 0,
+          error: catError?.message || null,
+          status: !catError && categories && categories.length > 0 ? '✅' : '❌'
+        };
+
+        // 2. posts 테이블 확인
+        const { data: posts, error: postError } = await supabase
+          .from('posts')
+          .select('count')
+          .limit(1);
+
+        diagnostics.checks.posts = {
+          table_exists: !postError,
+          error: postError?.message || null,
+          status: !postError ? '✅' : '❌'
+        };
+
+        // 3. user_profiles 테이블 확인
+        const { data: profiles, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('count')
+          .limit(1);
+
+        diagnostics.checks.user_profiles = {
+          table_exists: !profileError,
+          error: profileError?.message || null,
+          status: !profileError ? '✅' : '❌'
+        };
+
+        // 결과 요약
+        const allGood = Object.values(diagnostics.checks).every(check => check.status === '✅');
+        
+        diagnostics.summary = allGood 
+          ? '✅ 모든 체크 통과! 커뮤니티 기능이 정상적으로 작동해야 합니다.'
+          : '❌ 일부 체크 실패. 아래 상세 내용을 확인하고 QUICK_FIX_COMMUNITY.sql을 실행하세요.';
+
+        result.textContent = JSON.stringify(diagnostics, null, 2);
+      } catch (error) {
+        result.textContent = `❌ 진단 중 오류: ${error.message}`;
+      }
+    }
+
+    // 페이지 로드시 초기화
+    window.addEventListener('DOMContentLoaded', () => {
+      initSupabase();
+    });
+  </script>
+</body>
+</html>

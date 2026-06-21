@@ -3,13 +3,20 @@ import type { Banner } from '../types/banner';
 
 /**
  * 활성화된 배너 목록 조회 (표시 순서대로)
+ * @param announcementCategory - 'homepage' 또는 'community' (선택사항)
  */
-export async function fetchActiveBanners(): Promise<Banner[]> {
-  const { data, error } = await supabase
+export async function fetchActiveBanners(announcementCategory?: 'homepage' | 'community'): Promise<Banner[]> {
+  let query = supabase
     .from('banners')
     .select('*')
-    .eq('is_active', true)
-    .order('display_order', { ascending: true });
+    .eq('is_active', true);
+  
+  // announcement_category 필터 추가
+  if (announcementCategory) {
+    query = query.eq('announcement_category', announcementCategory);
+  }
+  
+  const { data, error } = await query.order('display_order', { ascending: true });
 
   if (error) {
     console.error('배너 조회 실패:', error);

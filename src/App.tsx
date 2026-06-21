@@ -8,6 +8,7 @@ import { LoginPage } from './pages/LoginPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { BannerManagementPage } from './pages/BannerManagementPage';
 import { DeletedEventsPage } from './pages/DeletedEventsPage';
+import { CommunityPage } from './pages/CommunityPage';
 
 import { initGA4, recordVisit } from './utils/analytics';
 import { trackVisit as recordVisitorCounter } from './utils/visitorCounter';
@@ -127,6 +128,7 @@ function AppContent() {
         <div className="header-actions">
           {user ? (
             <>
+              <Link to="/community" className="nav-link">커뮤니티</Link>
               <Link to="/profile" className="nav-link">My Profile</Link>
               {isAdmin && (
                 <>
@@ -164,6 +166,7 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/event/:id" element={<EventDetailPage />} />
+        <Route path="/community" element={<CommunityPage />} />
         <Route path="/profile" element={<UserProfilePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />

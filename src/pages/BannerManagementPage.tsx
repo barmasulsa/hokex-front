@@ -10,6 +10,7 @@ import { VisitorStatisticsDashboard } from '../components/VisitorStatisticsDashb
 import './BannerManagementPage.css';
 
 type ManagementTab = 'image' | 'youtube' | 'text' | 'statistics' | 'viewcounts';
+type AnnouncementSubTab = 'homepage' | 'community';
 
 export function BannerManagementPage() {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -20,6 +21,7 @@ export function BannerManagementPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState<ManagementTab>('image'); // 탭 상태
+  const [announcementSubTab, setAnnouncementSubTab] = useState<AnnouncementSubTab>('homepage'); // 공지사항 하위 탭
   const [viewCountStats, setViewCountStats] = useState<ViewCountStats[]>([]);
   const [loadingViewCounts, setLoadingViewCounts] = useState(false);
   const [savedEventStats, setSavedEventStats] = useState<SavedEventStats[]>([]);
@@ -48,6 +50,7 @@ export function BannerManagementPage() {
     link_url: '',
     is_active: true,
     display_order: 0,
+    announcement_category: 'homepage' as 'homepage' | 'community', // 배너 카테고리 (홈페이지/커뮤니티)
     show_as_popup: false,
     popup_start_date: '',
     popup_end_date: '',
@@ -221,6 +224,7 @@ export function BannerManagementPage() {
       link_url: '',
       is_active: true,
       display_order: maxOrder + 1,
+      announcement_category: announcementSubTab, // 모든 타입에서 현재 선택된 하위 탭 사용
       show_as_popup: false,
       popup_start_date: '',
       popup_end_date: '',
@@ -344,6 +348,7 @@ export function BannerManagementPage() {
       link_url: banner.link_url || '',
       is_active: banner.is_active,
       display_order: banner.display_order,
+      announcement_category: banner.announcement_category || 'homepage', // 기본값: 홈페이지
       show_as_popup: banner.show_as_popup || false,
       popup_start_date: banner.popup_start_date || '',
       popup_end_date: banner.popup_end_date || '', // DB에서 null이면 빈 문자열로 변환
@@ -361,6 +366,7 @@ export function BannerManagementPage() {
       link_url: '',
       is_active: true,
       display_order: 0,
+      announcement_category: 'homepage',
       show_as_popup: false,
       popup_start_date: '',
       popup_end_date: '',
@@ -468,6 +474,7 @@ export function BannerManagementPage() {
         link_url: linkUrl,
         is_active: formData.is_active,
         display_order: formData.display_order,
+        announcement_category: formData.announcement_category,
         show_as_popup: formData.show_as_popup,
         popup_start_date: formData.popup_start_date || undefined,
         popup_end_date: popupEndDate
@@ -488,6 +495,7 @@ export function BannerManagementPage() {
         link_url: linkUrl,
         is_active: formData.is_active,
         display_order: formData.display_order,
+        announcement_category: formData.announcement_category,
         show_as_popup: formData.show_as_popup,
         popup_start_date: formData.popup_start_date || undefined,
         popup_end_date: popupEndDate
@@ -533,9 +541,13 @@ export function BannerManagementPage() {
     return null;
   }
 
-  // 타입별 배너 필터링
-  const filteredBanners = activeTab !== 'statistics' 
-    ? banners.filter(b => b.type === activeTab)
+  // 타입별 배너 필터링 (모든 타입에서 announcement_category로 추가 필터링)
+  const filteredBanners = activeTab !== 'statistics' && activeTab !== 'viewcounts'
+    ? banners.filter(b => {
+        if (b.type !== activeTab) return false;
+        // 모든 타입에서 하위 카테고리로 필터링
+        return (b.announcement_category || 'homepage') === announcementSubTab;
+      })
     : [];
 
   return (
@@ -959,12 +971,31 @@ export function BannerManagementPage() {
       {/* 배너 관리 섹션 (기존 코드) */}
       {activeTab !== 'statistics' && activeTab !== 'viewcounts' && (
         <div className="banner-management-section">
+      
+      {/* 하위 카테고리 탭 (모든 배너 타입에 표시) */}
+      {(activeTab === 'image' || activeTab === 'youtube' || activeTab === 'text') && (
+        <div className="announcement-sub-tabs">
+          <button
+            className={`sub-tab-btn ${announcementSubTab === 'homepage' ? 'active' : ''}`}
+            onClick={() => setAnnouncementSubTab('homepage')}
+          >
+            홈페이지
+          </button>
+          <button
+            className={`sub-tab-btn ${announcementSubTab === 'community' ? 'active' : ''}`}
+            onClick={() => setAnnouncementSubTab('community')}
+          >
+            커뮤니티
+          </button>
+        </div>
+      )}
+
       {/* 새 배너 추가 버튼 */}
       <div className="add-banner-section">
         <button className="btn-primary" onClick={() => handleCreate(activeTab as BannerType)}>
-          {activeTab === 'image' && '+ 이미지 배너 추가'}
-          {activeTab === 'youtube' && '+ 유튜브 추가'}
-          {activeTab === 'text' && '+ 공지사항 추가'}
+          {activeTab === 'image' && `+ ${announcementSubTab === 'homepage' ? '홈페이지' : '커뮤니티'} 이미지 배너 추가`}
+          {activeTab === 'youtube' && `+ ${announcementSubTab === 'homepage' ? '홈페이지' : '커뮤니티'} 유튜브 추가`}
+          {activeTab === 'text' && `+ ${announcementSubTab === 'homepage' ? '홈페이지' : '커뮤니티'} 공지사항 추가`}
         </button>
       </div>
 
@@ -1192,6 +1223,7 @@ export function BannerManagementPage() {
                 <th>순서</th>
                 <th>제목</th>
                 <th>내용</th>
+                <th>카테고리</th>
                 {activeTab === 'text' && <th>조회수</th>}
                 {activeTab === 'image' && <th>링크 URL</th>}
                 <th>팝업</th>
@@ -1213,6 +1245,11 @@ export function BannerManagementPage() {
                     ) : (
                       banner.content.substring(0, 30) + (banner.content.length > 30 ? '...' : '')
                     )}
+                  </td>
+                  <td>
+                    <span className={`category-badge ${banner.announcement_category || 'homepage'}`}>
+                      {banner.announcement_category === 'community' ? '커뮤니티' : '홈페이지'}
+                    </span>
                   </td>
                   {activeTab === 'text' && (
                     <td className="view-count-cell">

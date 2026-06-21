@@ -1006,7 +1006,7 @@ export function HomePage() {
         {/* 오른쪽 메인 영역 */}
         <div className="main-content-area">
           {/* 배너 영역 */}
-          <Banner />
+          <Banner announcementCategory="homepage" />
 
           {/* 결과 카운트 배너 */}
           <div className="results-count-banner">

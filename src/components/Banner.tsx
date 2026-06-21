@@ -26,7 +26,11 @@ const extractYoutubeId = (url: string): string => {
   return url; // 추출 실패 시 원본 반환
 };
 
-export function Banner() {
+interface BannerProps {
+  announcementCategory?: 'homepage' | 'community';
+}
+
+export function Banner({ announcementCategory = 'homepage' }: BannerProps) {
   const [loading, setLoading] = useState(true);
 
   // 타입별로 배너 분류
@@ -44,7 +48,7 @@ export function Banner() {
 
   useEffect(() => {
     async function loadBanners() {
-      const data = await fetchActiveBanners();
+      const data = await fetchActiveBanners(announcementCategory);
       
       // 타입별로 분류
       setImageBanners(data.filter(b => b.type === 'image'));
@@ -54,7 +58,7 @@ export function Banner() {
       setLoading(false);
     }
     loadBanners();
-  }, []);
+  }, [announcementCategory]);
 
   // 이미지 배너 자동 슬라이드
   useEffect(() => {
