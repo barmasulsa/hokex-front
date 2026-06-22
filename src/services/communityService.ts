@@ -10,7 +10,7 @@ export interface BoardCategory {
   description: string;
   icon: string;
   order: number;
-  is_active: boolean;
+  is_active: boolean; // false = section header (non-clickable), true = clickable button
   created_at: string;
 }
 
@@ -62,7 +62,7 @@ export async function fetchBoardCategories(): Promise<BoardCategory[]> {
   const { data, error } = await supabase
     .from('board_categories')
     .select('*')
-    .eq('is_active', true)
+    // Remove the is_active filter to include section headers (is_active = false)
     .order('order', { ascending: true });
 
   if (error) {

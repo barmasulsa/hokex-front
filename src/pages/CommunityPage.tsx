@@ -171,25 +171,43 @@ export function CommunityPage() {
             ) : (
               <div className="board-category-list">
                 {categories.map(category => (
-                  <button
-                    key={category.id}
-                    className={`filter-btn-sidebar ${selectedCategory === category.id ? 'active' : ''}`}
-                    onClick={() => {
-                      setSelectedCategory(category.id);
-                      setPage(1);
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      width: '100%',
-                      justifyContent: 'flex-start',
-                      padding: '0.75rem 1rem'
-                    }}
-                  >
-                    <span style={{ fontSize: '1.2rem' }}>{category.icon}</span>
-                    <span>{category.name}</span>
-                  </button>
+                  <div key={category.id}>
+                    {!category.is_active ? (
+                      // 분류 헤더 (is_active = false, 클릭 불가능)
+                      <div style={{
+                        padding: '0.5rem 1rem',
+                        marginTop: '0.5rem',
+                        marginBottom: '0.25rem',
+                        fontWeight: '700',
+                        fontSize: '0.85rem',
+                        color: '#4A90E2',
+                        borderBottom: '2px solid #E3F2FD',
+                        background: '#F5F9FF'
+                      }}>
+                        {category.icon} {category.name}
+                      </div>
+                    ) : (
+                      // 일반 게시판 버튼 (is_active = true, 클릭 가능)
+                      <button
+                        className={`filter-btn-sidebar ${selectedCategory === category.id ? 'active' : ''}`}
+                        onClick={() => {
+                          setSelectedCategory(category.id);
+                          setPage(1);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          width: '100%',
+                          justifyContent: 'flex-start',
+                          padding: '0.3rem 1rem'
+                        }}
+                      >
+                        <span style={{ fontSize: '1.2rem' }}>{category.icon}</span>
+                        <span>{category.name}</span>
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             )}

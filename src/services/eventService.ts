@@ -86,6 +86,19 @@ function setCachedData<T>(key: string, data: T, ttl: number = 300000) {
   localStorage.setItem(key, JSON.stringify(cached));
 }
 
+// 캐시 무효화 함수
+export function invalidateEventsCache() {
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('events:')) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+  console.log('[Cache] Invalidated', keysToRemove.length, 'events cache entries');
+}
+
 // 페이지네이션된 행사 가져오기 (48개씩)
 export async function fetchEventsPaginated(
   pageParam: number = 0, 
@@ -401,6 +414,9 @@ export async function updateEvent(eventId: string, updates: Partial<EventRecord>
     console.error('Error updating event:', error);
     return false;
   }
+
+  // 캐시 무효화 - 관리자 수정 후 즉시 반영
+  invalidateEventsCache();
 
   // 변경 이력 저장
   if (updates.title && currentEvent.title !== updates.title) {
