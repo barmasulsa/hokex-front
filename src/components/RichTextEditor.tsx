@@ -1,228 +1,56 @@
-import { useRef, useEffect } from 'react';
-import './RichTextEditor.css';
+import { useEffect, useRef, useState } from 'react';
 
-interface RichTextEditorProps {
+interface Props {
   value: string;
-  onChange: (html: string) => void;
+  onChange: (value: string) => void;
   placeholder?: string;
+  onImageUpload?: (file: File) => Promise<string>;
+  onFileUpload?: (file: File) => Promise<{ url: string; name: string }>;
 }
 
-export function RichTextEditor({ value, onChange, placeholder = '내용을 입력하세요...' }: RichTextEditorProps) {
-  const editorRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // 초기값 설정
-  useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value;
+const allowedTags = new Set(['P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'DIV', 'SPAN', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'A', 'IMG', 'H2', 'H3']);
+export function sanitizeCommunityHtml(value: string) {
+  const doc = new DOMParser().parseFromString(value, 'text/html');
+  doc.body.querySelectorAll('*').forEach(element => {
+    if (!allowedTags.has(element.tagName)) { element.replaceWith(...Array.from(element.childNodes)); return; }
+    Array.from(element.attributes).forEach(attribute => {
+      const allowed = (element.tagName === 'A' && ['href', 'target', 'rel'].includes(attribute.name)) || (element.tagName === 'IMG' && ['src', 'alt'].includes(attribute.name)) || (['SPAN', 'DIV', 'P', 'H2', 'H3'].includes(element.tagName) && attribute.name === 'style');
+      if (!allowed || /^on/i.test(attribute.name) || /javascript:/i.test(attribute.value)) element.removeAttribute(attribute.name);
+    });
+    if (element.hasAttribute('style')) {
+      const style = element.getAttribute('style') || '';
+      const safeStyle = style.split(';').map(rule => rule.trim()).filter(rule => /^(font-family|font-size|text-align|color)\s*:/i.test(rule) && !/expression|url\s*\(/i.test(rule)).join('; ');
+      if (safeStyle) element.setAttribute('style', safeStyle); else element.removeAttribute('style');
     }
-  }, [value]);
+    if (element.tagName === 'A') { element.setAttribute('target', '_blank'); element.setAttribute('rel', 'noopener noreferrer'); }
+  });
+  return doc.body.innerHTML;
+}
 
-  // 에디터 내용 변경 핸들러
-  const handleInput = () => {
-    if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
-    }
-  };
+export function RichTextContent({ value }: { value: string }) {
+  return <div className="rich-content" dangerouslySetInnerHTML={{ __html: sanitizeCommunityHtml(value) }} />;
+}
 
-  // 서식 적용 함수
-  const applyFormat = (command: string, value?: string) => {
-    document.execCommand(command, false, value);
-    editorRef.current?.focus();
-  };
-
-  // 색상 선택 핸들러
-  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    applyFormat('foreColor', e.target.value);
-  };
-
-  // 이미지 업로드 핸들러
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // 이미지 파일 검증
-    if (!file.type.startsWith('image/')) {
-      alert('이미지 파일만 업로드할 수 있습니다.');
-      return;
-    }
-
-    // 파일 크기 제한 (2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      alert('이미지 크기는 2MB 이하여야 합니다.');
-      return;
-    }
-
-    // Base64로 변환하여 삽입
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      // 이미지 태그 삽입
-      document.execCommand('insertHTML', false, `<img src="${base64}" alt="uploaded" style="max-width: 100%; height: auto; margin: 10px 0;" />`);
-      editorRef.current?.focus();
-    };
-    reader.readAsDataURL(file);
-
-    // 파일 입력 초기화
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  return (
-    <div className="rich-text-editor">
-      {/* 툴바 */}
-      <div className="editor-toolbar">
-        <button
-          type="button"
-          className="toolbar-btn"
-          onClick={() => applyFormat('bold')}
-          title="굵게 (Ctrl+B)"
-        >
-          <strong>B</strong>
-        </button>
-        <button
-          type="button"
-          className="toolbar-btn"
-          onClick={() => applyFormat('italic')}
-          title="기울임 (Ctrl+I)"
-        >
-          <em>I</em>
-        </button>
-        <button
-          type="button"
-          className="toolbar-btn"
-          onClick={() => applyFormat('underline')}
-          title="밑줄 (Ctrl+U)"
-        >
-          <u>U</u>
-        </button>
-        <button
-          type="button"
-          className="toolbar-btn"
-          onClick={() => applyFormat('strikeThrough')}
-          title="취소선"
-        >
-          <s>S</s>
-        </button>
-        
-        <div className="toolbar-divider" />
-        
-        {/* 색상 선택 */}
-        <label className="toolbar-btn color-picker-label" title="텍스트 색상">
-          <span>A</span>
-          <input
-            type="color"
-            className="color-picker"
-            onChange={handleColorChange}
-            defaultValue="#000000"
-          />
-        </label>
-        
-        <div className="toolbar-divider" />
-        
-        {/* 정렬 */}
-        <button
-          type="button"
-          className="toolbar-btn"
-          onClick={() => applyFormat('justifyLeft')}
-          title="왼쪽 정렬"
-        >
-          ≡
-        </button>
-        <button
-          type="button"
-          className="toolbar-btn"
-          onClick={() => applyFormat('justifyCenter')}
-          title="가운데 정렬"
-        >
-          ≣
-        </button>
-        <button
-          type="button"
-          className="toolbar-btn"
-          onClick={() => applyFormat('justifyRight')}
-          title="오른쪽 정렬"
-        >
-          ≡
-        </button>
-        
-        <div className="toolbar-divider" />
-        
-        {/* 리스트 */}
-        <button
-          type="button"
-          className="toolbar-btn"
-          onClick={() => applyFormat('insertUnorderedList')}
-          title="글머리 기호"
-        >
-          • 목록
-        </button>
-        <button
-          type="button"
-          className="toolbar-btn"
-          onClick={() => applyFormat('insertOrderedList')}
-          title="번호 매기기"
-        >
-          1. 목록
-        </button>
-        
-        <div className="toolbar-divider" />
-        
-        {/* 이미지 삽입 */}
-        <button
-          type="button"
-          className="toolbar-btn"
-          onClick={() => fileInputRef.current?.click()}
-          title="이미지 삽입"
-        >
-          🖼️ 이미지
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          style={{ display: 'none' }}
-          onChange={handleImageUpload}
-        />
-        
-        <div className="toolbar-divider" />
-        
-        {/* 링크 */}
-        <button
-          type="button"
-          className="toolbar-btn"
-          onClick={() => {
-            const url = prompt('링크 URL을 입력하세요:');
-            if (url) {
-              applyFormat('createLink', url);
-            }
-          }}
-          title="링크 삽입"
-        >
-          🔗 링크
-        </button>
-        
-        {/* 서식 제거 */}
-        <button
-          type="button"
-          className="toolbar-btn"
-          onClick={() => applyFormat('removeFormat')}
-          title="서식 제거"
-        >
-          ✕ 서식제거
-        </button>
-      </div>
-
-      {/* 에디터 영역 */}
-      <div
-        ref={editorRef}
-        className="editor-content"
-        contentEditable
-        onInput={handleInput}
-        data-placeholder={placeholder}
-        suppressContentEditableWarning
-      />
+export function RichTextEditor({ value, onChange, placeholder = '내용을 작성해주세요.', onImageUpload, onFileUpload }: Props) {
+  const editor = useRef<HTMLDivElement>(null); const imageInput = useRef<HTMLInputElement>(null); const fileInput = useRef<HTMLInputElement>(null); const [uploading, setUploading] = useState(''); const [error, setError] = useState('');
+  useEffect(() => { if (editor.current && editor.current.innerHTML !== value) editor.current.innerHTML = value; }, [value]);
+  const emit = () => onChange(editor.current?.innerHTML || '');
+  const command = (name: string, argument?: string) => { editor.current?.focus(); document.execCommand(name, false, argument); emit(); };
+  const selectedLink = () => { const url = window.prompt('연결할 URL을 입력하세요.', 'https://'); if (url && /^https?:\/\//i.test(url)) command('createLink', url); };
+  const uploadImage = async (event: React.ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file) return; if (!file.type.startsWith('image/')) { setError('이미지 파일만 첨부할 수 있습니다.'); return; } setUploading('사진 업로드 중…'); setError(''); try { const url = onImageUpload ? await onImageUpload(file) : await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = () => reject(new Error('사진을 읽지 못했습니다.')); reader.readAsDataURL(file); }); command('insertImage', url); } catch (caught) { setError(caught instanceof Error ? caught.message : '사진을 첨부하지 못했습니다.'); } finally { setUploading(''); event.target.value = ''; } };
+  const uploadFile = async (event: React.ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file || !onFileUpload) return; setUploading('파일 업로드 중…'); setError(''); try { const uploaded = await onFileUpload(file); editor.current?.focus(); document.execCommand('insertHTML', false, `<p><a href="${uploaded.url}" target="_blank" rel="noopener noreferrer">📎 ${uploaded.name}</a></p>`); emit(); } catch (caught) { setError(caught instanceof Error ? caught.message : '파일을 첨부하지 못했습니다.'); } finally { setUploading(''); event.target.value = ''; } };
+  return <div className="rich-editor">
+    <div className="rich-toolbar">
+      <select aria-label="글꼴" defaultValue="Pretendard" onChange={event => command('fontName', event.target.value)}><option value="Pretendard">기본서체</option><option value="Malgun Gothic">맑은 고딕</option><option value="Nanum Gothic">나눔고딕</option><option value="serif">명조체</option></select>
+      <select aria-label="글자 크기" defaultValue="3" onChange={event => command('fontSize', event.target.value)}><option value="2">13</option><option value="3">15</option><option value="4">18</option><option value="5">24</option><option value="6">32</option></select>
+      <span className="toolbar-divider" />
+      <button type="button" title="굵게" onClick={() => command('bold')}><b>B</b></button><button type="button" title="기울임" onClick={() => command('italic')}><i>I</i></button><button type="button" title="밑줄" onClick={() => command('underline')}><u>U</u></button>
+      <span className="toolbar-divider" /><button type="button" title="왼쪽 정렬" onClick={() => command('justifyLeft')}>≡</button><button type="button" title="가운데 정렬" onClick={() => command('justifyCenter')}>≡</button><button type="button" title="오른쪽 정렬" onClick={() => command('justifyRight')}>≡</button>
+      <span className="toolbar-divider" /><button type="button" title="글머리 기호" onClick={() => command('insertUnorderedList')}>• 목록</button><button type="button" title="번호 목록" onClick={() => command('insertOrderedList')}>1. 목록</button><button type="button" title="인용" onClick={() => command('formatBlock', 'blockquote')}>❝</button>
+      <span className="toolbar-divider" /><button type="button" title="링크" onClick={selectedLink}>🔗 링크</button><button type="button" title="사진 첨부" onClick={() => imageInput.current?.click()} disabled={Boolean(uploading)}>▧ 사진</button><button type="button" title="파일 첨부" onClick={() => fileInput.current?.click()} disabled={!onFileUpload || Boolean(uploading)}>📎 파일</button>
+      <input ref={imageInput} className="image-file-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={uploadImage} /><input ref={fileInput} className="image-file-input" type="file" onChange={uploadFile} />
     </div>
-  );
+    {uploading && <p className="upload-status">{uploading}</p>}{error && <p className="upload-error">{error}</p>}
+    <div ref={editor} className="rich-editor-canvas" contentEditable suppressContentEditableWarning data-placeholder={placeholder} onInput={emit} />
+  </div>;
 }

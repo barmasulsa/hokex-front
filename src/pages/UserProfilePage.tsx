@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchSavedEvents, unsaveEvent } from '../services/eventService';
 import type { EventRecord } from '../types/core';
-import { Heart, Bell, Shield, Mail, User as UserIcon, Key } from 'lucide-react';
+import { Heart, Bell, Mail, User as UserIcon, Key } from 'lucide-react';
 
 export function UserProfilePage() {
-  const { user, userProfile, updatePassword, updateNickname, resetNickname, unsubscribe, isAdmin } = useAuth();
+  const { user, userProfile, updatePassword, updateNickname, resetNickname, isAdmin } = useAuth();
+  const [searchParams] = useSearchParams();
+  const nicknameRequiredForWriting = searchParams.get('reason') === 'write';
   
   const [isSettingPassword, setIsSettingPassword] = useState(false);
-  const [isSettingNickname, setIsSettingNickname] = useState(false);
+  const [isSettingNickname, setIsSettingNickname] = useState(() => searchParams.get('setup') === 'nickname');
   const [nicknameInput, setNicknameInput] = useState('');
   const [nicknameError, setNicknameError] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -228,25 +230,6 @@ export function UserProfilePage() {
     }
   };
 
-  const handleUnsubscribe = async () => {
-    if (!user?.email) return;
-    
-    // 첫 번째 경고
-    if (confirm('⚠️ 구독을 해지하면 본 사이트를 이용하실 수 없습니다.\n\n구독 해지 시:\n- HOKEX 뉴스레터를 더 이상 받지 못합니다\n- 로그인이 불가능합니다\n- 저장한 행사 목록이 삭제됩니다\n- 닉네임 및 프로필 정보가 삭제됩니다\n\n정말로 구독을 해지하시겠습니까?')) {
-      // 두 번째 확인
-      if (confirm('다시 한번 확인합니다.\n\n구독을 해지하시겠습니까?')) {
-        try {
-          await unsubscribe();
-          alert('✅ 구독이 해지되었습니다.\n\n그동안 HOKEX를 이용해주셔서 감사합니다.');
-          // unsubscribe 함수 내에서 자동 로그아웃되므로 홈으로 리다이렉트됨
-        } catch (error) {
-          console.error('Error unsubscribing:', error);
-          alert('❌ 구독 해지에 실패했습니다.\n\n다시 시도해주시거나 관리자에게 문의해주세요.');
-        }
-      }
-    }
-  };
-
   // 비밀번호 설정 여부 확인 (Supabase는 매직 링크로 로그인한 경우 비밀번호가 없을 수 있음)
   const hasPassword = user?.app_metadata?.provider === 'email' && user?.user_metadata?.email_verified;
 
@@ -262,7 +245,7 @@ export function UserProfilePage() {
         </div>
         <div className="profile-info">
           <h1>{userProfile?.nickname || user?.email?.split('@')[0] || 'User'}</h1>
-          <p className="profile-title">HOKEX 구독자 • {user?.email}</p>
+          <p className="profile-title">HOKEX 회원 • {user?.email}</p>
           <div className="profile-interests">
             {interests.map(interest => (
               <span key={interest} className="interest-tag">{interest}</span>
@@ -306,7 +289,7 @@ export function UserProfilePage() {
                 lineHeight: '1.6',
                 fontSize: '15px'
               }}>
-                닉네임은 미래에 추가될 기능(이벤트 추첨, 커뮤니티 등)에서 사용될 예정입니다. 
+                닉네임은 커뮤니티와 향후 이벤트 기능에서 사용됩니다. 
                 중복 닉네임은 설정이 불가하니 사람이 없는 초기에 멋있는 닉네임을 미리 선점하세요! :)
               </p>
               <button 
@@ -410,6 +393,7 @@ export function UserProfilePage() {
           {isSettingNickname && (
             <section className="profile-section" style={{ marginBottom: '24px' }}>
               <h2>🐼 판다 닉네임 설정</h2>
+              {nicknameRequiredForWriting && <p style={{ margin: '0 0 16px', padding: '12px 14px', borderRadius: '8px', background: '#fff7ed', color: '#9a3412', fontWeight: 700 }}>게시물 작성은 닉네임을 설정해야 가능합니다.</p>}
               
               {/* 파란색 안내 박스 */}
               <div style={{
@@ -696,18 +680,10 @@ export function UserProfilePage() {
             </div>
           </div>
 
-          {/* 구독 해지 */}
-          <div className="sidebar-card danger-zone">
-            <h3><Shield size={20} /> 구독 해지</h3>
-            <p className="danger-warning">
-              구독을 해지하면 본 사이트를 이용하실 수 없습니다. 신중히 결정해주세요.
-            </p>
-            <button 
-              className="btn-deactivate" 
-              onClick={handleUnsubscribe}
-            >
-              구독 해지
-            </button>
+          <div className="sidebar-card">
+            <h3><Mail size={20} /> 카페인판다 뉴스레터</h3>
+            <p>호켁스 계정과 뉴스레터는 별도입니다. 구독 여부와 관계없이 계정과 저장한 행사는 유지됩니다.</p>
+            <a className="btn-deactivate" href="https://page.stibee.com/subscriptions/289942" target="_blank" rel="noreferrer">뉴스레터 구독하기</a>
           </div>
         </aside>
       </div>

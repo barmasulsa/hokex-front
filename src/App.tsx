@@ -9,6 +9,8 @@ import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { BannerManagementPage } from './pages/BannerManagementPage';
 import { DeletedEventsPage } from './pages/DeletedEventsPage';
 import { CommunityPage } from './pages/CommunityPage';
+import { CommunityWritePage } from './pages/CommunityWritePage';
+import { CommunityPostPage } from './pages/CommunityPostPage';
 
 import { initGA4, recordVisit } from './utils/analytics';
 import { trackVisit as recordVisitorCounter } from './utils/visitorCounter';
@@ -65,7 +67,7 @@ function ScrollRestoration() {
 }
 
 function AppContent() {
-  const { user, isAdmin, loading, signOut, userProfile, toggleAdminMode } = useAuth();
+  const { user, isAdmin, loading, signOut, userProfile, needsNickname, toggleAdminMode } = useAuth();
   const navigate = useNavigate();
 
   // GA4 초기화 및 방문 기록
@@ -83,6 +85,14 @@ function AppContent() {
       }
     });
   }, []);
+
+  // 새로 로그인한 회원은 기존 My Profile의 닉네임 설정 화면으로 한 번 안내한다.
+  useEffect(() => {
+    if (user && needsNickname && sessionStorage.getItem('hokex-open-nickname-setup') === 'true') {
+      sessionStorage.removeItem('hokex-open-nickname-setup');
+      navigate('/profile?setup=nickname');
+    }
+  }, [user, needsNickname, navigate]);
 
   // URL 해시 정리 (에러 파라미터 제거)
   useEffect(() => {
@@ -126,9 +136,9 @@ function AppContent() {
           </Link>
         </div>
         <div className="header-actions">
+          <Link to="/community" className="nav-link">커뮤니티</Link>
           {user ? (
             <>
-              <Link to="/community" className="nav-link">커뮤니티</Link>
               <Link to="/profile" className="nav-link">My Profile</Link>
               {isAdmin && (
                 <>
@@ -167,6 +177,9 @@ function AppContent() {
         <Route path="/" element={<HomePage />} />
         <Route path="/event/:id" element={<EventDetailPage />} />
         <Route path="/community" element={<CommunityPage />} />
+        <Route path="/community/write" element={<CommunityWritePage />} />
+        <Route path="/community/:postId/edit" element={<CommunityWritePage />} />
+        <Route path="/community/:postId" element={<CommunityPostPage />} />
         <Route path="/profile" element={<UserProfilePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
