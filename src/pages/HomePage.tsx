@@ -15,7 +15,7 @@ import { Region, Category, REGION_VENUE_MAP, EXHIBIT_ITEMS } from '../types/core
 import { FilterEngine } from '../utils/filterEngine';
 
 export function HomePage() {
-  const { user, loading: authLoading, isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,18 +27,9 @@ export function HomePage() {
   // 데이터 로드 여부를 추적하는 ref
   const hasLoadedData = useRef(false);
 
-  // 로그인 체크 - Stibee 구독자만 홈페이지 이용 가능
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/login');
-    }
-  }, [user, authLoading, navigate]);
-  
   // 팝업 배너 로드 및 표시
   useEffect(() => {
     const loadPopupBanners = async () => {
-      if (!user) return;
-      
       try {
         const { data, error } = await supabase
           .from('banners')
@@ -96,7 +87,7 @@ export function HomePage() {
     };
 
     loadPopupBanners();
-  }, [user]);
+  }, []);
   
   // sessionStorage에서 필터 상태 복원
   const getInitialFilterState = () => {
@@ -186,7 +177,7 @@ export function HomePage() {
       }
     }
     
-    if (user && !hasLoadedData.current) {
+    if (!hasLoadedData.current) {
       loadEvents();
     }
   }, [user]);
@@ -548,11 +539,6 @@ export function HomePage() {
       setSelectedIndustries([...selectedIndustries, industry]);
     }
   };
-
-  // Stibee 구독자만 홈페이지 접근 가능
-  if (authLoading || !user) {
-    return null;
-  }
 
   return (
     <>
