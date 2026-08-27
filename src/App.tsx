@@ -70,6 +70,7 @@ function AppContent() {
   const { user, isAdmin, loading, signOut, userProfile, needsNickname, toggleAdminMode } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isCommunityRoute = location.pathname.startsWith('/community');
 
   // GA4 초기화 및 방문 기록
   useEffect(() => {
@@ -137,6 +138,7 @@ function AppContent() {
           </Link>
         </div>
         <div className="header-actions">
+          {isCommunityRoute && <Link to="/" className="nav-link">전시 행사</Link>}
           <Link to="/community" className="nav-link">커뮤니티</Link>
           {user ? (
             <>

@@ -67,6 +67,12 @@ export async function updatePost(id: string, draft: PostDraft): Promise<void> {
   const { error } = await supabase.rpc('update_community_post', { p_post_id: id, p_title: draft.title.trim(), p_content: draft.content.trim(), p_board_category_id: draft.board_category_id, p_is_public: draft.is_public });
   if (error) throw error;
 }
+
+export async function getMyPosts(userId: string): Promise<Post[]> {
+  const { data, error } = await supabase.from('community_posts_public').select(PUBLIC_POST_COLUMNS).eq('author_id', userId).order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as Post[];
+}
 export async function deletePost(id: string): Promise<void> { const { error } = await supabase.rpc('delete_community_post', { p_post_id: id }); if (error) throw error; }
 export async function incrementPostView(id: string): Promise<void> { const { error } = await supabase.rpc('increment_community_post_view', { post_id: id }); if (error) throw error; }
 

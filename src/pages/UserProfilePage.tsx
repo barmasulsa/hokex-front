@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchSavedEvents, unsaveEvent } from '../services/eventService';
+import { deletePost, getMyPosts, type Post } from '../services/communityService';
 import type { EventRecord } from '../types/core';
 import { Heart, Bell, Mail, User as UserIcon, Key } from 'lucide-react';
 
@@ -23,6 +24,8 @@ export function UserProfilePage() {
   const [loadingSavedEvents, setLoadingSavedEvents] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const eventsPerPage = 4;
+  const [myPosts, setMyPosts] = useState<Post[]>([]);
+  const [loadingMyPosts, setLoadingMyPosts] = useState(true);
   
   // Notification settings
   const [eventReminders, setEventReminders] = useState(true);
@@ -44,6 +47,12 @@ export function UserProfilePage() {
     }
     
     loadSavedEvents();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    setLoadingMyPosts(true);
+    getMyPosts(user.id).then(setMyPosts).catch(() => setMyPosts([])).finally(() => setLoadingMyPosts(false));
   }, [user]);
 
   // 페이지네이션 계산
@@ -78,6 +87,16 @@ export function UserProfilePage() {
       }
     } else {
       alert('❌ 찜 해제에 실패했습니다. 다시 시도해주세요.');
+    }
+  };
+
+  const handleDeleteMyPost = async (post: Post) => {
+    if (!confirm(`글번호 ${post.post_number}번 글을 삭제할까요?`)) return;
+    try {
+      await deletePost(post.id);
+      setMyPosts(items => items.filter(item => item.id !== post.id));
+    } catch {
+      alert('게시글을 삭제하지 못했습니다.');
     }
   };
 
@@ -313,6 +332,20 @@ export function UserProfilePage() {
               </button>
             </div>
           )}
+
+          {/* My activity */}
+          <section className="profile-section my-activity-section">
+            <div className="section-header">
+              <h2>✍️ 나의 활동</h2>
+              <p className="section-subtitle">내가 작성한 게시글 ({myPosts.length}개)</p>
+            </div>
+            {loadingMyPosts ? <p>작성한 글을 불러오는 중...</p> : myPosts.length === 0 ? <p>아직 작성한 글이 없습니다.</p> : <div className="my-post-list">
+              {myPosts.map(post => <div key={post.id} className="my-post-item">
+                <Link to={`/community/${post.id}`}><span className="my-post-number">#{post.post_number}</span><span className="my-post-title">{post.title}</span>{!post.is_public && <span className="my-post-private">비공개</span>}</Link>
+                <div className="my-post-meta"><span>{new Date(post.created_at).toLocaleDateString('ko-KR')}</span><span>조회 {post.view_count}</span><Link to={`/community/${post.id}/edit`}>수정</Link><button type="button" onClick={() => handleDeleteMyPost(post)}>삭제</button></div>
+              </div>)}
+            </div>}
+          </section>
 
           {/* Saved Events */}
           <section className="profile-section">
