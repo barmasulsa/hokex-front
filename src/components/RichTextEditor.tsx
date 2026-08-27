@@ -32,10 +32,10 @@ export function RichTextContent({ value }: { value: string }) {
 }
 
 export function RichTextEditor({ value, onChange, placeholder = '내용을 작성해주세요.', onImageUpload, onFileUpload }: Props) {
-  const editor = useRef<HTMLDivElement>(null); const imageInput = useRef<HTMLInputElement>(null); const fileInput = useRef<HTMLInputElement>(null); const composing = useRef(false); const [uploading, setUploading] = useState(''); const [error, setError] = useState('');
-  // 한글·일본어 등 IME 입력 중에는 React 상태로 DOM을 다시 동기화하면 조합이 취소된다.
-  // 조합이 끝난 뒤 한 번만 값을 반영해 자연스럽게 입력되도록 한다.
-  useEffect(() => { if (!composing.current && editor.current && editor.current.innerHTML !== value) editor.current.innerHTML = value; }, [value]);
+  const editor = useRef<HTMLDivElement>(null); const imageInput = useRef<HTMLInputElement>(null); const fileInput = useRef<HTMLInputElement>(null); const composing = useRef(false); const editing = useRef(false); const [uploading, setUploading] = useState(''); const [error, setError] = useState('');
+  // contentEditable은 입력 중 DOM을 다시 쓰면 한글·일본어 IME 조합이 취소된다.
+  // 초기값/외부 변경만 반영하고, 사용자가 편집 중인 DOM은 브라우저에 맡긴다.
+  useEffect(() => { if (!editing.current && !composing.current && editor.current && editor.current.innerHTML !== value) editor.current.innerHTML = value; }, [value]);
   const emit = () => onChange(editor.current?.innerHTML || '');
   const command = (name: string, argument?: string) => { editor.current?.focus(); document.execCommand(name, false, argument); emit(); };
   const selectedLink = () => { const url = window.prompt('연결할 URL을 입력하세요.', 'https://'); if (url && /^https?:\/\//i.test(url)) command('createLink', url); };
@@ -53,6 +53,6 @@ export function RichTextEditor({ value, onChange, placeholder = '내용을 작�
       <input ref={imageInput} className="image-file-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={uploadImage} /><input ref={fileInput} className="image-file-input" type="file" onChange={uploadFile} />
     </div>
     {uploading && <p className="upload-status">{uploading}</p>}{error && <p className="upload-error">{error}</p>}
-    <div ref={editor} className="rich-editor-canvas" contentEditable suppressContentEditableWarning data-placeholder={placeholder} onCompositionStart={() => { composing.current = true; }} onCompositionEnd={() => { composing.current = false; emit(); }} onInput={() => { if (!composing.current) emit(); }} />
+    <div ref={editor} className="rich-editor-canvas" contentEditable suppressContentEditableWarning data-placeholder={placeholder} onFocus={() => { editing.current = true; }} onBlur={() => { editing.current = false; if (!composing.current) emit(); }} onCompositionStart={() => { composing.current = true; }} onCompositionEnd={() => { composing.current = false; emit(); }} onInput={() => { if (!composing.current) emit(); }} />
   </div>;
 }
