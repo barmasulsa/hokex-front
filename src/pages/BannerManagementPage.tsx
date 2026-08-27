@@ -7,9 +7,10 @@ import { Region, REGION_VENUE_MAP } from '../types/core';
 import type { Banner, BannerType } from '../types/banner';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { VisitorStatisticsDashboard } from '../components/VisitorStatisticsDashboard';
+import { getCommunityReports, resolveCommunityReport, type CommunityReport } from '../services/communityService';
 import './BannerManagementPage.css';
 
-type ManagementTab = 'image' | 'youtube' | 'text' | 'statistics' | 'viewcounts';
+type ManagementTab = 'image' | 'youtube' | 'text' | 'statistics' | 'viewcounts' | 'community';
 type AnnouncementSubTab = 'homepage' | 'community';
 
 export function BannerManagementPage() {
@@ -26,6 +27,8 @@ export function BannerManagementPage() {
   const [loadingViewCounts, setLoadingViewCounts] = useState(false);
   const [savedEventStats, setSavedEventStats] = useState<SavedEventStats[]>([]);
   const [loadingSavedStats, setLoadingSavedStats] = useState(false);
+  const [communityReports, setCommunityReports] = useState<CommunityReport[]>([]);
+  const [loadingReports, setLoadingReports] = useState(false);
   
   // 조회수 통계 필터
   const [viewCountLimit, setViewCountLimit] = useState<number>(50);
@@ -200,6 +203,13 @@ export function BannerManagementPage() {
       return () => clearInterval(interval);
     }
   }, [activeTab, statsType, viewCountLimit, viewCountRegion, viewCountVenue, datePeriod, customStartDate, customEndDate]);
+
+  const loadCommunityReports = async () => {
+    setLoadingReports(true);
+    try { setCommunityReports(await getCommunityReports()); } finally { setLoadingReports(false); }
+  };
+  useEffect(() => { if (activeTab === 'community') void loadCommunityReports(); }, [activeTab]);
+  const resolveReport = async (id: string) => { await resolveCommunityReport(id); await loadCommunityReports(); };
 
   const loadBanners = async () => {
     setLoading(true);
@@ -588,6 +598,9 @@ export function BannerManagementPage() {
         >
           👁️ 행사 조회수
         </button>
+        <button className={`tab-btn ${activeTab === 'community' ? 'active' : ''}`} onClick={() => setActiveTab('community')}>
+          🛡️ 커뮤니티 관리
+        </button>
       </div>
 
       {/* 통계 탭 - 방문자 통계 대시보드 */}
@@ -968,8 +981,15 @@ export function BannerManagementPage() {
         </div>
       )}
 
+      {activeTab === 'community' && (
+        <div className="view-count-stats-tab-content"><div className="view-count-stats-section community-report-admin">
+          <div className="report-admin-heading"><h2>🛡️ 커뮤니티 신고 관리</h2><button className="btn-primary" onClick={() => void loadCommunityReports()}>새로고침</button></div>
+          {loadingReports ? <p>신고 내역을 불러오는 중입니다.</p> : communityReports.length === 0 ? <p>접수된 신고가 없습니다.</p> : <div className="view-count-table-container"><table className="view-count-table"><thead><tr><th>상태</th><th>게시글</th><th>신고 사유</th><th>세부 내용</th><th>신고자</th><th>접수일</th><th>처리</th></tr></thead><tbody>{communityReports.map(report => <tr key={report.id}><td>{report.status === 'pending' ? '검토 대기' : '처리 완료'}</td><td><a className="event-link" href={`/community/${report.post_id}`}>#{report.post_number} {report.post_title}</a></td><td>{report.reason}</td><td>{report.details || '-'}</td><td>{report.reporter_nickname || '-'}</td><td>{new Date(report.created_at).toLocaleString('ko-KR')}</td><td>{report.status === 'pending' && <button className="btn-primary" onClick={() => void resolveReport(report.id)}>처리 완료</button>}</td></tr>)}</tbody></table></div>}
+        </div></div>
+      )}
+
       {/* 배너 관리 섹션 (기존 코드) */}
-      {activeTab !== 'statistics' && activeTab !== 'viewcounts' && (
+      {activeTab !== 'statistics' && activeTab !== 'viewcounts' && activeTab !== 'community' && (
         <div className="banner-management-section">
       
       {/* 하위 카테고리 탭 (모든 배너 타입에 표시) */}

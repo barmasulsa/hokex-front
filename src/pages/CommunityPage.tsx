@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Banner } from '../components/Banner';
 import { useAuth } from '../contexts/AuthContext';
 import { getBestPosts, getBoardCategories, getPinnedPosts, getPosts, type BoardCategory, type Post } from '../services/communityService';
@@ -11,7 +11,7 @@ const relativeTime = (value: string) => {
 };
 const formatDate = (value: string) => new Date(value).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '');
 
-function PostRow({ post, notice = false }: { post: Post; notice?: boolean }) {
+function PostRow({ post, notice = false, onOpen }: { post: Post; notice?: boolean; onOpen: (id: string) => void }) {
   const className = notice ? 'community-table-row notice-row' : 'community-table-row';
   const row = <>
     <span className="post-number">{notice ? '공지' : post.post_number}</span>
@@ -20,7 +20,7 @@ function PostRow({ post, notice = false }: { post: Post; notice?: boolean }) {
     <span>{notice ? formatDate(post.created_at) : relativeTime(post.created_at)}</span>
     <span>{post.view_count.toLocaleString()}</span><span>{post.like_count}</span>
   </>;
-  return post.link_url ? <a href={post.link_url} className={className}>{row}</a> : <Link to={`/community/${post.id}`} className={className}>{row}</Link>;
+  return post.link_url ? <a href={post.link_url} className={className}>{row}</a> : <a href={`/community/${post.id}`} className={className} onClick={event => { event.preventDefault(); onOpen(post.id); }}>{row}</a>;
 }
 
 export function CommunityPage() {
@@ -59,6 +59,7 @@ export function CommunityPage() {
   const isBestBoard = selectedBoard?.name === '베스트 게시판';
   const selectCategory = (id: string) => { setCategory(id); setPage(1); };
   const submitSearch = (event: React.FormEvent) => { event.preventDefault(); setPage(1); setSubmittedSearch(search); };
+  const openPost = (id: string) => navigate(`/community/${id}`, { state: { communityScrollY: window.scrollY } });
 
   return <main className="community-page">
     <div className="community-layout">
@@ -72,8 +73,8 @@ export function CommunityPage() {
           <div>{!isBestBoard && (['latest', 'popular', 'views'] as const).map(item => <button key={item} className={sort === item ? 'sort-active' : ''} onClick={() => { setSort(item); setPage(1); }}>{item === 'latest' ? '최신순' : item === 'popular' ? '인기순' : '조회순'}</button>)}{!isBestBoard && <button className="write-button" onClick={() => !user ? navigate('/login') : !userProfile?.nickname ? navigate('/profile?setup=nickname&reason=write') : navigate(`/community/write${selectedBoard ? `?board=${selectedBoard.id}` : ''}`)}>✏️ 글쓰기</button>}</div>
         </div>
         <div className="community-table"><div className="community-table-header"><span>번호</span><span>제목</span><span>작성자</span><span>작성일</span><span>조회</span><span>좋아요</span></div>
-          {notices.map(post => <PostRow key={post.id} post={post} notice />)}
-          {loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : posts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 작성해 보세요.</div> : posts.map(post => <PostRow key={post.id} post={post} />)}
+          {notices.map(post => <PostRow key={post.id} post={post} notice onOpen={openPost} />)}
+          {loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : posts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 작성해 보세요.</div> : posts.map(post => <PostRow key={post.id} post={post} onOpen={openPost} />)}
         </div>
         {totalPages > 1 && <div className="pagination"><button disabled={page === 1} onClick={() => setPage(value => value - 1)}>이전</button><span>{page} / {totalPages}</span><button disabled={page === totalPages} onClick={() => setPage(value => value + 1)}>다음</button></div>}
         <p className="community-page-note">일반 게시글은 공지글을 제외하고 한 페이지에 15개씩 표시됩니다. 최신 글이 1페이지 맨 위에 표시됩니다.</p>

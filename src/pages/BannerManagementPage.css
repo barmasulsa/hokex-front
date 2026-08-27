@@ -832,6 +832,9 @@
 .view-count-table tbody tr:hover {
   background: #f8f9fa;
 }
+.report-admin-heading { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+.community-report-admin td { max-width:240px; overflow-wrap:anywhere; vertical-align:top; }
+.community-report-admin .btn-primary { padding:7px 11px; white-space:nowrap; }
 
 /* 순위 셀 */
 .rank-cell {

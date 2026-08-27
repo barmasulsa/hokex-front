@@ -23,6 +23,11 @@ function ScrollRestoration() {
   useEffect(() => {
     console.log('[ScrollRestoration] Location changed to:', location.pathname);
     
+    const routeState = location.state as { communityScrollY?: number } | null;
+    if (typeof routeState?.communityScrollY === 'number') {
+      requestAnimationFrame(() => window.scrollTo(0, routeState.communityScrollY!));
+      return;
+    }
     // 홈페이지로 돌아올 때만 저장된 이벤트로 스크롤 복원
     if (location.pathname === '/') {
       const savedEventId = sessionStorage.getItem('lastViewedEventId');
