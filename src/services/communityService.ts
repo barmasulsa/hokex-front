@@ -2,11 +2,11 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
 export interface BoardCategory { id: string; name: string; icon: string; is_active: boolean; display_order: number; }
-export interface Post { id: string; post_number: number; title: string; content: string; board_category_id: string; author_id: string | null; author_nickname: string | null; created_at: string; updated_at: string; view_count: number; like_count: number; comment_count: number; is_pinned: boolean; }
+export interface Post { id: string; post_number: number; title: string; content: string; board_category_id: string; author_id: string | null; author_nickname: string | null; created_at: string; updated_at: string; view_count: number; like_count: number; comment_count: number; is_pinned: boolean; is_public: boolean; }
 export interface GetPostsParams { board_category_id?: string; sort_by?: 'latest' | 'popular' | 'views'; page?: number; page_size?: number; search_query?: string; exclude_pinned?: boolean; }
-export interface PostDraft { title: string; content: string; board_category_id: string; }
+export interface PostDraft { title: string; content: string; board_category_id: string; is_public: boolean; }
 
-const PUBLIC_POST_COLUMNS = 'id,post_number,title,content,board_category_id,author_id,author_nickname,created_at,updated_at,view_count,like_count,comment_count,is_pinned';
+const PUBLIC_POST_COLUMNS = 'id,post_number,title,content,board_category_id,author_id,author_nickname,created_at,updated_at,view_count,like_count,comment_count,is_pinned,is_public';
 
 export async function getBoardCategories(): Promise<BoardCategory[]> {
   const { data, error } = await supabase.from('community_board_categories').select('id,name,icon,is_active,display_order').order('display_order', { ascending: true });
@@ -35,7 +35,7 @@ export async function getPosts(params: GetPostsParams): Promise<{ posts: Post[];
 // 베스트 게시판은 별도의 글을 작성하는 곳이 아니라, 일반 게시판 글의 반응 지표를 합산해 보여 준다.
 export async function getBestPosts(params: Omit<GetPostsParams, 'board_category_id' | 'sort_by'> & { best_category_id: string }): Promise<{ posts: Post[]; total_count: number }> {
   const { best_category_id, page = 1, page_size = 15, search_query = '' } = params;
-  let query = supabase.from('community_posts_public').select(PUBLIC_POST_COLUMNS, { count: 'exact' }).neq('board_category_id', best_category_id).eq('is_pinned', false);
+  let query = supabase.from('community_posts_public').select(PUBLIC_POST_COLUMNS, { count: 'exact' }).neq('board_category_id', best_category_id).eq('is_pinned', false).eq('is_public', true);
   if (search_query.trim()) {
     const safeQuery = search_query.trim().replace(/[%,()]/g, ' ');
     query = query.or(`title.ilike.%${safeQuery}%,content.ilike.%${safeQuery}%`);
@@ -59,12 +59,12 @@ export async function getPost(id: string): Promise<Post | null> {
 }
 
 export async function createPost(draft: PostDraft): Promise<string> {
-  const { data, error } = await supabase.rpc('create_community_post', { p_title: draft.title.trim(), p_content: draft.content.trim(), p_board_category_id: draft.board_category_id });
+  const { data, error } = await supabase.rpc('create_community_post', { p_title: draft.title.trim(), p_content: draft.content.trim(), p_board_category_id: draft.board_category_id, p_is_public: draft.is_public });
   if (error) throw error;
   return data as string;
 }
 export async function updatePost(id: string, draft: PostDraft): Promise<void> {
-  const { error } = await supabase.rpc('update_community_post', { p_post_id: id, p_title: draft.title.trim(), p_content: draft.content.trim(), p_board_category_id: draft.board_category_id });
+  const { error } = await supabase.rpc('update_community_post', { p_post_id: id, p_title: draft.title.trim(), p_content: draft.content.trim(), p_board_category_id: draft.board_category_id, p_is_public: draft.is_public });
   if (error) throw error;
 }
 export async function deletePost(id: string): Promise<void> { const { error } = await supabase.rpc('delete_community_post', { p_post_id: id }); if (error) throw error; }
