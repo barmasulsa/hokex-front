@@ -209,7 +209,7 @@ export function BannerManagementPage() {
     try { setCommunityReports(await getCommunityReports()); } finally { setLoadingReports(false); }
   };
   useEffect(() => { if (activeTab === 'community') void loadCommunityReports(); }, [activeTab]);
-  const resolveReport = async (id: string) => { await resolveCommunityReport(id); await loadCommunityReports(); };
+  const resolveReport = async (id: string, targetType: 'post' | 'comment') => { await resolveCommunityReport(id, targetType); await loadCommunityReports(); };
 
   const loadBanners = async () => {
     setLoading(true);
@@ -984,7 +984,7 @@ export function BannerManagementPage() {
       {activeTab === 'community' && (
         <div className="view-count-stats-tab-content"><div className="view-count-stats-section community-report-admin">
           <div className="report-admin-heading"><h2>🛡️ 커뮤니티 신고 관리</h2><button className="btn-primary" onClick={() => void loadCommunityReports()}>새로고침</button></div>
-          {loadingReports ? <p>신고 내역을 불러오는 중입니다.</p> : communityReports.length === 0 ? <p>접수된 신고가 없습니다.</p> : <div className="view-count-table-container"><table className="view-count-table"><thead><tr><th>상태</th><th>게시글</th><th>신고 사유</th><th>세부 내용</th><th>신고자</th><th>접수일</th><th>처리</th></tr></thead><tbody>{communityReports.map(report => <tr key={report.id}><td>{report.status === 'pending' ? '검토 대기' : '처리 완료'}</td><td><a className="event-link" href={`/community/${report.post_id}`}>#{report.post_number} {report.post_title}</a></td><td>{report.reason}</td><td>{report.details || '-'}</td><td>{report.reporter_nickname || '-'}</td><td>{new Date(report.created_at).toLocaleString('ko-KR')}</td><td>{report.status === 'pending' && <button className="btn-primary" onClick={() => void resolveReport(report.id)}>처리 완료</button>}</td></tr>)}</tbody></table></div>}
+          {loadingReports ? <p>신고 내역을 불러오는 중입니다.</p> : communityReports.length === 0 ? <p>접수된 신고가 없습니다.</p> : <div className="view-count-table-container"><table className="view-count-table"><thead><tr><th>대상</th><th>상태</th><th>게시글</th><th>신고 사유</th><th>세부 내용</th><th>신고자</th><th>접수일</th><th>처리</th></tr></thead><tbody>{communityReports.map(report => <tr key={`${report.target_type}-${report.id}`}><td>{report.target_type === 'comment' ? '댓글' : '게시글'}</td><td>{report.status === 'pending' ? '검토 대기' : '처리 완료'}</td><td><a className="event-link" href={`/community/${report.post_id}`}>#{report.post_number} {report.post_title}</a>{report.target_content && <small>{report.target_content}</small>}</td><td>{report.reason}</td><td>{report.details || '-'}</td><td>{report.reporter_nickname || '-'}</td><td>{new Date(report.created_at).toLocaleString('ko-KR')}</td><td>{report.status === 'pending' && <button className="btn-primary" onClick={() => void resolveReport(report.id, report.target_type)}>처리 완료</button>}</td></tr>)}</tbody></table></div>}
         </div></div>
       )}
 

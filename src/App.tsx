@@ -24,7 +24,7 @@ function ScrollRestoration() {
     console.log('[ScrollRestoration] Location changed to:', location.pathname);
     
     const routeState = location.state as { communityScrollY?: number } | null;
-    if (typeof routeState?.communityScrollY === 'number') {
+    if (location.pathname === '/community' && typeof routeState?.communityScrollY === 'number') {
       requestAnimationFrame(() => window.scrollTo(0, routeState.communityScrollY!));
       return;
     }

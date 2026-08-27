@@ -6,7 +6,7 @@ export interface Post { id: string; post_number: number; title: string; content:
 export interface GetPostsParams { board_category_id?: string; sort_by?: 'latest' | 'popular' | 'views'; page?: number; page_size?: number; search_query?: string; exclude_pinned?: boolean; }
 export interface PostDraft { title: string; content: string; link_url: string | null; board_category_id: string; is_public: boolean; }
 export interface CommunityComment { id: string; post_id: string; author_id: string; author_nickname: string; content: string; created_at: string; updated_at: string; }
-export interface CommunityReport { id: string; post_id: string; post_number: number; post_title: string; reporter_nickname: string | null; reason: string; details: string | null; status: 'pending' | 'resolved'; created_at: string; resolved_at: string | null; }
+export interface CommunityReport { id: string; target_type: 'post' | 'comment'; post_id: string; comment_id: string | null; post_number: number; post_title: string; target_content: string | null; reporter_nickname: string | null; reason: string; details: string | null; status: 'pending' | 'resolved'; created_at: string; resolved_at: string | null; }
 
 const PUBLIC_POST_COLUMNS = 'id,post_number,title,content,link_url,board_category_id,author_id,author_nickname,created_at,updated_at,view_count,like_count,comment_count,is_pinned,is_public';
 
@@ -83,8 +83,9 @@ export async function deleteComment(commentId: string): Promise<void> { const { 
 export async function getPostLikeStatus(postId: string): Promise<{ liked: boolean; like_count: number }> { const { data, error } = await supabase.rpc('get_community_post_like_status', { p_post_id: postId }); if (error) throw error; return data as { liked: boolean; like_count: number }; }
 export async function togglePostLike(postId: string): Promise<{ liked: boolean; like_count: number }> { const { data, error } = await supabase.rpc('toggle_community_post_like', { p_post_id: postId }); if (error) throw error; return data as { liked: boolean; like_count: number }; }
 export async function reportPost(postId: string, reason: string, details: string): Promise<void> { const { error } = await supabase.rpc('create_community_post_report', { p_post_id: postId, p_reason: reason, p_details: details.trim() || null }); if (error) throw error; }
+export async function reportComment(commentId: string, reason: string, details: string): Promise<void> { const { error } = await supabase.rpc('create_community_comment_report', { p_comment_id: commentId, p_reason: reason, p_details: details.trim() || null }); if (error) throw error; }
 export async function getCommunityReports(): Promise<CommunityReport[]> { const { data, error } = await supabase.rpc('get_community_reports'); if (error) throw error; return (data ?? []) as CommunityReport[]; }
-export async function resolveCommunityReport(reportId: string): Promise<void> { const { error } = await supabase.rpc('resolve_community_report', { p_report_id: reportId }); if (error) throw error; }
+export async function resolveCommunityReport(reportId: string, targetType: 'post' | 'comment'): Promise<void> { const { error } = await supabase.rpc('resolve_community_report', { p_report_id: reportId, p_target_type: targetType }); if (error) throw error; }
 
 export async function uploadCommunityImage(file: File, user: User): Promise<string> {
   const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
