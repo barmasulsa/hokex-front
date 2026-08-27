@@ -2,11 +2,11 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
 export interface BoardCategory { id: string; name: string; icon: string; is_active: boolean; display_order: number; }
-export interface Post { id: string; post_number: number; title: string; content: string; board_category_id: string; author_nickname: string | null; created_at: string; updated_at: string; view_count: number; like_count: number; comment_count: number; is_pinned: boolean; }
+export interface Post { id: string; post_number: number; title: string; content: string; board_category_id: string; author_id: string | null; author_nickname: string | null; created_at: string; updated_at: string; view_count: number; like_count: number; comment_count: number; is_pinned: boolean; }
 export interface GetPostsParams { board_category_id?: string; sort_by?: 'latest' | 'popular' | 'views'; page?: number; page_size?: number; search_query?: string; exclude_pinned?: boolean; }
 export interface PostDraft { title: string; content: string; board_category_id: string; }
 
-const PUBLIC_POST_COLUMNS = 'id,post_number,title,content,board_category_id,author_nickname,created_at,updated_at,view_count,like_count,comment_count,is_pinned';
+const PUBLIC_POST_COLUMNS = 'id,post_number,title,content,board_category_id,author_id,author_nickname,created_at,updated_at,view_count,like_count,comment_count,is_pinned';
 
 export async function getBoardCategories(): Promise<BoardCategory[]> {
   const { data, error } = await supabase.from('community_board_categories').select('id,name,icon,is_active,display_order').order('display_order', { ascending: true });
@@ -64,10 +64,10 @@ export async function createPost(draft: PostDraft): Promise<string> {
   return data as string;
 }
 export async function updatePost(id: string, draft: PostDraft): Promise<void> {
-  const { error } = await supabase.from('community_posts').update({ title: draft.title.trim(), content: draft.content.trim(), board_category_id: draft.board_category_id }).eq('id', id);
+  const { error } = await supabase.rpc('update_community_post', { p_post_id: id, p_title: draft.title.trim(), p_content: draft.content.trim(), p_board_category_id: draft.board_category_id });
   if (error) throw error;
 }
-export async function deletePost(id: string): Promise<void> { const { error } = await supabase.from('community_posts').delete().eq('id', id); if (error) throw error; }
+export async function deletePost(id: string): Promise<void> { const { error } = await supabase.rpc('delete_community_post', { p_post_id: id }); if (error) throw error; }
 export async function incrementPostView(id: string): Promise<void> { const { error } = await supabase.rpc('increment_community_post_view', { post_id: id }); if (error) throw error; }
 
 export async function uploadCommunityImage(file: File, user: User): Promise<string> {
