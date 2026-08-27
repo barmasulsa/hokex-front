@@ -2,11 +2,11 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
 export interface BoardCategory { id: string; name: string; icon: string; is_active: boolean; display_order: number; }
-export interface Post { id: string; title: string; content: string; board_category_id: string; author_nickname: string | null; created_at: string; updated_at: string; view_count: number; like_count: number; comment_count: number; is_pinned: boolean; }
+export interface Post { id: string; post_number: number; title: string; content: string; board_category_id: string; author_nickname: string | null; created_at: string; updated_at: string; view_count: number; like_count: number; comment_count: number; is_pinned: boolean; }
 export interface GetPostsParams { board_category_id?: string; sort_by?: 'latest' | 'popular' | 'views'; page?: number; page_size?: number; search_query?: string; exclude_pinned?: boolean; }
 export interface PostDraft { title: string; content: string; board_category_id: string; }
 
-const PUBLIC_POST_COLUMNS = 'id,title,content,board_category_id,author_nickname,created_at,updated_at,view_count,like_count,comment_count,is_pinned';
+const PUBLIC_POST_COLUMNS = 'id,post_number,title,content,board_category_id,author_nickname,created_at,updated_at,view_count,like_count,comment_count,is_pinned';
 
 export async function getBoardCategories(): Promise<BoardCategory[]> {
   const { data, error } = await supabase.from('community_board_categories').select('id,name,icon,is_active,display_order').order('display_order', { ascending: true });
@@ -28,6 +28,20 @@ export async function getPosts(params: GetPostsParams): Promise<{ posts: Post[];
   else query = query.order('created_at', { ascending: false });
   const from = (page - 1) * page_size;
   const { data, error, count } = await query.range(from, from + page_size - 1);
+  if (error) throw error;
+  return { posts: (data ?? []) as Post[], total_count: count ?? 0 };
+}
+
+// 베스트 게시판은 별도의 글을 작성하는 곳이 아니라, 일반 게시판 글의 반응 지표를 합산해 보여 준다.
+export async function getBestPosts(params: Omit<GetPostsParams, 'board_category_id' | 'sort_by'> & { best_category_id: string }): Promise<{ posts: Post[]; total_count: number }> {
+  const { best_category_id, page = 1, page_size = 15, search_query = '' } = params;
+  let query = supabase.from('community_posts_public').select(PUBLIC_POST_COLUMNS, { count: 'exact' }).neq('board_category_id', best_category_id).eq('is_pinned', false);
+  if (search_query.trim()) {
+    const safeQuery = search_query.trim().replace(/[%,()]/g, ' ');
+    query = query.or(`title.ilike.%${safeQuery}%,content.ilike.%${safeQuery}%`);
+  }
+  const from = (page - 1) * page_size;
+  const { data, error, count } = await query.order('view_count', { ascending: false }).order('like_count', { ascending: false }).order('comment_count', { ascending: false }).order('created_at', { ascending: false }).range(from, from + page_size - 1);
   if (error) throw error;
   return { posts: (data ?? []) as Post[], total_count: count ?? 0 };
 }

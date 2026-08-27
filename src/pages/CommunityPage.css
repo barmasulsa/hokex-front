@@ -206,6 +206,7 @@
 
 /* Naver Cafe-inspired board list and full-width write view */
 .community-table { background:#fff; border-top:2px solid #334155; }
+.community-board-title { margin:0 0 14px; padding:2px 0 14px; border-bottom:1px solid #d9e0ea; }.community-board-title p { margin:0 0 3px; color:#64748b; font-size:.72rem; font-weight:700; letter-spacing:.06em; }.community-board-title h2 { margin:0; color:#1f2937; font-size:1.45rem; }.community-board-title span { display:block; margin-top:7px; color:#64748b; font-size:.84rem; }
 .community-table-header, .community-table-row { display:grid; grid-template-columns:70px minmax(240px, 1fr) 120px 100px 70px 70px; align-items:center; gap:10px; padding:0 12px; min-height:45px; border-bottom:1px solid #edf0f3; font-size:.87rem; }
 .community-table-header { min-height:42px; text-align:center; color:#374151; font-weight:700; background:#fafafa; }.community-table-header span:nth-child(2), .community-table-row .post-title-cell { text-align:left; }
 .community-table-row { color:#64748b; text-decoration:none; transition:background .15s; }.community-table-row:hover { background:#f8fbff; }.community-table-row > span:not(.post-title-cell) { text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

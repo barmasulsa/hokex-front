@@ -69,6 +69,7 @@ function ScrollRestoration() {
 function AppContent() {
   const { user, isAdmin, loading, signOut, userProfile, needsNickname, toggleAdminMode } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // GA4 초기화 및 방문 기록
   useEffect(() => {
@@ -130,7 +131,7 @@ function AppContent() {
       {/* 헤더 */}
       <header className="app-header">
         <div className="header-logo-container">
-          <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link to={location.pathname.startsWith('/community') ? '/community' : '/'} style={{ textDecoration: 'none', color: 'inherit' }}>
             <h1>HOKEX</h1>
             <span className="subtitle">Hub of Korea Exhibition</span>
           </Link>

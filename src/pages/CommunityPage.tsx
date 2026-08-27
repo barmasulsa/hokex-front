@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Banner } from '../components/Banner';
 import { useAuth } from '../contexts/AuthContext';
-import { getBoardCategories, getPinnedPosts, getPosts, type BoardCategory, type Post } from '../services/communityService';
+import { getBestPosts, getBoardCategories, getPinnedPosts, getPosts, type BoardCategory, type Post } from '../services/communityService';
 import './CommunityPage.css';
 
 const relativeTime = (value: string) => {
@@ -13,7 +13,7 @@ const formatDate = (value: string) => new Date(value).toLocaleDateString('ko-KR'
 
 function PostRow({ post, notice = false }: { post: Post; notice?: boolean }) {
   return <Link to={`/community/${post.id}`} className={notice ? 'community-table-row notice-row' : 'community-table-row'}>
-    <span className="post-number">{notice ? '공지' : ''}</span>
+    <span className="post-number">{notice ? '공지' : post.post_number}</span>
     <span className="post-title-cell">{notice && <b className="notice-pill">공지</b>}{post.title}{post.comment_count > 0 && <em>[{post.comment_count}]</em>}</span>
     <span>{post.author_nickname || '익명 판다'}</span>
     <span>{notice ? formatDate(post.created_at) : relativeTime(post.created_at)}</span>
@@ -42,13 +42,19 @@ export function CommunityPage() {
   }, []);
   useEffect(() => {
     setLoading(true); setError('');
-    getPosts({ board_category_id: category, sort_by: sort, page, page_size: 15, search_query: submittedSearch, exclude_pinned: true })
+    const bestBoard = categories.find(item => item.id === category && item.name === '베스트 게시판');
+    const request = bestBoard
+      ? getBestPosts({ best_category_id: bestBoard.id, page, page_size: 15, search_query: submittedSearch })
+      : getPosts({ board_category_id: category, sort_by: sort, page, page_size: 15, search_query: submittedSearch, exclude_pinned: true });
+    request
       .then(({ posts: nextPosts, total_count }) => { setPosts(nextPosts); setTotal(total_count); })
       .catch(() => setError('게시글을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'))
       .finally(() => setLoading(false));
-  }, [category, sort, page, submittedSearch]);
+  }, [categories, category, sort, page, submittedSearch]);
 
   const totalPages = Math.max(1, Math.ceil(total / 15));
+  const selectedBoard = category === 'all' ? null : categories.find(item => item.id === category) ?? null;
+  const isBestBoard = selectedBoard?.name === '베스트 게시판';
   const selectCategory = (id: string) => { setCategory(id); setPage(1); };
   const submitSearch = (event: React.FormEvent) => { event.preventDefault(); setPage(1); setSubmittedSearch(search); };
 
@@ -59,8 +65,9 @@ export function CommunityPage() {
       </aside>
       <section className="community-content">
         <div className="community-banner-area"><Banner announcementCategory="community" /></div>
+        <div className="community-board-title"><p>HOKEX COMMUNITY</p><h2>{selectedBoard?.name || '전체 글'}</h2>{isBestBoard && <span>다른 게시판에서 반응이 높은 글을 자동으로 모아 보여드립니다.</span>}</div>
         <div className="community-toolbar"><form onSubmit={submitSearch}><input value={search} onChange={event => setSearch(event.target.value)} placeholder="제목 또는 내용 검색" /><button type="submit">검색</button></form>
-          <div>{(['latest', 'popular', 'views'] as const).map(item => <button key={item} className={sort === item ? 'sort-active' : ''} onClick={() => { setSort(item); setPage(1); }}>{item === 'latest' ? '최신순' : item === 'popular' ? '인기순' : '조회순'}</button>)}<button className="write-button" onClick={() => !user ? navigate('/login') : !userProfile?.nickname ? navigate('/profile?setup=nickname&reason=write') : navigate('/community/write')}>✏️ 글쓰기</button></div>
+          <div>{!isBestBoard && (['latest', 'popular', 'views'] as const).map(item => <button key={item} className={sort === item ? 'sort-active' : ''} onClick={() => { setSort(item); setPage(1); }}>{item === 'latest' ? '최신순' : item === 'popular' ? '인기순' : '조회순'}</button>)}{!isBestBoard && <button className="write-button" onClick={() => !user ? navigate('/login') : !userProfile?.nickname ? navigate('/profile?setup=nickname&reason=write') : navigate(`/community/write${selectedBoard ? `?board=${selectedBoard.id}` : ''}`)}>✏️ 글쓰기</button>}</div>
         </div>
         <div className="community-table"><div className="community-table-header"><span>번호</span><span>제목</span><span>작성자</span><span>작성일</span><span>조회</span><span>좋아요</span></div>
           {notices.map(post => <PostRow key={post.id} post={post} notice />)}
