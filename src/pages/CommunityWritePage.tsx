@@ -14,6 +14,7 @@ export function CommunityWritePage() {
   const [categories, setCategories] = useState<BoardCategory[]>([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
   const [category, setCategory] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -37,12 +38,17 @@ export function CommunityWritePage() {
     if (!postId) return;
     getPost(postId).then(post => {
       if (!post) throw new Error();
-      setTitle(post.title); setContent(post.content); setCategory(post.board_category_id); setIsPublic(post.is_public);
+      setTitle(post.title); setContent(post.content); setLinkUrl(post.link_url || ''); setCategory(post.board_category_id); setIsPublic(post.is_public);
     }).catch(() => setError('게시글을 불러올 수 없습니다.'));
   }, [postId]);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    const normalizedLinkUrl = linkUrl.trim() ? (/^https?:\/\//i.test(linkUrl.trim()) ? linkUrl.trim() : `https://${linkUrl.trim()}`) : null;
+    if (normalizedLinkUrl && !/^https:\/\//i.test(normalizedLinkUrl)) {
+      setError('링크 URL은 http:// 또는 https:// 형식으로 입력해 주세요.');
+      return;
+    }
     if (!user || !title.trim() || !content.trim() || !category) {
       setError('게시판, 제목, 본문을 모두 입력해 주세요.');
       return;
@@ -50,10 +56,10 @@ export function CommunityWritePage() {
     setSaving(true); setError('');
     try {
       if (postId) {
-        await updatePost(postId, { title, content, board_category_id: category, is_public: isPublic });
+        await updatePost(postId, { title, content, link_url: normalizedLinkUrl, board_category_id: category, is_public: isPublic });
         navigate(`/community/${postId}`);
       } else {
-        const id = await createPost({ title, content, board_category_id: category, is_public: isPublic });
+        const id = await createPost({ title, content, link_url: normalizedLinkUrl, board_category_id: category, is_public: isPublic });
         navigate(`/community/${id}`);
       }
     } catch {
@@ -70,6 +76,7 @@ export function CommunityWritePage() {
       <div className="write-select-row"><label>게시판<select value={category} onChange={event => setCategory(event.target.value)}>{categories.map(item => <option key={item.id} value={item.id}>{item.icon} {item.name}</option>)}</select></label></div>
       <label className="title-field"><input value={title} maxLength={120} onChange={event => setTitle(event.target.value)} placeholder="제목을 입력해 주세요." /></label>
       <div className="body-field"><RichTextEditor value={content} onChange={setContent} onImageUpload={file => uploadCommunityImage(file, user!)} onFileUpload={file => uploadCommunityFile(file, user!)} /></div>
+      <label className="link-url-field"><span>링크 URL <em>(선택사항)</em></span><input type="url" value={linkUrl} onChange={event => setLinkUrl(event.target.value)} placeholder="제목 클릭 시 이동할 URL을 입력해 주세요." /><small>입력하면 게시글 제목과 목록을 클릭했을 때 해당 링크로 이동합니다.</small></label>
     </section><aside className="write-options"><strong>공개 설정</strong><label><input type="checkbox" checked={isPublic} onChange={event => setIsPublic(event.target.checked)} /> 전체 공개</label><p>{isPublic ? '누구나 이 글을 볼 수 있습니다.' : '작성자와 관리자만 이 글을 볼 수 있습니다.'}</p><label><input type="checkbox" defaultChecked /> 댓글 허용</label><label><input type="checkbox" defaultChecked /> 검색 노출 허용</label><p>사진은 JPG, PNG, WEBP, GIF 형식으로 최대 5MB, 일반 파일은 최대 10MB까지 첨부할 수 있습니다.</p></aside></div>
     {error && <p className="form-error">{error}</p>}<div className="editor-actions"><button type="button" onClick={() => navigate(-1)}>취소</button><button className="write-button" disabled={saving}>{saving ? '등록 중…' : editing ? '수정 완료' : '등록하기'}</button></div></form>
   </section></main>;

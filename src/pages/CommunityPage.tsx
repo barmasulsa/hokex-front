@@ -12,13 +12,15 @@ const relativeTime = (value: string) => {
 const formatDate = (value: string) => new Date(value).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '');
 
 function PostRow({ post, notice = false }: { post: Post; notice?: boolean }) {
-  return <Link to={`/community/${post.id}`} className={notice ? 'community-table-row notice-row' : 'community-table-row'}>
+  const className = notice ? 'community-table-row notice-row' : 'community-table-row';
+  const row = <>
     <span className="post-number">{notice ? '공지' : post.post_number}</span>
-    <span className="post-title-cell">{notice && <b className="notice-pill">공지</b>}{post.title}{post.comment_count > 0 && <em>[{post.comment_count}]</em>}</span>
+    <span className="post-title-cell">{notice && <b className="notice-pill">공지</b>}{post.title}{post.link_url && <i className="post-external-link">↗</i>}{post.comment_count > 0 && <em>[{post.comment_count}]</em>}</span>
     <span>{post.author_nickname || '익명 판다'}</span>
     <span>{notice ? formatDate(post.created_at) : relativeTime(post.created_at)}</span>
     <span>{post.view_count.toLocaleString()}</span><span>{post.like_count}</span>
-  </Link>;
+  </>;
+  return post.link_url ? <a href={post.link_url} className={className}>{row}</a> : <Link to={`/community/${post.id}`} className={className}>{row}</Link>;
 }
 
 export function CommunityPage() {
