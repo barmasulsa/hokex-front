@@ -80,7 +80,15 @@ export async function getMyPosts(userId: string): Promise<Post[]> {
   return (data ?? []) as Post[];
 }
 export async function deletePost(id: string): Promise<void> { const { error } = await supabase.rpc('delete_community_post', { p_post_id: id }); if (error) throw error; }
-export async function incrementPostView(id: string): Promise<void> { const { error } = await supabase.rpc('increment_community_post_view', { post_id: id }); if (error) throw error; }
+export async function incrementPostView(id: string): Promise<void> {
+  // 같은 브라우저에서는 한국시간 기준 하루에 한 번만 집계해 새로고침·뒤로가기로 인한 중복을 막는다.
+  const kstDate = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const viewKey = 'hokex-community-viewed-' + id + '-' + kstDate;
+  if (localStorage.getItem(viewKey)) return;
+  const { error } = await supabase.rpc('increment_community_post_view', { post_id: id });
+  if (error) throw error;
+  localStorage.setItem(viewKey, 'true');
+}
 export async function getComments(postId: string): Promise<CommunityComment[]> { const { data, error } = await supabase.from('community_post_comments_public').select('id,post_id,parent_comment_id,author_id,author_nickname,content,created_at,updated_at').eq('post_id', postId).order('created_at'); if (error) throw error; return (data ?? []) as CommunityComment[]; }
 export async function createComment(postId: string, content: string, parentCommentId: string | null = null): Promise<void> { const { error } = await supabase.rpc('create_community_comment', { p_post_id: postId, p_content: content.trim(), p_parent_comment_id: parentCommentId }); if (error) throw error; }
 export async function updateComment(commentId: string, content: string): Promise<void> { const { error } = await supabase.rpc('update_community_comment', { p_comment_id: commentId, p_content: content.trim() }); if (error) throw error; }
