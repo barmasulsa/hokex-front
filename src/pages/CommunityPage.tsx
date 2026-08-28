@@ -43,7 +43,7 @@ export function CommunityPage() {
     getBoardCategories().then(setCategories).catch(() => setError('게시판 분류를 불러오지 못했습니다.'));
     getPinnedPosts().then(setNotices).catch(() => undefined);
     getPosts({ page_size: 100, exclude_pinned: true }).then(({ posts: recentPosts }) => {
-      const since = Date.now() - 24 * 60 * 60 * 1000;
+      const since = Date.now() - 72 * 60 * 60 * 1000;
       setRecentBoardIds(new Set(recentPosts.filter(post => new Date(post.created_at).getTime() >= since).map(post => post.board_category_id)));
     }).catch(() => undefined);
   }, []);
