@@ -11,11 +11,11 @@ const relativeTime = (value: string) => {
 };
 const formatDate = (value: string) => new Date(value).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '');
 
-function PostRow({ post, notice = false, onOpen }: { post: Post; notice?: boolean; onOpen: (id: string) => void }) {
+function PostRow({ post, notice = false, onOpen, sourceBoard }: { post: Post; notice?: boolean; onOpen: (id: string) => void; sourceBoard?: string }) {
   const className = notice ? 'community-table-row notice-row' : 'community-table-row';
   const row = <>
     <span className="post-number">{notice ? '공지' : post.post_number}</span>
-    <span className="post-title-cell">{notice && <b className="notice-pill">공지</b>}{post.title}{post.link_url && <i className="post-external-link">↗</i>}{post.comment_count > 0 && <em>[{post.comment_count}]</em>}</span>
+    <span className="post-title-cell">{notice && <b className="notice-pill">공지</b>}{sourceBoard && <b className="source-board-pill">{sourceBoard}</b>}{post.title}{post.link_url && <i className="post-external-link">↗</i>}{post.comment_count > 0 && <em>[{post.comment_count}]</em>}</span>
     <span>{post.author_nickname || '익명 판다'}</span>
     <span>{notice ? formatDate(post.created_at) : relativeTime(post.created_at)}</span>
     <span>{post.view_count.toLocaleString()}</span><span>{post.like_count}</span>
@@ -37,16 +37,21 @@ export function CommunityPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [recentBoardIds, setRecentBoardIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     getBoardCategories().then(setCategories).catch(() => setError('게시판 분류를 불러오지 못했습니다.'));
     getPinnedPosts().then(setNotices).catch(() => undefined);
+    getPosts({ page_size: 100, exclude_pinned: true }).then(({ posts: recentPosts }) => {
+      const since = Date.now() - 24 * 60 * 60 * 1000;
+      setRecentBoardIds(new Set(recentPosts.filter(post => new Date(post.created_at).getTime() >= since).map(post => post.board_category_id)));
+    }).catch(() => undefined);
   }, []);
   useEffect(() => {
     setLoading(true); setError('');
     const bestBoard = categories.find(item => item.id === category && item.name === '베스트 게시판');
     const request = bestBoard
-      ? getBestPosts({ best_category_id: bestBoard.id, page, page_size: 15, search_query: submittedSearch })
+      ? getBestPosts({ best_category_id: bestBoard.id, sort_by: sort, page, page_size: 15, search_query: submittedSearch })
       : getPosts({ board_category_id: category, sort_by: sort, page, page_size: 15, search_query: submittedSearch, exclude_pinned: true });
     request
       .then(({ posts: nextPosts, total_count }) => { setPosts(nextPosts); setTotal(total_count); })
@@ -64,17 +69,17 @@ export function CommunityPage() {
   return <main className="community-page">
     <div className="community-layout">
       <aside className="community-sidebar"><strong>게시판</strong><button className={category === 'all' ? 'active' : ''} onClick={() => selectCategory('all')}>전체 글</button>
-        {categories.map(item => item.is_active ? <button key={item.id} className={category === item.id ? 'active' : ''} onClick={() => selectCategory(item.id)}>{item.icon} {item.name}</button> : <div key={item.id} className="community-category-heading">{item.icon} {item.name}</div>)}
+        {categories.map(item => item.is_active ? <button key={item.id} className={category === item.id ? 'active' : ''} onClick={() => selectCategory(item.id)}>{item.icon} {item.name}{recentBoardIds.has(item.id) && <b className="new-post-badge">N</b>}</button> : <div key={item.id} className="community-category-heading">{item.icon} {item.name}</div>)}
       </aside>
       <section className="community-content">
         <div className="community-banner-area"><Banner announcementCategory="community" /></div>
         <div className="community-board-title"><p>HOKEX COMMUNITY</p><h2>{selectedBoard?.name || '전체 글'}</h2>{isBestBoard && <span>다른 게시판에서 반응이 높은 글을 자동으로 모아 보여드립니다.</span>}</div>
         <div className="community-toolbar"><form onSubmit={submitSearch}><input value={search} onChange={event => setSearch(event.target.value)} placeholder="제목 또는 내용 검색" /><button type="submit">검색</button></form>
-          <div>{!isBestBoard && (['latest', 'popular', 'views'] as const).map(item => <button key={item} className={sort === item ? 'sort-active' : ''} onClick={() => { setSort(item); setPage(1); }}>{item === 'latest' ? '최신순' : item === 'popular' ? '인기순' : '조회순'}</button>)}{!isBestBoard && <button className="write-button" onClick={() => !user ? navigate('/login') : !userProfile?.nickname ? navigate('/profile?setup=nickname&reason=write') : navigate(`/community/write${selectedBoard ? `?board=${selectedBoard.id}` : ''}`)}>✏️ 글쓰기</button>}</div>
+          <div>{(['latest', 'popular', 'views'] as const).map(item => <button key={item} className={sort === item ? 'sort-active' : ''} onClick={() => { setSort(item); setPage(1); }}>{item === 'latest' ? '최신순' : item === 'popular' ? '인기순' : '조회순'}</button>)}{!isBestBoard && <button className="write-button" onClick={() => !user ? navigate('/login') : !userProfile?.nickname ? navigate('/profile?setup=nickname&reason=write') : navigate(`/community/write${selectedBoard ? `?board=${selectedBoard.id}` : ''}`)}>✏️ 글쓰기</button>}</div>
         </div>
         <div className="community-table"><div className="community-table-header"><span>번호</span><span>제목</span><span>작성자</span><span>작성일</span><span>조회</span><span>좋아요</span></div>
-          {notices.map(post => <PostRow key={post.id} post={post} notice onOpen={openPost} />)}
-          {loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : posts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 작성해 보세요.</div> : posts.map(post => <PostRow key={post.id} post={post} onOpen={openPost} />)}
+          {notices.map(post => <PostRow key={post.id} post={post} notice onOpen={openPost} sourceBoard={(category === 'all' || isBestBoard) ? categories.find(item => item.id === post.board_category_id)?.name : undefined} />)}
+          {loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : posts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 작성해 보세요.</div> : posts.map(post => <PostRow key={post.id} post={post} onOpen={openPost} sourceBoard={(category === 'all' || isBestBoard) ? categories.find(item => item.id === post.board_category_id)?.name : undefined} />)}
         </div>
         {totalPages > 1 && <div className="pagination"><button disabled={page === 1} onClick={() => setPage(value => value - 1)}>이전</button><span>{page} / {totalPages}</span><button disabled={page === totalPages} onClick={() => setPage(value => value + 1)}>다음</button></div>}
         <p className="community-page-note">일반 게시글은 공지글을 제외하고 한 페이지에 15개씩 표시됩니다. 최신 글이 1페이지 맨 위에 표시됩니다.</p>

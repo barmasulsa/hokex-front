@@ -35,15 +35,18 @@ export async function getPosts(params: GetPostsParams): Promise<{ posts: Post[];
 }
 
 // 베스트 게시판은 별도의 글을 작성하는 곳이 아니라, 일반 게시판 글의 반응 지표를 합산해 보여 준다.
-export async function getBestPosts(params: Omit<GetPostsParams, 'board_category_id' | 'sort_by'> & { best_category_id: string }): Promise<{ posts: Post[]; total_count: number }> {
-  const { best_category_id, page = 1, page_size = 15, search_query = '' } = params;
+export async function getBestPosts(params: Omit<GetPostsParams, 'board_category_id'> & { best_category_id: string }): Promise<{ posts: Post[]; total_count: number }> {
+  const { best_category_id, sort_by = 'popular', page = 1, page_size = 15, search_query = '' } = params;
   let query = supabase.from('community_posts_public').select(PUBLIC_POST_COLUMNS, { count: 'exact' }).neq('board_category_id', best_category_id).eq('is_pinned', false).eq('is_public', true);
   if (search_query.trim()) {
     const safeQuery = search_query.trim().replace(/[%,()]/g, ' ');
     query = query.or(`title.ilike.%${safeQuery}%,content.ilike.%${safeQuery}%`);
   }
   const from = (page - 1) * page_size;
-  const { data, error, count } = await query.order('view_count', { ascending: false }).order('like_count', { ascending: false }).order('comment_count', { ascending: false }).order('created_at', { ascending: false }).range(from, from + page_size - 1);
+  if (sort_by === 'latest') query = query.order('created_at', { ascending: false });
+  else if (sort_by === 'views') query = query.order('view_count', { ascending: false }).order('like_count', { ascending: false }).order('comment_count', { ascending: false });
+  else query = query.order('like_count', { ascending: false }).order('comment_count', { ascending: false }).order('view_count', { ascending: false });
+  const { data, error, count } = await query.order('created_at', { ascending: false }).range(from, from + page_size - 1);
   if (error) throw error;
   return { posts: (data ?? []) as Post[], total_count: count ?? 0 };
 }
