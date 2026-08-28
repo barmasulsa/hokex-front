@@ -163,11 +163,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // 네이버 로그인 (커스텀 OAuth 필요)
+  // 네이버 로그인 (Supabase Custom OAuth Provider 이름: naver)
   const signInWithNaver = async () => {
-    // TODO: 네이버는 Supabase에서 기본 지원하지 않으므로 커스텀 OAuth 구현 필요
-    console.warn('Naver login not yet implemented');
-    alert('네이버 로그인은 아직 구현되지 않았습니다.');
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'custom:naver',
+      options: { redirectTo: window.location.origin + '/' },
+    });
+    if (error) throw error;
   };
 
   // 호켁스 독립 회원가입. 이메일 인증은 Supabase Auth가 처리한다.
