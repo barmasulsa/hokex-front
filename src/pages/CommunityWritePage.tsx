@@ -57,10 +57,10 @@ export function CommunityWritePage() {
     try {
       if (postId) {
         await updatePost(postId, { title, content, link_url: normalizedLinkUrl, board_category_id: category, is_public: isPublic });
-        navigate(`/community/${postId}`);
+        navigate(`/community/${postId}`, { state: { communityCategory: category, communityScrollY: (location.state as { communityScrollY?: number } | null)?.communityScrollY ?? 0 } });
       } else {
         const id = await createPost({ title, content, link_url: normalizedLinkUrl, board_category_id: category, is_public: isPublic });
-        navigate(`/community/${id}`);
+        navigate(`/community/${id}`, { state: { communityCategory: category } });
       }
     } catch {
       setError('저장하지 못했습니다. 로그인 상태와 권한을 확인해 주세요.');
