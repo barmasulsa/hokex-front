@@ -27,9 +27,9 @@ export function LoginPage() {
   return <div className="login-container"><div className="login-box"><div className="login-header"><h1>HOKEX</h1><p>전국 전시·컨벤션 정보 플랫폼</p></div><div className="login-content">
     <h2>호켁스 시작하기</h2><p className="login-description">소셜 계정으로 빠르게 로그인하고, 첫 방문 시 닉네임만 설정하면 됩니다.</p>
     <div className="social-login-buttons">
-      <button className="social-login kakao" disabled={submitting} onClick={() => socialLogin('kakao')}><b>카카오</b>로 시작하기</button>
-      <button className="social-login naver" disabled={submitting} onClick={() => socialLogin('naver')}><b>N</b> 네이버로 시작하기</button>
-      <button className="social-login google" disabled={submitting} onClick={() => socialLogin('google')}><span>G</span> Google로 계속하기</button>
+      <button className="social-login naver" disabled={submitting} onClick={() => socialLogin('naver')}><span className="social-provider-mark naver-mark" aria-hidden="true">N</span><span>네이버 계정으로 로그인</span></button>
+      <button className="social-login kakao" disabled={submitting} onClick={() => socialLogin('kakao')}><span className="social-provider-mark kakao-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 3C6.48 3 2 6.45 2 10.7c0 2.74 1.8 5.15 4.5 6.5l-.9 3.3a.45.45 0 0 0 .68.5l3.98-2.62c.57.08 1.15.12 1.74.12 5.52 0 10-3.45 10-7.7S17.52 3 12 3Z" /></svg></span><span>카카오 계정으로 로그인</span></button>
+      <button className="social-login google" disabled={submitting} onClick={() => socialLogin('google')}><span className="social-provider-mark google-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path fill="#4285F4" d="M21.35 12.23c0-.72-.06-1.25-.2-1.8H12v3.39h5.37c-.11.84-.73 2.1-2.11 2.95l-.02.11 3.07 2.38.21.02c1.94-1.79 3.06-4.43 3.06-7.05Z" /><path fill="#34A853" d="M12 21.75c2.62 0 4.82-.86 6.43-2.35l-3.06-2.4c-.82.57-1.92.97-3.37.97-2.56 0-4.74-1.69-5.52-4.03l-.1.01-3.2 2.48-.04.1A9.72 9.72 0 0 0 12 21.75Z" /><path fill="#FBBC05" d="M6.48 13.94A5.83 5.83 0 0 1 6.17 12c0-.67.12-1.32.3-1.94v-.12L3.23 7.42l-.1.05A9.75 9.75 0 0 0 2.25 12c0 1.64.4 3.18.88 4.53l3.35-2.59Z" /><path fill="#EA4335" d="M12 6.03c1.83 0 3.06.79 3.76 1.45l2.75-2.68C16.81 3.2 14.62 2.25 12 2.25a9.72 9.72 0 0 0-8.87 5.22l3.34 2.59C7.26 7.72 9.44 6.03 12 6.03Z" /></svg></span><span>구글 계정으로 로그인</span></button>
     </div>
     <p className="social-notice">소셜 로그인은 회원가입과 로그인이 한 번에 진행됩니다.</p>
     {error && <div className="error-message">{error}</div>}{notice && <div className="success-message">{notice}</div>}
