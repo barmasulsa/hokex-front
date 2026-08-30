@@ -171,7 +171,7 @@
   cursor: not-allowed;
 }
 
-.community-page { width:100%; max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.5rem 4rem; }
+.community-page { width:100%; max-width: 1280px; margin: 80px auto 0; padding: 1.5rem 1.5rem 4rem; }
 .community-hero { padding: 2.5rem 2.75rem; border-radius: 20px; color: #fff; background: linear-gradient(120deg, #243c84, #5d4fb7); margin-bottom: 1.5rem; }
 .community-hero p, .editor-heading p { letter-spacing: .12em; font-weight: 700; font-size: .75rem; margin: 0 0 .6rem; opacity: .8; }.community-hero h2 { margin: 0 0 .65rem; font-size: 2rem; }.community-hero span { opacity: .88; }
 .community-layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 1.5rem; align-items:start; }.community-content { min-width:0; }.community-sidebar { display: flex; flex-direction: column; gap: .25rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 14px; background: #fff; align-self: start; position:sticky; top:104px; max-height:calc(100vh - 124px); overflow-y:auto; }.community-sidebar strong { padding: .5rem; color: #243c84; }.community-sidebar button { border: 0; background: transparent; text-align: left; padding: .65rem; border-radius: 8px; cursor: pointer; color: #4b5563; white-space:nowrap; }.community-sidebar button:hover, .community-sidebar button.active { background: #eef2ff; color: #3730a3; font-weight: 700; }
