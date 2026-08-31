@@ -19,7 +19,12 @@ export function UserProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [linkingNaver, setLinkingNaver] = useState(false);
-  const [naverLinkError, setNaverLinkError] = useState('');
+  const [naverLinkError, setNaverLinkError] = useState(() => {
+    if (searchParams.get('error_code') === 'identity_already_exists') {
+      return '이 네이버 계정은 이미 다른 HOKEX 계정에 연결되어 있습니다.';
+    }
+    return searchParams.get('error_description') ?? '';
+  });
   
   // 저장된 행사 목록
   const [savedEvents, setSavedEvents] = useState<EventRecord[]>([]);
