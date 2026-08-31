@@ -1,6 +1,8 @@
 -- 관리자용: 특정 하위 게시판 묶음의 현재 자리(display_order)를 서로 교환한다.
 -- 전체 게시판의 다른 항목 순서는 바꾸지 않는다.
-create or replace function public.reorder_community_board_categories(p_category_ids uuid[])
+drop function if exists public.reorder_community_board_categories(uuid[]);
+
+create or replace function public.reorder_community_board_categories(p_category_ids text[])
 returns void
 language plpgsql
 security definer
@@ -12,7 +14,7 @@ declare
   v_offset integer;
 begin
   if not exists (
-    select 1 from public.profiles
+    select 1 from public.user_profiles
     where id = auth.uid() and is_admin = true
   ) then
     raise exception '관리자만 게시판 순서를 변경할 수 있습니다.';
@@ -51,4 +53,4 @@ begin
 end;
 $$;
 
-grant execute on function public.reorder_community_board_categories(uuid[]) to authenticated;
+grant execute on function public.reorder_community_board_categories(text[]) to authenticated;
