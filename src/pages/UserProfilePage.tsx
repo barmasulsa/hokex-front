@@ -41,9 +41,10 @@ export function UserProfilePage() {
     setLinkingNaver(true);
     try {
       await linkNaverIdentity();
-    } catch {
+    } catch (error) {
       setLinkingNaver(false);
-      alert('네이버 계정 연결을 시작하지 못했습니다. 잠시 후 다시 시도해주세요.');
+      const detail = error instanceof Error ? error.message : '알 수 없는 오류';
+      alert(`네이버 계정 연결을 시작하지 못했습니다.\n${detail}`);
     }
   };
 

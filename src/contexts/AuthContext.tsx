@@ -177,7 +177,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const linkNaverIdentity = async () => {
     const { error } = await supabase.auth.linkIdentity({
       provider: 'custom:naver',
-      options: { redirectTo: window.location.origin + '/profile?linked=naver' },
+      // 네이버에 등록된 운영 서비스 주소로 복귀시켜 로컬 개발 주소와의 불일치를 피한다.
+      options: { redirectTo: 'https://hokex.vercel.app/profile?linked=naver' },
     });
     if (error) throw error;
   };
