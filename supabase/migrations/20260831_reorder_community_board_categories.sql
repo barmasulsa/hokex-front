@@ -8,6 +8,8 @@ set search_path = public
 as $$
 declare
   v_count integer;
+  v_slots integer[];
+  v_offset integer;
 begin
   if not exists (
     select 1 from public.profiles
@@ -28,18 +30,23 @@ begin
     raise exception '존재하지 않는 게시판이 포함되어 있습니다.';
   end if;
 
+  select array_agg(display_order order by display_order), coalesce(max(abs(display_order)), 0) + 1000
+  into v_slots, v_offset
+  from public.community_board_categories
+  where id = any(p_category_ids);
+
+  -- display_order에 고유 제약이 있어도 충돌하지 않도록 먼저 임시 음수값으로 이동한다.
+  update public.community_board_categories
+  set display_order = -v_offset - display_order
+  where id = any(p_category_ids);
+
   with requested as (
     select category_id, ordinality as requested_position
     from unnest(p_category_ids) with ordinality as item(category_id, ordinality)
-  ), slots as (
-    select display_order, row_number() over (order by display_order) as slot_position
-    from public.community_board_categories
-    where id = any(p_category_ids)
   )
   update public.community_board_categories category
-  set display_order = slots.display_order
+  set display_order = v_slots[requested.requested_position]
   from requested
-  join slots on slots.slot_position = requested.requested_position
   where category.id = requested.category_id;
 end;
 $$;
