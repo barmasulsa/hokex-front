@@ -182,8 +182,9 @@ export function CommunityPage() {
       await reorderCommunityBoardCategories(reordered.map(item => item.id));
       setCategories(await getBoardCategories());
       setCategoryMessage('하위 게시판 순서를 변경했습니다.');
-    } catch {
-      setCategoryMessage('순서를 저장하지 못했습니다. DB 설정을 확인해 주세요.');
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : '';
+      setCategoryMessage(detail ? `순서를 저장하지 못했습니다. ${detail}` : '순서를 저장하지 못했습니다. DB 설정을 확인해 주세요.');
     } finally { setCategorySaving(false); }
   };
   const startDescriptionEdit = () => {
