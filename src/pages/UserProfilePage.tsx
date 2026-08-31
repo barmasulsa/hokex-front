@@ -19,6 +19,7 @@ export function UserProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [linkingNaver, setLinkingNaver] = useState(false);
+  const [naverLinkError, setNaverLinkError] = useState('');
   
   // 저장된 행사 목록
   const [savedEvents, setSavedEvents] = useState<EventRecord[]>([]);
@@ -39,12 +40,13 @@ export function UserProfilePage() {
 
   const handleLinkNaver = async () => {
     setLinkingNaver(true);
+    setNaverLinkError('');
     try {
       await linkNaverIdentity();
     } catch (error) {
       setLinkingNaver(false);
       const detail = error instanceof Error ? error.message : '알 수 없는 오류';
-      alert(`네이버 계정 연결을 시작하지 못했습니다.\n${detail}`);
+      setNaverLinkError(`연결을 시작하지 못했습니다: ${detail}`);
     }
   };
 
@@ -662,6 +664,7 @@ export function UserProfilePage() {
                   {naverLinked ? <><span className="verified-badge">✓</span> 연결됨</> : '연결되지 않음'}
                   {!naverLinked && <button className="btn-change" disabled={linkingNaver} onClick={handleLinkNaver}>{linkingNaver ? '연결 중…' : '네이버 계정 연결'}</button>}
                 </div>
+                {naverLinkError && <p style={{ gridColumn: '2', margin: '0', color: '#dc2626', fontSize: '0.82rem' }}>{naverLinkError}</p>}
               </div>
               {hasPassword && (
                 <div className="setting-row">
