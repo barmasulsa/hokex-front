@@ -36,6 +36,11 @@ export async function deleteCommunityBoardCategory(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function reorderCommunityBoardCategories(ids: string[]): Promise<void> {
+  const { error } = await supabase.rpc('reorder_community_board_categories', { p_category_ids: ids });
+  if (error) throw error;
+}
+
 export async function getPosts(params: GetPostsParams): Promise<{ posts: Post[]; total_count: number }> {
   const { board_category_id = 'all', sort_by = 'latest', page = 1, page_size = 15, search_query = '', exclude_pinned = true } = params;
   let query = supabase.from('community_posts_public').select(PUBLIC_POST_COLUMNS, { count: 'exact' });
