@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Banner } from '../components/Banner';
 import { useAuth } from '../contexts/AuthContext';
-import { deleteCommunityBoardCategory, getBestPosts, getBoardCategories, getPinnedPosts, getPosts, saveCommunityBoardCategory, type BoardCategory, type BoardCategoryDraft, type Post } from '../services/communityService';
+import { deleteCommunityBoardCategory, deletePost, getBestPosts, getBoardCategories, getPinnedPosts, getPostLikeStatus, getPosts, saveCommunityBoardCategory, togglePostLike, type BoardCategory, type BoardCategoryDraft, type Post } from '../services/communityService';
 import './CommunityPage.css';
 
 const relativeTime = (value: string) => {
@@ -47,16 +47,16 @@ const LEGACY_BOARD_DESCRIPTIONS = new Set([
   '행사 및 제품 홍보', '전시회 홍보', '포럼 및 컨퍼런스', '교육 프로그램', '공연 및 공연예술', '각종 행사 및 이벤트', '베뉴 및 장소 홍보', '업체 및 서비스 홍보', '디자인 및 인쇄 서비스', '부스 제작 및 시공', '기타 업체 홍보',
 ]);
 
-function PostRow({ post, notice = false, sourceBoard, displayNumber, returnCategory }: { post: Post; notice?: boolean; sourceBoard?: string; displayNumber?: number; returnCategory: string }) {
+function PostRow({ post, notice = false, sourceBoard, displayNumber, returnCategory, isNewsPost, canManageNews, liked, onLike, onEditNews, onDeleteNews }: { post: Post; notice?: boolean; sourceBoard?: string; displayNumber?: number; returnCategory: string; isNewsPost: boolean; canManageNews: boolean; liked: boolean; onLike: (post: Post) => void; onEditNews: (post: Post) => void; onDeleteNews: (post: Post) => void }) {
   const className = notice ? 'community-table-row notice-row' : 'community-table-row';
-  const row = <>
+  const titleHref = post.link_url || `/community/${post.id}?board=${encodeURIComponent(returnCategory)}`;
+  return <div className={className}>
     <span className="post-number">{notice ? '공지' : (displayNumber ?? post.board_post_number ?? post.post_number)}</span>
-    <span className="post-title-cell">{notice && <b className="notice-pill">공지</b>}{sourceBoard && <b className="source-board-pill">{sourceBoard}</b>}{post.title}{post.link_url && <i className="post-external-link">↗</i>}{post.comment_count > 0 && <em>[{post.comment_count}]</em>}</span>
+    <span className="post-title-cell"><a href={titleHref} className="post-title-link">{notice && <b className="notice-pill">공지</b>}{sourceBoard && <b className="source-board-pill">{sourceBoard}</b>}{post.title}{post.link_url && <i className="post-external-link">↗</i>}{post.comment_count > 0 && <em>[{post.comment_count}]</em>}</a>{isNewsPost && canManageNews && <span className="news-row-actions"><button type="button" onClick={() => onEditNews(post)}>수정</button><button type="button" onClick={() => onDeleteNews(post)}>삭제</button></span>}</span>
     <span>{post.author_nickname || '익명 판다'}</span>
     <span>{notice ? formatDate(post.created_at) : relativeTime(post.created_at)}</span>
-    <span>{post.view_count.toLocaleString()}</span><span>{post.like_count}</span>
-  </>;
-  return post.link_url ? <a href={post.link_url} className={className}>{row}</a> : <a href={`/community/${post.id}?board=${encodeURIComponent(returnCategory)}`} className={className}>{row}</a>;
+    <span>{post.view_count.toLocaleString()}</span><span><button type="button" className={liked ? 'post-like-button active' : 'post-like-button'} onClick={() => onLike(post)} aria-label={`${post.title} 좋아요`}>{liked ? '♥' : '♡'} {post.like_count}</button></span>
+  </div>;
 }
 
 export function CommunityPage() {
@@ -83,6 +83,8 @@ export function CommunityPage() {
   const [categorySaving, setCategorySaving] = useState(false);
   const [categoryMessage, setCategoryMessage] = useState('');
   const [newCategory, setNewCategory] = useState({ name: '', icon: '📌', description: '' });
+  const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     getBoardCategories().then(setCategories).catch(() => setError('게시판 분류를 불러오지 못했습니다.'));
@@ -106,7 +108,15 @@ export function CommunityPage() {
       .then(({ posts: nextPosts, total_count }) => { setPosts(nextPosts); setTotal(total_count); })
       .catch(() => setError('게시글을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'))
       .finally(() => setLoading(false));
-  }, [categories, category, sort, page, submittedSearch]);
+  }, [categories, category, sort, page, submittedSearch, reloadKey]);
+  useEffect(() => {
+    if (!user) { setLikedPostIds(new Set()); return; }
+    const postIds = [...posts, ...notices].map(post => post.id);
+    if (!postIds.length) return;
+    Promise.all(postIds.map(async id => ({ id, ...(await getPostLikeStatus(id)) })))
+      .then(results => setLikedPostIds(new Set(results.filter(item => item.liked).map(item => item.id))))
+      .catch(() => undefined);
+  }, [user?.id, posts, notices]);
 
   const totalPages = Math.max(1, Math.ceil(total / 15));
   const selectedBoard = category === 'all' ? null : categories.find(item => item.id === category) ?? null;
@@ -158,6 +168,23 @@ export function CommunityPage() {
     await saveCategory({ ...selectedBoard, name: boardLabel(selectedBoard.name), description: descriptionDraft, parent_category_id: selectedBoard.parent_category_id, is_active: selectedBoard.is_active });
     setEditingDescription(false);
   };
+  const toggleLikeFromList = async (post: Post) => {
+    if (!user) { navigate('/login'); return; }
+    try {
+      const result = await togglePostLike(post.id);
+      const updatePostLike = (item: Post) => item.id === post.id ? { ...item, like_count: result.like_count } : item;
+      setPosts(items => items.map(updatePostLike));
+      setNotices(items => items.map(updatePostLike));
+      setLikedPostIds(items => { const next = new Set(items); if (result.liked) next.add(post.id); else next.delete(post.id); return next; });
+    } catch { setError('좋아요를 저장하지 못했습니다.'); }
+  };
+  const editNewsPost = (post: Post) => navigate(`/community/${post.id}/edit`, { state: { communityCategory: post.board_category_id } });
+  const deleteNewsPost = async (post: Post) => {
+    if (!window.confirm('이 뉴스 게시글을 삭제할까요?')) return;
+    try { await deletePost(post.id); setReloadKey(value => value + 1); }
+    catch { setError('작성자만 게시글을 삭제할 수 있습니다.'); }
+  };
+  const postRowProps = (post: Post, displayNumber: number | undefined, sourceBoard?: string, notice = false) => ({ post, notice, returnCategory: category, displayNumber, sourceBoard, isNewsPost: categories.find(item => item.id === post.board_category_id)?.name === '뉴스게시판', canManageNews: post.author_id === user?.id, liked: likedPostIds.has(post.id), onLike: toggleLikeFromList, onEditNews: editNewsPost, onDeleteNews: deleteNewsPost });
 
   return <main className="community-page">
     <div className="community-layout">
@@ -178,8 +205,8 @@ export function CommunityPage() {
           <div>{(['latest', 'popular', 'views'] as const).map(item => <button key={item} className={sort === item ? 'sort-active' : ''} onClick={() => { setSort(item); setPage(1); }}>{item === 'latest' ? '최신순' : item === 'popular' ? '인기순' : '조회순'}</button>)}{!isBestBoard && <button className="write-button" onClick={() => !user ? navigate('/login') : !userProfile?.nickname ? navigate('/profile?setup=nickname&reason=write') : navigate(`/community/write${selectedBoard ? `?board=${selectedBoard.id}` : ''}`)}>✏️ 글쓰기</button>}</div>
         </div>
         <div className="community-table"><div className="community-table-header"><span>번호</span><span>제목</span><span>작성자</span><span>작성일</span><span>조회</span><span>좋아요</span></div>
-          {notices.map(post => <PostRow key={post.id} post={post} notice returnCategory={category} displayNumber={category === 'all' ? post.post_number : post.board_post_number} sourceBoard={(category === 'all' || isBestBoard) ? categories.find(item => item.id === post.board_category_id)?.name : undefined} />)}
-          {loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : posts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 작성해 보세요.</div> : posts.map(post => <PostRow key={post.id} post={post} returnCategory={category} displayNumber={category === 'all' ? post.post_number : post.board_post_number} sourceBoard={(category === 'all' || isBestBoard) ? categories.find(item => item.id === post.board_category_id)?.name : undefined} />)}
+          {notices.map(post => <PostRow key={post.id} {...postRowProps(post, category === 'all' ? post.post_number : post.board_post_number, (category === 'all' || isBestBoard) ? categories.find(item => item.id === post.board_category_id)?.name : undefined, true)} />)}
+          {loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : posts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 작성해 보세요.</div> : posts.map(post => <PostRow key={post.id} {...postRowProps(post, category === 'all' ? post.post_number : post.board_post_number, (category === 'all' || isBestBoard) ? categories.find(item => item.id === post.board_category_id)?.name : undefined)} />)}
         </div>
         {totalPages > 1 && <div className="pagination"><button disabled={page === 1} onClick={() => setPage(value => value - 1)}>이전</button><span>{page} / {totalPages}</span><button disabled={page === totalPages} onClick={() => setPage(value => value + 1)}>다음</button></div>}
         <p className="community-page-note">일반 게시글은 공지글을 제외하고 한 페이지에 15개씩 표시됩니다. 최신 글이 1페이지 맨 위에 표시됩니다.</p>
