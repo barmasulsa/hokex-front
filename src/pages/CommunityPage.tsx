@@ -83,6 +83,8 @@ export function CommunityPage() {
   const [categorySaving, setCategorySaving] = useState(false);
   const [categoryMessage, setCategoryMessage] = useState('');
   const [newCategory, setNewCategory] = useState({ name: '', icon: '📌', description: '' });
+  const [editingChildId, setEditingChildId] = useState<string | null>(null);
+  const [childNameDraft, setChildNameDraft] = useState('');
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -138,7 +140,7 @@ export function CommunityPage() {
   })() : [];
   const selectCategory = (id: string) => { setCategory(id); setPage(1); };
   const submitSearch = (event: React.FormEvent) => { event.preventDefault(); setPage(1); setSubmittedSearch(search); };
-  const openBoardManager = (parentId: string) => { setManagedParentId(parentId); setCategoryMessage(''); };
+  const openBoardManager = (parentId: string) => { setManagedParentId(parentId); setCategoryMessage(''); setEditingChildId(null); };
   const saveCategory = async (draft: BoardCategoryDraft) => {
     setCategorySaving(true); setCategoryMessage('');
     try { await saveCommunityBoardCategory(draft); setCategories(await getBoardCategories()); setCategoryMessage('저장했습니다.'); }
@@ -157,6 +159,17 @@ export function CommunityPage() {
     try { await deleteCommunityBoardCategory(child.id); setCategories(await getBoardCategories()); setCategoryMessage('하위 게시판을 삭제했습니다.'); }
     catch { setCategoryMessage('삭제하지 못했습니다. 게시글이 있는 게시판인지 확인해 주세요.'); }
     finally { setCategorySaving(false); }
+  };
+  const startChildNameEdit = (child: BoardCategory) => {
+    setEditingChildId(child.id);
+    setChildNameDraft(boardLabel(child.name));
+    setCategoryMessage('');
+  };
+  const saveChildName = async (child: BoardCategory) => {
+    const name = childNameDraft.trim();
+    if (!name) { setCategoryMessage('게시판 이름을 입력해 주세요.'); return; }
+    await saveCategory({ ...child, name, description: child.description ?? '', parent_category_id: child.parent_category_id, is_active: child.is_active });
+    setEditingChildId(null);
   };
   const startDescriptionEdit = () => {
     if (!selectedBoard) return;
@@ -197,7 +210,7 @@ export function CommunityPage() {
           <p className="community-manager-help">하위 게시판을 추가하거나 각 게시판의 이름·아이콘·설명을 관리합니다.</p>
           {categoryMessage && <p className="community-manager-message">{categoryMessage}</p>}
           <form className="community-category-editor" onSubmit={addChildCategory}><strong>하위 게시판 추가</strong><div><input value={newCategory.icon} onChange={event => setNewCategory(value => ({ ...value, icon: event.target.value }))} maxLength={4} aria-label="아이콘" /><input value={newCategory.name} onChange={event => setNewCategory(value => ({ ...value, name: event.target.value }))} placeholder="게시판 이름" maxLength={40} required /></div><textarea value={newCategory.description} onChange={event => setNewCategory(value => ({ ...value, description: event.target.value }))} placeholder="게시판 설명 (선택 사항)" maxLength={1000} /><button type="submit" disabled={categorySaving}>하위 게시판 추가</button></form>
-          <div className="community-category-manage-list"><strong>현재 하위 게시판</strong>{managedChildren.length === 0 ? <p>등록된 하위 게시판이 없습니다.</p> : managedChildren.map(item => <div key={item.id}><span>{item.icon} {boardLabel(item.name)}</span><button type="button" disabled={categorySaving} onClick={() => void removeChildCategory(item)}>삭제</button></div>)}</div>
+          <div className="community-category-manage-list"><strong>현재 하위 게시판</strong>{managedChildren.length === 0 ? <p>등록된 하위 게시판이 없습니다.</p> : managedChildren.map(item => <div key={item.id}>{editingChildId === item.id ? <input className="community-child-name-input" value={childNameDraft} onChange={event => setChildNameDraft(event.target.value)} maxLength={40} aria-label={`${boardLabel(item.name)} 게시판 이름`} autoFocus /> : <span>{item.icon} {boardLabel(item.name)}</span>}<div className="community-category-actions">{editingChildId === item.id ? <><button type="button" className="save" disabled={categorySaving} onClick={() => void saveChildName(item)}>저장</button><button type="button" className="cancel" disabled={categorySaving} onClick={() => setEditingChildId(null)}>취소</button></> : <button type="button" className="edit" disabled={categorySaving} onClick={() => startChildNameEdit(item)}>수정</button>}<button type="button" disabled={categorySaving} onClick={() => void removeChildCategory(item)}>삭제</button></div></div>)}</div>
         </section>}
         <div className="community-banner-area"><Banner announcementCategory="community" /></div>
         <div className="community-board-title"><p>HOKEX COMMUNITY</p><h2>{selectedBoardName}</h2>{boardDescription && <span>{boardDescription}</span>}{isAdmin && selectedBoard && !editingDescription && <button type="button" className="community-description-edit" onClick={startDescriptionEdit}>설명 수정</button>}{isAdmin && selectedBoard && editingDescription && <div className="community-description-editor"><textarea value={descriptionDraft} onChange={event => setDescriptionDraft(event.target.value)} maxLength={1000} aria-label="게시판 설명" /><button type="button" disabled={categorySaving} onClick={() => void saveDescription()}>저장</button><button type="button" onClick={() => setEditingDescription(false)}>취소</button></div>}</div>
