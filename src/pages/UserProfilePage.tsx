@@ -7,7 +7,7 @@ import type { EventRecord } from '../types/core';
 import { Heart, Bell, Mail, User as UserIcon, Key } from 'lucide-react';
 
 export function UserProfilePage() {
-  const { user, userProfile, updatePassword, updateNickname, resetNickname, isAdmin } = useAuth();
+  const { user, userProfile, updatePassword, updateNickname, resetNickname, isAdmin, linkNaverIdentity } = useAuth();
   const [searchParams] = useSearchParams();
   const nicknameRequiredForWriting = searchParams.get('reason') === 'write';
   
@@ -18,6 +18,7 @@ export function UserProfilePage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [linkingNaver, setLinkingNaver] = useState(false);
   
   // 저장된 행사 목록
   const [savedEvents, setSavedEvents] = useState<EventRecord[]>([]);
@@ -34,6 +35,17 @@ export function UserProfilePage() {
 
   // Interest tags
   const [interests] = useState(['Architectural Design', 'MICE Logistics', 'Smart Venues']);
+  const naverLinked = user?.identities?.some(identity => identity.provider === 'custom:naver') ?? false;
+
+  const handleLinkNaver = async () => {
+    setLinkingNaver(true);
+    try {
+      await linkNaverIdentity();
+    } catch {
+      setLinkingNaver(false);
+      alert('네이버 계정 연결을 시작하지 못했습니다. 잠시 후 다시 시도해주세요.');
+    }
+  };
 
   // 저장된 행사 가져오기
   useEffect(() => {
@@ -641,6 +653,13 @@ export function UserProfilePage() {
                 <div className="setting-value">
                   {user?.email}
                   <span className="verified-badge">✓</span>
+                </div>
+              </div>
+              <div className="setting-row">
+                <label>네이버 로그인</label>
+                <div className="setting-value">
+                  {naverLinked ? <><span className="verified-badge">✓</span> 연결됨</> : '연결되지 않음'}
+                  {!naverLinked && <button className="btn-change" disabled={linkingNaver} onClick={handleLinkNaver}>{linkingNaver ? '연결 중…' : '네이버 계정 연결'}</button>}
                 </div>
               </div>
               {hasPassword && (

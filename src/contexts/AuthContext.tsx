@@ -21,6 +21,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithKakao: () => Promise<void>;
   signInWithNaver: () => Promise<void>;
+  linkNaverIdentity: () => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signInWithPassword: (email: string, password: string) => Promise<void>;
   signInWithMagicLink: (email: string) => Promise<void>;
@@ -168,6 +169,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'custom:naver',
       options: { redirectTo: window.location.origin + '/' },
+    });
+    if (error) throw error;
+  };
+
+  // 이미 로그인한 계정에 네이버 로그인 수단을 추가한다.
+  const linkNaverIdentity = async () => {
+    const { error } = await supabase.auth.linkIdentity({
+      provider: 'custom:naver',
+      options: { redirectTo: window.location.origin + '/profile?linked=naver' },
     });
     if (error) throw error;
   };
@@ -387,6 +397,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signInWithGoogle,
     signInWithKakao,
     signInWithNaver,
+    linkNaverIdentity,
     signUp,
     signInWithPassword,
     signInWithMagicLink,
