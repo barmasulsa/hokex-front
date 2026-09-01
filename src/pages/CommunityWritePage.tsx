@@ -7,6 +7,13 @@ import './CommunityPage.css';
 
 type CropFrame = { left: number; top: number; width: number; height: number };
 type CropHandle = 'move' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top' | 'right' | 'bottom' | 'left';
+const PROMOTION_PREFIXES: Record<string, { options: string[]; help?: string }> = {
+  '포럼&세미나': { options: ['포럼', '세미나'], help: '분류는 가장 가까운 걸로 선택해주세요.' },
+  '포럼': { options: ['포럼', '세미나'], help: '분류는 가장 가까운 걸로 선택해주세요.' },
+  '행사/이벤트/팝업': { options: ['행사', '이벤트', '팝업'], help: '분류는 가장 가까운 걸로 선택해주세요.' },
+  '강의&교육': { options: ['강의', '교육'] },
+  '공연': { options: ['연극', '뮤지컬', '서양음악(클래식)', '한국음악(국악)', '무용(서양/한국무용)', '대중무용', '서커스/마술', '복합'], help: '분류는 가장 가까운 걸로 선택해주세요.' },
+};
 
 export function CommunityWritePage() {
   const { user, userProfile } = useAuth();
@@ -16,6 +23,7 @@ export function CommunityWritePage() {
   const editing = Boolean(postId);
   const [categories, setCategories] = useState<BoardCategory[]>([]);
   const [title, setTitle] = useState('');
+  const [titlePrefix, setTitlePrefix] = useState('');
   const [newsDate, setNewsDate] = useState('');
   const [newsSource, setNewsSource] = useState('');
   const [content, setContent] = useState('');
@@ -38,6 +46,7 @@ export function CommunityWritePage() {
   const promotionParentIndex = categories.findIndex(item => item.id === promotionParent?.id);
   const inferredPromotionChildren = promotionParentIndex < 0 ? [] : categories.slice(promotionParentIndex + 1, (() => { const nextIndex = categories.slice(promotionParentIndex + 1).findIndex(item => !item.is_active); return nextIndex < 0 ? undefined : promotionParentIndex + 1 + nextIndex; })()).filter(item => item.is_active);
   const isPromotionGalleryBoard = Boolean(category && (categories.find(item => item.id === category)?.parent_category_id === promotionParent?.id || inferredPromotionChildren.some(item => item.id === category)));
+  const prefixConfig = isPromotionGalleryBoard ? PROMOTION_PREFIXES[boardName] : undefined;
 
   useEffect(() => {
     if (!user) navigate('/login');
@@ -57,7 +66,8 @@ export function CommunityWritePage() {
     if (!postId) return;
     getPost(postId).then(post => {
       if (!post) throw new Error();
-      setTitle(post.title); setContent(post.content); setLinkUrl(post.link_url || ''); setThumbnailUrl(post.thumbnail_url || ''); setThumbnailCrop({ x: 50, y: 50, scale: 1, aspect_ratio: 1, ...(post.thumbnail_crop || {}) }); setCategory(post.board_category_id); setIsPublic(post.is_public);
+      const prefixedTitle = post.title.match(/^\[([^\]]+)\]\s*(.+)$/);
+      setTitle(prefixedTitle?.[2] || post.title); setTitlePrefix(prefixedTitle?.[1] || ''); setContent(post.content); setLinkUrl(post.link_url || ''); setThumbnailUrl(post.thumbnail_url || ''); setThumbnailCrop({ x: 50, y: 50, scale: 1, aspect_ratio: 1, ...(post.thumbnail_crop || {}) }); setCategory(post.board_category_id); setIsPublic(post.is_public);
     }).catch(() => setError('게시글을 불러올 수 없습니다.'));
   }, [postId]);
 
@@ -129,7 +139,7 @@ export function CommunityWritePage() {
       setError('링크 URL은 http:// 또는 https:// 형식으로 입력해 주세요.');
       return;
     }
-    const savedTitle = isNewsBoard ? `${title.trim()} ${newsDate} <${newsSource.trim()}>` : title.trim();
+    const savedTitle = isNewsBoard ? `${title.trim()} ${newsDate} <${newsSource.trim()}>` : prefixConfig && titlePrefix ? `[${titlePrefix}] ${title.trim()}` : title.trim();
     const savedContent = isNewsBoard ? '' : content;
     if (!user || !title.trim() || !category || (!isNewsBoard && !savedContent.trim())) {
       setError('게시판, 제목, 본문을 모두 입력해 주세요.');
@@ -145,6 +155,10 @@ export function CommunityWritePage() {
     }
     if (isNewsBoard && !normalizedLinkUrl) {
       setError('뉴스 원문 URL을 입력해 주세요.');
+      return;
+    }
+    if (prefixConfig && !titlePrefix) {
+      setError('제목 왼쪽의 분류를 선택해 주세요.');
       return;
     }
     if (isPromotionGalleryBoard && !thumbnailUrl) {
@@ -170,8 +184,8 @@ export function CommunityWritePage() {
   return <main className="community-page"><section className="editor-shell cafe-write-shell">
     <div className="editor-heading"><div><p>{boardName}</p><h2>{editing ? '글 수정' : '글쓰기'}</h2></div><div className="editor-top-actions"><button type="button" onClick={() => navigate(-1)}>취소</button><button className="write-button" disabled={saving}>{saving ? '등록 중…' : editing ? '수정' : '등록'}</button></div></div>
     <form onSubmit={submit}><div className="write-main-grid"><section className="write-editor-area">
-      <div className="write-select-row"><label>게시판<select value={category} onChange={event => setCategory(event.target.value)}>{categories.filter(item => item.is_active && item.name !== '베스트 게시판').map(item => <option key={item.id} value={item.id}>{item.icon} {item.name === '전시' ? '전시&박람회' : item.name}</option>)}</select></label></div>
-      {isNewsBoard ? <div className="news-title-fields"><label className="title-field"><input value={title} maxLength={90} onChange={event => setTitle(event.target.value)} placeholder="제목을 입력해 주세요." /></label><label className="news-date-field"><input value={newsDate} inputMode="numeric" maxLength={8} onChange={event => { const digits = event.target.value.replace(/\D/g, '').slice(0, 6); setNewsDate([digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 6)].filter(Boolean).join('.')); }} placeholder="26.00.00" aria-label="기사 작성일" required /></label><label className="news-source-field"><span>&lt;</span><input value={newsSource} maxLength={40} onChange={event => setNewsSource(event.target.value)} placeholder="언론사 명칭" aria-label="언론사 명칭" /><span>&gt;</span></label></div> : <label className="title-field"><input value={title} maxLength={120} onChange={event => setTitle(event.target.value)} placeholder="제목을 입력해 주세요." /></label>}
+      <div className="write-select-row"><label>게시판<select value={category} onChange={event => { setCategory(event.target.value); setTitlePrefix(''); }}>{categories.filter(item => item.is_active && item.name !== '베스트 게시판').map(item => <option key={item.id} value={item.id}>{item.icon} {item.name === '전시' ? '전시&박람회' : item.name}</option>)}</select></label></div>
+      {isNewsBoard ? <div className="news-title-fields"><label className="title-field"><input value={title} maxLength={90} onChange={event => setTitle(event.target.value)} placeholder="제목을 입력해 주세요." /></label><label className="news-date-field"><input value={newsDate} inputMode="numeric" maxLength={8} onChange={event => { const digits = event.target.value.replace(/\D/g, '').slice(0, 6); setNewsDate([digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 6)].filter(Boolean).join('.')); }} placeholder="26.00.00" aria-label="기사 작성일" required /></label><label className="news-source-field"><span>&lt;</span><input value={newsSource} maxLength={40} onChange={event => setNewsSource(event.target.value)} placeholder="언론사 명칭" aria-label="언론사 명칭" /><span>&gt;</span></label></div> : prefixConfig ? <><div className="promotion-title-fields"><label><select value={titlePrefix} onChange={event => setTitlePrefix(event.target.value)} aria-label="제목 분류"><option value="">분류 선택</option>{prefixConfig.options.map(option => <option key={option} value={option}>{option}</option>)}</select></label><label className="title-field"><input value={title} maxLength={110} onChange={event => setTitle(event.target.value)} placeholder="제목을 입력해 주세요." /></label></div>{prefixConfig.help && <p className="promotion-prefix-help">{prefixConfig.help}</p>}</> : <label className="title-field"><input value={title} maxLength={120} onChange={event => setTitle(event.target.value)} placeholder="제목을 입력해 주세요." /></label>}
       {isNewsBoard && <p className="news-title-preview">{title.trim() && /^\d{2}\.\d{2}\.\d{2}$/.test(newsDate) && newsSource.trim() ? `${title.trim()} ${newsDate} <${newsSource.trim()}>` : '제목 26.00.00 <언론사 명칭> 형식으로 자동 등록됩니다.'}</p>}
       {isPromotionGalleryBoard && <section className="exhibition-thumbnail-field"><div><strong>포스터 (썸네일) <em>필수</em></strong><span className="thumbnail-description">본문 사진을 대표로 설정하거나 직접 포스터를 올려주세요. 전시 갤러리 규격은 800×800(1:1)로 고정됩니다.<br />썸네일은 외부에 보이는 게시글의 이미지이며 본문에 첨부되는 실제 파일이 아닙니다.<br />이미지 파일을 게시글에 올리고 싶을 경우 본문에 실제 이미지 파일을 넣어야 합니다.</span></div><input ref={thumbnailInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={uploadThumbnail} />{thumbnailUrl ? <div className="exhibition-thumbnail-preview"><div className="exhibition-thumbnail-crop-preview"><img src={thumbnailUrl} style={{ objectPosition: `${thumbnailCrop.x}% ${thumbnailCrop.y}%`, transform: `scale(${thumbnailCrop.scale})` }} alt="선택한 전시 포스터" /></div><div><button type="button" className="thumbnail-adjust-button" onClick={openCropEditor}>썸네일 화면 조정하기</button><button type="button" onClick={() => setRepresentativeImage(null)}>대표 사진 해제</button></div></div> : <button type="button" className="exhibition-thumbnail-upload" onClick={() => thumbnailInput.current?.click()}>포스터 직접 선택</button>}{thumbnailError && <p className="thumbnail-error">{thumbnailError}</p>}</section>}
       {!isNewsBoard && <div className="body-field"><RichTextEditor value={content} onChange={setContent} onImageUpload={file => uploadCommunityImage(file, user!)} onFileUpload={file => uploadCommunityFile(file, user!)} representativeImageUrl={isPromotionGalleryBoard ? thumbnailUrl : undefined} onRepresentativeImageChange={isPromotionGalleryBoard ? setRepresentativeImage : undefined} /></div>}
