@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 
 export interface BoardCategory { id: string; name: string; description: string | null; icon: string; is_active: boolean; display_order: number; parent_category_id: string | null; }
 export interface BoardCategoryDraft { id?: string; name: string; description: string; icon: string; parent_category_id: string | null; is_active: boolean; }
-export interface ThumbnailCrop { x: number; y: number; scale: number; aspect_ratio?: number; }
+export interface ThumbnailCrop { x: number; y: number; scale: number; aspect_ratio?: number; source_url?: string; }
 export interface Post { id: string; post_number: number; board_post_number: number; title: string; content: string; link_url: string | null; thumbnail_url: string | null; thumbnail_crop: ThumbnailCrop | null; board_category_id: string; author_id: string | null; author_nickname: string | null; created_at: string; updated_at: string; view_count: number; like_count: number; comment_count: number; is_pinned: boolean; is_public: boolean; }
 export interface GetPostsParams { board_category_id?: string; sort_by?: 'latest' | 'popular' | 'views'; page?: number; page_size?: number; search_query?: string; exclude_pinned?: boolean; }
 export interface PostDraft { title: string; content: string; link_url: string | null; thumbnail_url: string | null; thumbnail_crop: ThumbnailCrop | null; board_category_id: string; is_public: boolean; }
