@@ -77,8 +77,8 @@ export function CommunityWritePage() {
     setThumbnailUrl(value || ''); setThumbnailCrop({ x: 50, y: 50, scale: 1, aspect_ratio: 1 }); setThumbnailError('');
   };
   const openCropEditor = () => {
-    const width = 82;
-    const height = width;
+    const width = Math.min(82, 82 / thumbnailImageAspect);
+    const height = width * thumbnailImageAspect;
     setCropFrame({ left: Math.max(0, Math.min(100 - width, thumbnailCrop.x - width / 2)), top: Math.max(0, Math.min(100 - height, thumbnailCrop.y - height / 2)), width, height });
     setCropEditorOpen(true);
   };
@@ -92,16 +92,16 @@ export function CommunityWritePage() {
     let { left, top, width, height } = frame;
     if (handle === 'move') { left = Math.max(0, Math.min(100 - width, left + dx)); top = Math.max(0, Math.min(100 - height, top + dy)); }
     if (handle !== 'move') {
-      const ratio = 1;
+      const imageAspect = thumbnailImageAspect;
       if (handle.includes('left') || handle.includes('right')) {
         const right = frame.left + frame.width;
         width = handle.includes('left') ? Math.max(minimum, Math.min(right, frame.width - dx)) : Math.max(minimum, Math.min(100 - frame.left, frame.width + dx));
-        height = width / ratio;
+        height = width * imageAspect;
         left = handle.includes('left') ? right - width : frame.left;
       } else {
         const bottom = frame.top + frame.height;
-        height = handle.includes('top') ? Math.max(minimum / ratio, Math.min(bottom, frame.height - dy)) : Math.max(minimum / ratio, Math.min(100 - frame.top, frame.height + dy));
-        width = height * ratio;
+        height = handle.includes('top') ? Math.max(minimum * imageAspect, Math.min(bottom, frame.height - dy)) : Math.max(minimum * imageAspect, Math.min(100 - frame.top, frame.height + dy));
+        width = height / imageAspect;
         top = handle.includes('top') ? bottom - height : frame.top;
       }
       left = Math.max(0, Math.min(100 - width, left));
@@ -112,6 +112,11 @@ export function CommunityWritePage() {
   const saveCropFrame = () => {
     setThumbnailCrop(value => ({ ...value, x: cropFrame.left + cropFrame.width / 2, y: cropFrame.top + cropFrame.height / 2, scale: Math.max(1, 100 / cropFrame.width), aspect_ratio: 1 }));
     setCropEditorOpen(false);
+  };
+  const resetCropFrame = () => {
+    const width = Math.min(82, 82 / thumbnailImageAspect);
+    const height = width * thumbnailImageAspect;
+    setCropFrame({ left: (100 - width) / 2, top: (100 - height) / 2, width, height });
   };
 
   const submit = async (event: React.FormEvent) => {
@@ -170,6 +175,6 @@ export function CommunityWritePage() {
       <label className="link-url-field"><span>{isNewsBoard ? '뉴스 원문 URL' : '링크 URL'} {!isNewsBoard && <em>(선택사항)</em>}</span><input type="url" value={linkUrl} onChange={event => setLinkUrl(event.target.value)} placeholder={isNewsBoard ? '뉴스 원문 URL을 입력해 주세요.' : '제목 클릭 시 이동할 URL을 입력해 주세요.'} required={isNewsBoard} /><small>{isNewsBoard ? '등록 후 제목이나 목록을 누르면 해당 뉴스 원문으로 바로 이동합니다.' : '입력하면 게시글 제목과 목록을 클릭했을 때 해당 링크로 이동합니다.'}</small></label>
     </section><aside className="write-options"><strong>공개 설정</strong><label><input type="checkbox" checked={isPublic} onChange={event => setIsPublic(event.target.checked)} /> 전체 공개</label><p>{isPublic ? '누구나 이 글을 볼 수 있습니다.' : '작성자와 관리자만 이 글을 볼 수 있습니다.'}</p><label><input type="checkbox" defaultChecked /> 댓글 허용</label><label><input type="checkbox" defaultChecked /> 검색 노출 허용</label><p>사진은 JPG, PNG, WEBP, GIF 형식으로 최대 5MB, 일반 파일은 최대 10MB까지 첨부할 수 있습니다.</p></aside></div>
     {error && <p className="form-error">{error}</p>}<div className="editor-actions"><button type="button" onClick={() => navigate(-1)}>취소</button><button className="write-button" disabled={saving}>{saving ? '등록 중…' : editing ? '수정 완료' : '등록하기'}</button></div></form>
-    {cropEditorOpen && thumbnailUrl && <div className="thumbnail-crop-modal" role="dialog" aria-modal="true" aria-label="썸네일 화면 조정"><section><header><div><strong>썸네일 화면 조정하기</strong><span>전시 갤러리 규격 800×800(1:1)에 맞춰, 선택 영역을 옮기거나 흰색 핸들로 크기를 조정하세요.</span></div><button type="button" onClick={() => setCropEditorOpen(false)}>×</button></header><div className="thumbnail-ratio-options"><button type="button" className="active">전시 썸네일 1:1</button></div><div className="thumbnail-crop-canvas" style={{ aspectRatio: String(thumbnailImageAspect) }} onPointerMove={moveCropFrame} onPointerUp={() => { cropInteraction.current = null; }} onPointerCancel={() => { cropInteraction.current = null; }}><img src={thumbnailUrl} alt="썸네일 자르기 미리보기" onLoad={event => setThumbnailImageAspect(event.currentTarget.naturalWidth / event.currentTarget.naturalHeight)} /><div className="thumbnail-crop-frame" style={{ left: `${cropFrame.left}%`, top: `${cropFrame.top}%`, width: `${cropFrame.width}%`, height: `${cropFrame.height}%` }} onPointerDown={event => { event.stopPropagation(); cropInteraction.current = { startX: event.clientX, startY: event.clientY, frame: cropFrame, handle: 'move' }; event.currentTarget.setPointerCapture(event.pointerId); }}><span className="thumbnail-crop-shade" aria-hidden="true" />{(['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top', 'right', 'bottom', 'left'] as CropHandle[]).map(handle => <button key={handle} type="button" className={`thumbnail-crop-handle ${handle}`} aria-label={`자르기 영역 ${handle} 조절`} onPointerDown={event => { event.stopPropagation(); cropInteraction.current = { startX: event.clientX, startY: event.clientY, frame: cropFrame, handle }; event.currentTarget.setPointerCapture(event.pointerId); }} />)}</div></div><div className="thumbnail-crop-actions"><button type="button" onClick={() => { setCropFrame({ left: 9, top: 9, width: 82, height: 82 }); }}>처음 상태</button><button type="button" className="write-button" onClick={saveCropFrame}>완료</button></div></section></div>}
+    {cropEditorOpen && thumbnailUrl && <div className="thumbnail-crop-modal" role="dialog" aria-modal="true" aria-label="썸네일 화면 조정"><section><header><div><strong>썸네일 화면 조정하기</strong><span>전시 갤러리 규격 800×800(1:1)에 맞춰, 선택 영역을 옮기거나 흰색 핸들로 크기를 조정하세요.</span></div><button type="button" onClick={() => setCropEditorOpen(false)}>×</button></header><div className="thumbnail-ratio-options"><button type="button" className="active">전시 썸네일 1:1</button></div><div className="thumbnail-crop-canvas" style={{ aspectRatio: String(thumbnailImageAspect) }} onPointerMove={moveCropFrame} onPointerUp={() => { cropInteraction.current = null; }} onPointerCancel={() => { cropInteraction.current = null; }}><img src={thumbnailUrl} alt="썸네일 자르기 미리보기" onLoad={event => { const aspect = event.currentTarget.naturalWidth / event.currentTarget.naturalHeight; setThumbnailImageAspect(aspect); setCropFrame(frame => { const width = Math.min(82, 82 / aspect); const height = width * aspect; return { left: Math.max(0, Math.min(100 - width, frame.left + frame.width / 2 - width / 2)), top: Math.max(0, Math.min(100 - height, frame.top + frame.height / 2 - height / 2)), width, height }; }); }} /><div className="thumbnail-crop-frame" style={{ left: `${cropFrame.left}%`, top: `${cropFrame.top}%`, width: `${cropFrame.width}%`, height: `${cropFrame.height}%` }} onPointerDown={event => { event.stopPropagation(); cropInteraction.current = { startX: event.clientX, startY: event.clientY, frame: cropFrame, handle: 'move' }; event.currentTarget.setPointerCapture(event.pointerId); }}><span className="thumbnail-crop-shade" aria-hidden="true" />{(['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top', 'right', 'bottom', 'left'] as CropHandle[]).map(handle => <button key={handle} type="button" className={`thumbnail-crop-handle ${handle}`} aria-label={`자르기 영역 ${handle} 조절`} onPointerDown={event => { event.stopPropagation(); cropInteraction.current = { startX: event.clientX, startY: event.clientY, frame: cropFrame, handle }; event.currentTarget.setPointerCapture(event.pointerId); }} />)}</div></div><div className="thumbnail-crop-actions"><button type="button" onClick={resetCropFrame}>처음 상태</button><button type="button" className="write-button" onClick={saveCropFrame}>완료</button></div></section></div>}
   </section></main>;
 }
