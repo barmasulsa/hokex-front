@@ -5,6 +5,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { createPost, getBoardCategories, getPost, updatePost, uploadCommunityFile, uploadCommunityImage, type BoardCategory, type ThumbnailCrop } from '../services/communityService';
 import './CommunityPage.css';
 
+type CropFrame = { left: number; top: number; width: number; height: number };
+type CropHandle = 'move' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top' | 'right' | 'bottom' | 'left';
+
 export function CommunityWritePage() {
   const { user, userProfile } = useAuth();
   const navigate = useNavigate();
@@ -21,8 +24,8 @@ export function CommunityWritePage() {
   const [thumbnailCrop, setThumbnailCrop] = useState<ThumbnailCrop>({ x: 50, y: 50, scale: 1, aspect_ratio: .75 });
   const [thumbnailError, setThumbnailError] = useState('');
   const [cropEditorOpen, setCropEditorOpen] = useState(false);
-  const cropDrag = useRef<{ startX: number; startY: number; crop: ThumbnailCrop } | null>(null);
-  const cropResize = useRef<{ startX: number; aspectRatio: number } | null>(null);
+  const [cropFrame, setCropFrame] = useState<CropFrame>({ left: 12, top: 8, width: 76, height: 84 });
+  const cropInteraction = useRef<{ startX: number; startY: number; frame: CropFrame; handle: CropHandle } | null>(null);
   const [category, setCategory] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -72,19 +75,40 @@ export function CommunityWritePage() {
   const setRepresentativeImage = (value: string | null) => {
     setThumbnailUrl(value || ''); setThumbnailCrop({ x: 50, y: 50, scale: 1, aspect_ratio: .75 }); setThumbnailError('');
   };
-  const moveCrop = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!cropDrag.current || cropResize.current) return;
+  const openCropEditor = () => {
+    const aspectRatio = thumbnailCrop.aspect_ratio ?? .75;
+    const width = Math.min(82, aspectRatio >= 1 ? 82 : 72);
+    const height = Math.min(88, width / aspectRatio);
+    setCropFrame({ left: Math.max(0, Math.min(100 - width, thumbnailCrop.x - width / 2)), top: Math.max(0, Math.min(100 - height, thumbnailCrop.y - height / 2)), width, height });
+    setCropEditorOpen(true);
+  };
+  const moveCropFrame = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!cropInteraction.current) return;
     const rect = event.currentTarget.getBoundingClientRect();
-    const { startX, startY, crop } = cropDrag.current;
-    setThumbnailCrop({ ...crop, x: Math.max(0, Math.min(100, crop.x - ((event.clientX - startX) / rect.width) * 100 / crop.scale)), y: Math.max(0, Math.min(100, crop.y - ((event.clientY - startY) / rect.height) * 100 / crop.scale)) });
+    const { startX, startY, frame, handle } = cropInteraction.current;
+    const dx = ((event.clientX - startX) / rect.width) * 100;
+    const dy = ((event.clientY - startY) / rect.height) * 100;
+    const minimum = 12;
+    let { left, top, width, height } = frame;
+    if (handle === 'move') { left = Math.max(0, Math.min(100 - width, left + dx)); top = Math.max(0, Math.min(100 - height, top + dy)); }
+    if (handle.includes('left')) { left = Math.max(0, Math.min(frame.left + frame.width - minimum, frame.left + dx)); width = frame.width + frame.left - left; }
+    if (handle.includes('right')) width = Math.max(minimum, Math.min(100 - left, frame.width + dx));
+    if (handle.includes('top')) { top = Math.max(0, Math.min(frame.top + frame.height - minimum, frame.top + dy)); height = frame.height + frame.top - top; }
+    if (handle.includes('bottom')) height = Math.max(minimum, Math.min(100 - top, frame.height + dy));
+    setCropFrame({ left, top, width, height });
   };
-  const cropAspectRatio = thumbnailCrop.aspect_ratio ?? .75;
-  const setCropAspectRatio = (aspectRatio: number) => setThumbnailCrop(value => ({ ...value, aspect_ratio: aspectRatio }));
-  const resizeCustomCrop = (event: React.PointerEvent<HTMLButtonElement>) => {
-    if (!cropResize.current) return;
-    const { startX, aspectRatio } = cropResize.current;
-    setCropAspectRatio(Math.max(.45, Math.min(2, aspectRatio + (event.clientX - startX) / 220)));
+  const setCropFrameRatio = (aspectRatio: number) => {
+    setCropFrame(frame => {
+      const width = Math.min(frame.width, 100 - frame.left);
+      const height = Math.min(100 - frame.top, width / aspectRatio);
+      return { ...frame, width: height * aspectRatio, height };
+    });
   };
+  const saveCropFrame = () => {
+    setThumbnailCrop(value => ({ ...value, x: cropFrame.left + cropFrame.width / 2, y: cropFrame.top + cropFrame.height / 2, scale: Math.max(1, 100 / cropFrame.width), aspect_ratio: Number((cropFrame.width / cropFrame.height).toFixed(3)) }));
+    setCropEditorOpen(false);
+  };
+  const cropFrameRatio = cropFrame.width / cropFrame.height;
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -137,11 +161,11 @@ export function CommunityWritePage() {
       <div className="write-select-row"><label>게시판<select value={category} onChange={event => setCategory(event.target.value)}>{categories.map(item => <option key={item.id} value={item.id}>{item.icon} {item.name}</option>)}</select></label></div>
       {isNewsBoard ? <div className="news-title-fields"><label className="title-field"><input value={title} maxLength={90} onChange={event => setTitle(event.target.value)} placeholder="제목을 입력해 주세요." /></label><label className="news-date-field"><input value={newsDate} inputMode="numeric" maxLength={8} onChange={event => { const digits = event.target.value.replace(/\D/g, '').slice(0, 6); setNewsDate([digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 6)].filter(Boolean).join('.')); }} placeholder="26.00.00" aria-label="기사 작성일" required /></label><label className="news-source-field"><span>&lt;</span><input value={newsSource} maxLength={40} onChange={event => setNewsSource(event.target.value)} placeholder="언론사 명칭" aria-label="언론사 명칭" /><span>&gt;</span></label></div> : <label className="title-field"><input value={title} maxLength={120} onChange={event => setTitle(event.target.value)} placeholder="제목을 입력해 주세요." /></label>}
       {isNewsBoard && <p className="news-title-preview">{title.trim() && /^\d{2}\.\d{2}\.\d{2}$/.test(newsDate) && newsSource.trim() ? `${title.trim()} ${newsDate} <${newsSource.trim()}>` : '제목 26.00.00 <언론사 명칭> 형식으로 자동 등록됩니다.'}</p>}
-      {isExhibitionBoard && <section className="exhibition-thumbnail-field"><div><strong>포스터 (썸네일) <em>필수</em></strong><span>본문 사진을 대표로 설정하거나 직접 포스터를 올려주세요. 비율은 세로형·정사각형·사용자 지정 중 선택할 수 있습니다.</span></div><input ref={thumbnailInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={uploadThumbnail} />{thumbnailUrl ? <div className="exhibition-thumbnail-preview"><div className="exhibition-thumbnail-crop-preview" style={{ aspectRatio: String(cropAspectRatio) }}><img src={thumbnailUrl} style={{ objectPosition: `${thumbnailCrop.x}% ${thumbnailCrop.y}%`, transform: `scale(${thumbnailCrop.scale})` }} alt="선택한 전시 포스터" /></div><div><button type="button" className="thumbnail-adjust-button" onClick={() => setCropEditorOpen(true)}>썸네일 화면 조정하기</button><button type="button" onClick={() => setRepresentativeImage(null)}>대표 사진 해제</button></div></div> : <button type="button" className="exhibition-thumbnail-upload" onClick={() => thumbnailInput.current?.click()}>포스터 직접 선택</button>}{thumbnailError && <p className="thumbnail-error">{thumbnailError}</p>}</section>}
+      {isExhibitionBoard && <section className="exhibition-thumbnail-field"><div><strong>포스터 (썸네일) <em>필수</em></strong><span>본문 사진을 대표로 설정하거나 직접 포스터를 올려주세요. 비율은 세로형·정사각형·사용자 지정 중 선택할 수 있습니다.</span></div><input ref={thumbnailInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={uploadThumbnail} />{thumbnailUrl ? <div className="exhibition-thumbnail-preview"><div className="exhibition-thumbnail-crop-preview" style={{ aspectRatio: String(thumbnailCrop.aspect_ratio ?? .75) }}><img src={thumbnailUrl} style={{ objectPosition: `${thumbnailCrop.x}% ${thumbnailCrop.y}%`, transform: `scale(${thumbnailCrop.scale})` }} alt="선택한 전시 포스터" /></div><div><button type="button" className="thumbnail-adjust-button" onClick={openCropEditor}>썸네일 화면 조정하기</button><button type="button" onClick={() => setRepresentativeImage(null)}>대표 사진 해제</button></div></div> : <button type="button" className="exhibition-thumbnail-upload" onClick={() => thumbnailInput.current?.click()}>포스터 직접 선택</button>}{thumbnailError && <p className="thumbnail-error">{thumbnailError}</p>}</section>}
       {!isNewsBoard && <div className="body-field"><RichTextEditor value={content} onChange={setContent} onImageUpload={file => uploadCommunityImage(file, user!)} onFileUpload={file => uploadCommunityFile(file, user!)} representativeImageUrl={isExhibitionBoard ? thumbnailUrl : undefined} onRepresentativeImageChange={isExhibitionBoard ? setRepresentativeImage : undefined} /></div>}
       <label className="link-url-field"><span>{isNewsBoard ? '뉴스 원문 URL' : '링크 URL'} {!isNewsBoard && <em>(선택사항)</em>}</span><input type="url" value={linkUrl} onChange={event => setLinkUrl(event.target.value)} placeholder={isNewsBoard ? '뉴스 원문 URL을 입력해 주세요.' : '제목 클릭 시 이동할 URL을 입력해 주세요.'} required={isNewsBoard} /><small>{isNewsBoard ? '등록 후 제목이나 목록을 누르면 해당 뉴스 원문으로 바로 이동합니다.' : '입력하면 게시글 제목과 목록을 클릭했을 때 해당 링크로 이동합니다.'}</small></label>
     </section><aside className="write-options"><strong>공개 설정</strong><label><input type="checkbox" checked={isPublic} onChange={event => setIsPublic(event.target.checked)} /> 전체 공개</label><p>{isPublic ? '누구나 이 글을 볼 수 있습니다.' : '작성자와 관리자만 이 글을 볼 수 있습니다.'}</p><label><input type="checkbox" defaultChecked /> 댓글 허용</label><label><input type="checkbox" defaultChecked /> 검색 노출 허용</label><p>사진은 JPG, PNG, WEBP, GIF 형식으로 최대 5MB, 일반 파일은 최대 10MB까지 첨부할 수 있습니다.</p></aside></div>
     {error && <p className="form-error">{error}</p>}<div className="editor-actions"><button type="button" onClick={() => navigate(-1)}>취소</button><button className="write-button" disabled={saving}>{saving ? '등록 중…' : editing ? '수정 완료' : '등록하기'}</button></div></form>
-    {cropEditorOpen && thumbnailUrl && <div className="thumbnail-crop-modal" role="dialog" aria-modal="true" aria-label="썸네일 화면 조정"><section><header><div><strong>썸네일 화면 조정하기</strong><span>사진을 드래그해 위치를 맞추고, 비율을 선택하거나 모서리를 드래그해 조정하세요.</span></div><button type="button" onClick={() => setCropEditorOpen(false)}>×</button></header><div className="thumbnail-ratio-options"><button type="button" className={cropAspectRatio === .75 ? 'active' : ''} onClick={() => setCropAspectRatio(.75)}>세로형 3:4</button><button type="button" className={cropAspectRatio === 1 ? 'active' : ''} onClick={() => setCropAspectRatio(1)}>정사각형 1:1</button><button type="button" className={cropAspectRatio !== .75 && cropAspectRatio !== 1 ? 'active' : ''} onClick={() => setCropAspectRatio(.9)}>사용자 지정</button></div><div className="thumbnail-crop-canvas" style={{ aspectRatio: String(cropAspectRatio) }} onPointerDown={event => { cropDrag.current = { startX: event.clientX, startY: event.clientY, crop: thumbnailCrop }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={moveCrop} onPointerUp={() => { cropDrag.current = null; cropResize.current = null; }} onPointerCancel={() => { cropDrag.current = null; cropResize.current = null; }}><img src={thumbnailUrl} alt="썸네일 자르기 미리보기" style={{ objectPosition: `${thumbnailCrop.x}% ${thumbnailCrop.y}%`, transform: `scale(${thumbnailCrop.scale})` }} />{cropAspectRatio !== .75 && cropAspectRatio !== 1 && <button type="button" className="thumbnail-crop-resize-handle" aria-label="사용자 지정 자르기 비율 조절" onPointerDown={event => { event.stopPropagation(); cropResize.current = { startX: event.clientX, aspectRatio: cropAspectRatio }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={resizeCustomCrop} onPointerUp={() => { cropResize.current = null; }} />}</div><label className="thumbnail-zoom">확대/축소 <input type="range" min="1" max="3" step="0.05" value={thumbnailCrop.scale} onChange={event => setThumbnailCrop(value => ({ ...value, scale: Number(event.target.value) }))} /></label><div className="thumbnail-crop-actions"><button type="button" onClick={() => setThumbnailCrop({ x: 50, y: 50, scale: 1, aspect_ratio: .75 })}>처음 상태</button><button type="button" className="write-button" onClick={() => setCropEditorOpen(false)}>완료</button></div></section></div>}
+    {cropEditorOpen && thumbnailUrl && <div className="thumbnail-crop-modal" role="dialog" aria-modal="true" aria-label="썸네일 화면 조정"><section><header><div><strong>썸네일 화면 조정하기</strong><span>사진 위의 선택 영역을 드래그하거나 흰색 핸들을 끌어 실제 잘릴 부분을 조정하세요.</span></div><button type="button" onClick={() => setCropEditorOpen(false)}>×</button></header><div className="thumbnail-ratio-options"><button type="button" className={Math.abs(cropFrameRatio - .75) < .01 ? 'active' : ''} onClick={() => setCropFrameRatio(.75)}>세로형 3:4</button><button type="button" className={Math.abs(cropFrameRatio - 1) < .01 ? 'active' : ''} onClick={() => setCropFrameRatio(1)}>정사각형 1:1</button><button type="button" className={Math.abs(cropFrameRatio - .75) >= .01 && Math.abs(cropFrameRatio - 1) >= .01 ? 'active' : ''}>사용자 지정</button></div><div className="thumbnail-crop-canvas" onPointerMove={moveCropFrame} onPointerUp={() => { cropInteraction.current = null; }} onPointerCancel={() => { cropInteraction.current = null; }}><img src={thumbnailUrl} alt="썸네일 자르기 미리보기" /><div className="thumbnail-crop-frame" style={{ left: `${cropFrame.left}%`, top: `${cropFrame.top}%`, width: `${cropFrame.width}%`, height: `${cropFrame.height}%` }} onPointerDown={event => { event.stopPropagation(); cropInteraction.current = { startX: event.clientX, startY: event.clientY, frame: cropFrame, handle: 'move' }; event.currentTarget.setPointerCapture(event.pointerId); }}><span className="thumbnail-crop-shade" aria-hidden="true" />{(['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top', 'right', 'bottom', 'left'] as CropHandle[]).map(handle => <button key={handle} type="button" className={`thumbnail-crop-handle ${handle}`} aria-label={`자르기 영역 ${handle} 조절`} onPointerDown={event => { event.stopPropagation(); cropInteraction.current = { startX: event.clientX, startY: event.clientY, frame: cropFrame, handle }; event.currentTarget.setPointerCapture(event.pointerId); }} />)}</div></div><div className="thumbnail-crop-actions"><button type="button" onClick={() => { setCropFrame({ left: 12, top: 8, width: 76, height: 84 }); }}>처음 상태</button><button type="button" className="write-button" onClick={saveCropFrame}>완료</button></div></section></div>}
   </section></main>;
 }
