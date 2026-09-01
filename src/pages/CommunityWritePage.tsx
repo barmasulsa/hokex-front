@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,12 +17,15 @@ export function CommunityWritePage() {
   const [newsSource, setNewsSource] = useState('');
   const [content, setContent] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
+  const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [category, setCategory] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const thumbnailInput = useRef<HTMLInputElement>(null);
   const boardName = categories.find(item => item.id === category)?.name || '게시판';
   const isNewsBoard = boardName === '뉴스게시판';
+  const isExhibitionBoard = boardName === '전시';
 
   useEffect(() => {
     if (!user) navigate('/login');
@@ -42,7 +45,7 @@ export function CommunityWritePage() {
     if (!postId) return;
     getPost(postId).then(post => {
       if (!post) throw new Error();
-      setTitle(post.title); setContent(post.content); setLinkUrl(post.link_url || ''); setCategory(post.board_category_id); setIsPublic(post.is_public);
+      setTitle(post.title); setContent(post.content); setLinkUrl(post.link_url || ''); setThumbnailUrl(post.thumbnail_url || ''); setCategory(post.board_category_id); setIsPublic(post.is_public);
     }).catch(() => setError('게시글을 불러올 수 없습니다.'));
   }, [postId]);
 
@@ -51,6 +54,15 @@ export function CommunityWritePage() {
     const matched = title.match(/^(.*?)(?:\s+(\d{2}\.\d{2}\.\d{2}))?\s*<([^<>]+)>\s*$/);
     if (matched) { setTitle(matched[1].trim()); setNewsDate(matched[2] || ''); setNewsSource(matched[3].trim()); }
   }, [isNewsBoard, newsSource, title]);
+
+  const uploadThumbnail = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+    setError('');
+    try { setThumbnailUrl(await uploadCommunityImage(file, user)); }
+    catch (caught) { setError(caught instanceof Error ? caught.message : '포스터를 첨부하지 못했습니다.'); }
+    finally { event.target.value = ''; }
+  };
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -81,10 +93,10 @@ export function CommunityWritePage() {
     setSaving(true); setError('');
     try {
       if (postId) {
-        await updatePost(postId, { title: savedTitle, content: savedContent, link_url: normalizedLinkUrl, board_category_id: category, is_public: isPublic });
+        await updatePost(postId, { title: savedTitle, content: savedContent, link_url: normalizedLinkUrl, thumbnail_url: thumbnailUrl || null, board_category_id: category, is_public: isPublic });
         navigate(isNewsBoard ? `/community?board=${encodeURIComponent(category)}` : `/community/${postId}`, { state: { communityCategory: category, communityScrollY: (location.state as { communityScrollY?: number } | null)?.communityScrollY ?? 0 } });
       } else {
-        const id = await createPost({ title: savedTitle, content: savedContent, link_url: normalizedLinkUrl, board_category_id: category, is_public: isPublic });
+        const id = await createPost({ title: savedTitle, content: savedContent, link_url: normalizedLinkUrl, thumbnail_url: thumbnailUrl || null, board_category_id: category, is_public: isPublic });
         navigate(isNewsBoard ? `/community?board=${encodeURIComponent(category)}` : `/community/${id}`, { state: { communityCategory: category } });
       }
     } catch {
@@ -99,7 +111,8 @@ export function CommunityWritePage() {
       <div className="write-select-row"><label>게시판<select value={category} onChange={event => setCategory(event.target.value)}>{categories.map(item => <option key={item.id} value={item.id}>{item.icon} {item.name}</option>)}</select></label></div>
       {isNewsBoard ? <div className="news-title-fields"><label className="title-field"><input value={title} maxLength={90} onChange={event => setTitle(event.target.value)} placeholder="제목을 입력해 주세요." /></label><label className="news-date-field"><input value={newsDate} inputMode="numeric" maxLength={8} onChange={event => { const digits = event.target.value.replace(/\D/g, '').slice(0, 6); setNewsDate([digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 6)].filter(Boolean).join('.')); }} placeholder="26.00.00" aria-label="기사 작성일" required /></label><label className="news-source-field"><span>&lt;</span><input value={newsSource} maxLength={40} onChange={event => setNewsSource(event.target.value)} placeholder="언론사 명칭" aria-label="언론사 명칭" /><span>&gt;</span></label></div> : <label className="title-field"><input value={title} maxLength={120} onChange={event => setTitle(event.target.value)} placeholder="제목을 입력해 주세요." /></label>}
       {isNewsBoard && <p className="news-title-preview">{title.trim() && /^\d{2}\.\d{2}\.\d{2}$/.test(newsDate) && newsSource.trim() ? `${title.trim()} ${newsDate} <${newsSource.trim()}>` : '제목 26.00.00 <언론사 명칭> 형식으로 자동 등록됩니다.'}</p>}
-      {!isNewsBoard && <div className="body-field"><RichTextEditor value={content} onChange={setContent} onImageUpload={file => uploadCommunityImage(file, user!)} onFileUpload={file => uploadCommunityFile(file, user!)} /></div>}
+      {isExhibitionBoard && <section className="exhibition-thumbnail-field"><div><strong>포스터 (썸네일)</strong><span>선택 사항 · 본문 사진을 대표로 설정하거나 직접 포스터를 올릴 수 있습니다.</span></div><input ref={thumbnailInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={uploadThumbnail} />{thumbnailUrl ? <div className="exhibition-thumbnail-preview"><img src={thumbnailUrl} alt="선택한 전시 포스터" /><button type="button" onClick={() => setThumbnailUrl('')}>대표 사진 해제</button></div> : <button type="button" className="exhibition-thumbnail-upload" onClick={() => thumbnailInput.current?.click()}>포스터 직접 선택</button>}</section>}
+      {!isNewsBoard && <div className="body-field"><RichTextEditor value={content} onChange={setContent} onImageUpload={file => uploadCommunityImage(file, user!)} onFileUpload={file => uploadCommunityFile(file, user!)} representativeImageUrl={isExhibitionBoard ? thumbnailUrl : undefined} onRepresentativeImageChange={isExhibitionBoard ? value => setThumbnailUrl(value || '') : undefined} /></div>}
       <label className="link-url-field"><span>{isNewsBoard ? '뉴스 원문 URL' : '링크 URL'} {!isNewsBoard && <em>(선택사항)</em>}</span><input type="url" value={linkUrl} onChange={event => setLinkUrl(event.target.value)} placeholder={isNewsBoard ? '뉴스 원문 URL을 입력해 주세요.' : '제목 클릭 시 이동할 URL을 입력해 주세요.'} required={isNewsBoard} /><small>{isNewsBoard ? '등록 후 제목이나 목록을 누르면 해당 뉴스 원문으로 바로 이동합니다.' : '입력하면 게시글 제목과 목록을 클릭했을 때 해당 링크로 이동합니다.'}</small></label>
     </section><aside className="write-options"><strong>공개 설정</strong><label><input type="checkbox" checked={isPublic} onChange={event => setIsPublic(event.target.checked)} /> 전체 공개</label><p>{isPublic ? '누구나 이 글을 볼 수 있습니다.' : '작성자와 관리자만 이 글을 볼 수 있습니다.'}</p><label><input type="checkbox" defaultChecked /> 댓글 허용</label><label><input type="checkbox" defaultChecked /> 검색 노출 허용</label><p>사진은 JPG, PNG, WEBP, GIF 형식으로 최대 5MB, 일반 파일은 최대 10MB까지 첨부할 수 있습니다.</p></aside></div>
     {error && <p className="form-error">{error}</p>}<div className="editor-actions"><button type="button" onClick={() => navigate(-1)}>취소</button><button className="write-button" disabled={saving}>{saving ? '등록 중…' : editing ? '수정 완료' : '등록하기'}</button></div></form>

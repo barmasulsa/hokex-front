@@ -3,13 +3,13 @@ import { supabase } from '../lib/supabase';
 
 export interface BoardCategory { id: string; name: string; description: string | null; icon: string; is_active: boolean; display_order: number; parent_category_id: string | null; }
 export interface BoardCategoryDraft { id?: string; name: string; description: string; icon: string; parent_category_id: string | null; is_active: boolean; }
-export interface Post { id: string; post_number: number; board_post_number: number; title: string; content: string; link_url: string | null; board_category_id: string; author_id: string | null; author_nickname: string | null; created_at: string; updated_at: string; view_count: number; like_count: number; comment_count: number; is_pinned: boolean; is_public: boolean; }
+export interface Post { id: string; post_number: number; board_post_number: number; title: string; content: string; link_url: string | null; thumbnail_url: string | null; board_category_id: string; author_id: string | null; author_nickname: string | null; created_at: string; updated_at: string; view_count: number; like_count: number; comment_count: number; is_pinned: boolean; is_public: boolean; }
 export interface GetPostsParams { board_category_id?: string; sort_by?: 'latest' | 'popular' | 'views'; page?: number; page_size?: number; search_query?: string; exclude_pinned?: boolean; }
-export interface PostDraft { title: string; content: string; link_url: string | null; board_category_id: string; is_public: boolean; }
+export interface PostDraft { title: string; content: string; link_url: string | null; thumbnail_url: string | null; board_category_id: string; is_public: boolean; }
 export interface CommunityComment { id: string; post_id: string; parent_comment_id: string | null; author_id: string; author_nickname: string; content: string; created_at: string; updated_at: string; }
 export interface CommunityReport { id: string; target_type: 'post' | 'comment'; post_id: string; comment_id: string | null; post_number: number; post_title: string; target_content: string | null; reporter_nickname: string | null; reason: string; details: string | null; status: 'pending' | 'resolved'; created_at: string; resolved_at: string | null; }
 
-const PUBLIC_POST_COLUMNS = 'id,post_number,board_post_number,title,content,link_url,board_category_id,author_id,author_nickname,created_at,updated_at,view_count,like_count,comment_count,is_pinned,is_public';
+const PUBLIC_POST_COLUMNS = 'id,post_number,board_post_number,title,content,link_url,thumbnail_url,board_category_id,author_id,author_nickname,created_at,updated_at,view_count,like_count,comment_count,is_pinned,is_public';
 
 export async function getBoardCategories(): Promise<BoardCategory[]> {
   const { data, error } = await supabase.from('community_board_categories').select('id,name,description,icon,is_active,display_order,parent_category_id').order('display_order', { ascending: true });
@@ -89,12 +89,12 @@ export async function getPost(id: string): Promise<Post | null> {
 }
 
 export async function createPost(draft: PostDraft): Promise<string> {
-  const { data, error } = await supabase.rpc('create_community_post', { p_title: draft.title.trim(), p_content: draft.content.trim(), p_link_url: draft.link_url, p_board_category_id: draft.board_category_id, p_is_public: draft.is_public });
+  const { data, error } = await supabase.rpc('create_community_post', { p_title: draft.title.trim(), p_content: draft.content.trim(), p_link_url: draft.link_url, p_thumbnail_url: draft.thumbnail_url, p_board_category_id: draft.board_category_id, p_is_public: draft.is_public });
   if (error) throw error;
   return data as string;
 }
 export async function updatePost(id: string, draft: PostDraft): Promise<void> {
-  const { error } = await supabase.rpc('update_community_post', { p_post_id: id, p_title: draft.title.trim(), p_content: draft.content.trim(), p_link_url: draft.link_url, p_board_category_id: draft.board_category_id, p_is_public: draft.is_public });
+  const { error } = await supabase.rpc('update_community_post', { p_post_id: id, p_title: draft.title.trim(), p_content: draft.content.trim(), p_link_url: draft.link_url, p_thumbnail_url: draft.thumbnail_url, p_board_category_id: draft.board_category_id, p_is_public: draft.is_public });
   if (error) throw error;
 }
 export async function moveCommunityPost(id: string, boardCategoryId: string): Promise<void> { const { error } = await supabase.rpc('move_community_post', { p_post_id: id, p_board_category_id: boardCategoryId }); if (error) throw error; }

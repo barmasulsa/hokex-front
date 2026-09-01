@@ -13,6 +13,10 @@ const formatDate = (value: string) => new Date(value).toLocaleDateString('ko-KR'
 
 // DB에 저장된 기존 명칭도 화면에서는 새 공식 명칭으로 일관되게 표시한다.
 const boardLabel = (name?: string) => name === '마이스인' ? 'MICE人(마이스인)' : name || '전체 글';
+const firstContentImage = (content: string) => {
+  const matched = content.match(/<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["']/i);
+  return matched?.[1] || null;
+};
 
 const BOARD_DESCRIPTIONS: Record<string, string> = {
   '전체 글': '호켁스의 커뮤니티는 MICE 관련 중심의 게시글이 중심이 되어야 합니다.',
@@ -123,6 +127,7 @@ export function CommunityPage() {
   const totalPages = Math.max(1, Math.ceil(total / 15));
   const selectedBoard = category === 'all' ? null : categories.find(item => item.id === category) ?? null;
   const isBestBoard = selectedBoard?.name === '베스트 게시판';
+  const isExhibitionBoard = selectedBoard?.name === '전시';
   const selectedBoardName = boardLabel(selectedBoard?.name);
   const boardDescription = selectedBoard
     ? (selectedBoard.description !== null && !LEGACY_BOARD_DESCRIPTIONS.has(selectedBoard.description) ? selectedBoard.description : BOARD_DESCRIPTIONS[selectedBoard.name] ?? '')
@@ -233,10 +238,10 @@ export function CommunityPage() {
         <div className="community-toolbar"><form onSubmit={submitSearch}><input value={search} onChange={event => setSearch(event.target.value)} placeholder="제목 또는 내용 검색" /><button type="submit">검색</button></form>
           <div>{(['latest', 'popular', 'views'] as const).map(item => <button key={item} className={sort === item ? 'sort-active' : ''} onClick={() => { setSort(item); setPage(1); }}>{item === 'latest' ? '최신순' : item === 'popular' ? '인기순' : '조회순'}</button>)}{!isBestBoard && <button className="write-button" onClick={() => !user ? navigate('/login') : !userProfile?.nickname ? navigate('/profile?setup=nickname&reason=write') : navigate(`/community/write${selectedBoard ? `?board=${selectedBoard.id}` : ''}`)}>✏️ 글쓰기</button>}</div>
         </div>
-        <div className="community-table"><div className="community-table-header"><span>번호</span><span>제목</span><span>작성자</span><span>작성일</span><span>조회</span><span>좋아요</span></div>
+        {isExhibitionBoard ? <div className="exhibition-gallery">{loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : posts.length === 0 ? <div className="community-empty">아직 전시 게시글이 없습니다. 첫 전시를 등록해 보세요.</div> : posts.map(post => { const poster = post.thumbnail_url || firstContentImage(post.content); return <a key={post.id} className="exhibition-card" href={post.link_url || `/community/${post.id}?board=${encodeURIComponent(category)}`}><div className="exhibition-card-image">{poster ? <img src={poster} alt="" /> : <span aria-hidden="true">🛖</span>}</div><strong>{post.title}</strong></a>; })}</div> : <div className="community-table"><div className="community-table-header"><span>번호</span><span>제목</span><span>작성자</span><span>작성일</span><span>조회</span><span>좋아요</span></div>
           {notices.map(post => <PostRow key={post.id} {...postRowProps(post, category === 'all' ? post.post_number : post.board_post_number, (category === 'all' || isBestBoard) ? categories.find(item => item.id === post.board_category_id)?.name : undefined, true)} />)}
           {loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : posts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 작성해 보세요.</div> : posts.map(post => <PostRow key={post.id} {...postRowProps(post, category === 'all' ? post.post_number : post.board_post_number, (category === 'all' || isBestBoard) ? categories.find(item => item.id === post.board_category_id)?.name : undefined)} />)}
-        </div>
+        </div>}
         {totalPages > 1 && <div className="pagination"><button disabled={page === 1} onClick={() => setPage(value => value - 1)}>이전</button><span>{page} / {totalPages}</span><button disabled={page === totalPages} onClick={() => setPage(value => value + 1)}>다음</button></div>}
         <p className="community-page-note">일반 게시글은 공지글을 제외하고 한 페이지에 15개씩 표시됩니다. 최신 글이 1페이지 맨 위에 표시됩니다.</p>
       </section>

@@ -6,6 +6,8 @@ interface Props {
   placeholder?: string;
   onImageUpload?: (file: File) => Promise<string>;
   onFileUpload?: (file: File) => Promise<{ url: string; name: string }>;
+  representativeImageUrl?: string;
+  onRepresentativeImageChange?: (url: string | null) => void;
 }
 
 const allowedTags = new Set(['P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'DIV', 'SPAN', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'A', 'IMG', 'H2', 'H3']);
@@ -138,7 +140,7 @@ export function RichTextContent({ value }: { value: string }) {
   return <div ref={contentRef} className="rich-content" dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-export function RichTextEditor({ value, onChange, placeholder = '내용을 작성해주세요.', onImageUpload, onFileUpload }: Props) {
+export function RichTextEditor({ value, onChange, placeholder = '내용을 작성해주세요.', onImageUpload, onFileUpload, representativeImageUrl, onRepresentativeImageChange }: Props) {
   const editor = useRef<HTMLDivElement>(null); const imageInput = useRef<HTMLInputElement>(null); const fileInput = useRef<HTMLInputElement>(null); const composing = useRef(false); const editing = useRef(false); const undoStack = useRef<string[]>([]); const redoStack = useRef<string[]>([]); const [uploading, setUploading] = useState(''); const [error, setError] = useState(''); const [selectedImage, setSelectedImage] = useState<{ image: HTMLImageElement; top: number; left: number } | null>(null);
   // contentEditable은 입력 중 DOM을 다시 쓰면 한글·일본어 IME 조합이 취소된다.
   // 초기값/외부 변경만 반영하고, 사용자가 편집 중인 DOM은 브라우저에 맡긴다.
@@ -167,6 +169,7 @@ export function RichTextEditor({ value, onChange, placeholder = '내용을 작�
   };
   const deleteSelectedImage = () => {
     saveUndoPoint();
+    if (selectedImage && representativeImageUrl === selectedImage.image.src) onRepresentativeImageChange?.(null);
     selectedImage?.image.remove();
     setSelectedImage(null);
     emit();
@@ -224,6 +227,6 @@ export function RichTextEditor({ value, onChange, placeholder = '내용을 작�
     </div>
     {uploading && <p className="upload-status">{uploading}</p>}{error && <p className="upload-error">{error}</p>}
     <div ref={editor} className="rich-editor-canvas" contentEditable suppressContentEditableWarning data-placeholder={placeholder} onMouseDown={startImageResize} onBeforeInput={saveUndoPoint} onKeyDown={event => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); if (event.shiftKey) redo(); else undo(); return; } if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') { event.preventDefault(); redo(); return; } if (selectedImage && (event.key === 'Backspace' || event.key === 'Delete')) { event.preventDefault(); deleteSelectedImage(); } }} onFocus={() => { editing.current = true; }} onBlur={() => { editing.current = false; if (!composing.current) emit(); }} onCompositionStart={() => { composing.current = true; }} onCompositionEnd={() => { composing.current = false; emit(); }} onInput={() => { if (!composing.current) emit(); }} />
-    {selectedImage && <button type="button" className="rich-editor-image-delete" style={{ top: selectedImage.top, left: selectedImage.left }} aria-label="사진 삭제" title="사진 삭제" onMouseDown={event => event.preventDefault()} onClick={deleteSelectedImage}>×</button>}
+    {selectedImage && <div className="rich-editor-image-actions" style={{ top: selectedImage.top, left: selectedImage.left }} onMouseDown={event => event.preventDefault()}>{onRepresentativeImageChange && <button type="button" className={representativeImageUrl === selectedImage.image.src ? 'representative active' : 'representative'} onClick={() => onRepresentativeImageChange(selectedImage.image.src)}>{representativeImageUrl === selectedImage.image.src ? '대표 사진' : '대표로 설정'}</button>}<button type="button" className="rich-editor-image-delete" aria-label="사진 삭제" title="사진 삭제" onClick={deleteSelectedImage}>×</button></div>}
   </div>;
 }
