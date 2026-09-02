@@ -5,11 +5,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { deleteCommunityBoardCategory, deletePost, getBestPosts, getBoardCategories, getPinnedPosts, getPostLikeStatus, getPosts, reorderCommunityBoardCategories, saveCommunityBoardCategory, togglePostLike, type BoardCategory, type BoardCategoryDraft, type Post } from '../services/communityService';
 import './CommunityPage.css';
 
-const relativeTime = (value: string) => {
-  const days = Math.floor((Date.now() - new Date(value).getTime()) / 86400000);
-  return days < 1 ? new Date(value).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : days < 7 ? `${days}일 전` : new Date(value).toLocaleDateString('ko-KR');
-};
 const formatDate = (value: string) => new Date(value).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '');
+const displayCreatedAt = (value: string) => {
+  const date = new Date(value);
+  const today = new Date();
+  return date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate()
+    ? date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+    : formatDate(value);
+};
 
 // DB에 저장된 기존 명칭도 화면에서는 새 공식 명칭으로 일관되게 표시한다.
 const boardLabel = (name?: string) => name === '마이스인' ? 'MICE人(마이스인)' : name === '전시' ? '전시&박람회' : name || '전체 글';
@@ -59,7 +62,7 @@ function PostRow({ post, notice = false, sourceBoard, displayNumber, returnCateg
     <span className="post-number">{sourceBoard ? boardLabel(sourceBoard) : notice ? '공지' : (displayNumber ?? post.board_post_number ?? post.post_number)}</span>
     <span className="post-title-cell"><a href={titleHref} className="post-title-link">{notice && <b className="notice-pill">공지</b>}{post.title}{post.link_url && <i className="post-external-link">↗</i>}{post.comment_count > 0 && <em>[{post.comment_count}]</em>}</a>{isNewsPost && canManageNews && <span className="news-row-actions"><button type="button" onClick={() => onEditNews(post)}>수정</button><button type="button" onClick={() => onDeleteNews(post)}>삭제</button></span>}</span>
     <span>{post.author_nickname || '익명 판다'}</span>
-    <span>{notice ? formatDate(post.created_at) : relativeTime(post.created_at)}</span>
+    <span>{displayCreatedAt(post.created_at)}</span>
     <span>{post.view_count.toLocaleString()}</span><span><button type="button" className={liked ? 'post-like-button active' : 'post-like-button'} onClick={() => onLike(post)} aria-label={`${post.title} 좋아요`}>{liked ? '♥' : '♡'} {post.like_count}</button></span>
   </div>;
 }
@@ -244,7 +247,7 @@ export function CommunityPage() {
         <div className="community-toolbar"><form onSubmit={submitSearch}><input value={search} onChange={event => setSearch(event.target.value)} placeholder="제목 또는 내용 검색" /><button type="submit">검색</button></form>
           <div>{(['latest', 'popular', 'views'] as const).map(item => <button key={item} className={sort === item ? 'sort-active' : ''} onClick={() => { setSort(item); setPage(1); }}>{item === 'latest' ? '최신순' : item === 'popular' ? '인기순' : '조회순'}</button>)}{!isBestBoard && <button className="write-button" onClick={() => !user ? navigate('/login') : !userProfile?.nickname ? navigate('/profile?setup=nickname&reason=write') : navigate(`/community/write${selectedBoard ? `?board=${selectedBoard.id}` : ''}`)}>✏️ 글쓰기</button>}</div>
         </div>
-        {isPromotionGalleryBoard ? <div className="exhibition-gallery">{loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : posts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 등록해 보세요.</div> : posts.map(post => { const poster = post.thumbnail_url || firstContentImage(post.content); const crop = post.thumbnail_crop || { x: 50, y: 50, scale: 1 }; return <a key={post.id} className="exhibition-card" href={post.link_url || `/community/${post.id}?board=${encodeURIComponent(category)}`}><div className="exhibition-card-image">{poster ? <img src={poster} style={{ objectPosition: `${crop.x}% ${crop.y}%`, transform: `scale(${crop.scale})` }} alt="" /> : <span aria-hidden="true">🛖</span>}</div><strong>{post.title}</strong><p className="exhibition-card-author">{post.author_nickname || '익명 판다'}</p><p className="exhibition-card-meta">{formatDate(post.created_at)} · 조회 {post.view_count.toLocaleString()} · 좋아요 {post.like_count.toLocaleString()}</p></a>; })}</div> : <div className="community-table"><div className="community-table-header"><span>{category === 'all' || isBestBoard ? '게시판' : '번호'}</span><span>제목</span><span>작성자</span><span>작성일</span><span>조회</span><span>좋아요</span></div>
+        {isPromotionGalleryBoard ? <div className="exhibition-gallery">{loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : posts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 등록해 보세요.</div> : posts.map(post => { const poster = post.thumbnail_url || firstContentImage(post.content); const crop = post.thumbnail_crop || { x: 50, y: 50, scale: 1 }; return <a key={post.id} className="exhibition-card" href={post.link_url || `/community/${post.id}?board=${encodeURIComponent(category)}`}><div className="exhibition-card-image">{poster ? <img src={poster} style={{ objectPosition: `${crop.x}% ${crop.y}%`, transform: `scale(${crop.scale})` }} alt="" /> : <span aria-hidden="true">🛖</span>}</div><strong>{post.title}{post.comment_count > 0 && <em>[{post.comment_count}]</em>}</strong><p className="exhibition-card-author">{post.author_nickname || '익명 판다'}</p><p className="exhibition-card-meta">{displayCreatedAt(post.created_at)} · 조회 {post.view_count.toLocaleString()} · 좋아요 {post.like_count.toLocaleString()}</p></a>; })}</div> : <div className="community-table"><div className="community-table-header"><span>{category === 'all' || isBestBoard ? '게시판' : '번호'}</span><span>제목</span><span>작성자</span><span>작성일</span><span>조회</span><span>좋아요</span></div>
           {notices.map(post => <PostRow key={post.id} {...postRowProps(post, category === 'all' ? post.post_number : post.board_post_number, (category === 'all' || isBestBoard) ? categories.find(item => item.id === post.board_category_id)?.name : undefined, true)} />)}
           {loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : posts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 작성해 보세요.</div> : posts.map(post => <PostRow key={post.id} {...postRowProps(post, category === 'all' ? post.post_number : post.board_post_number, (category === 'all' || isBestBoard) ? categories.find(item => item.id === post.board_category_id)?.name : undefined)} />)}
         </div>}
