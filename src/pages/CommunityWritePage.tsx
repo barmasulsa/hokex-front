@@ -149,7 +149,6 @@ export function CommunityWritePage() {
     try {
       const image = await new Promise<HTMLImageElement>((resolve, reject) => { const value = new Image(); value.onload = () => resolve(value); value.onerror = () => reject(new Error('포스터 이미지를 읽지 못했습니다.')); value.src = objectUrl; });
       const cropWidth = image.naturalWidth / Math.max(1, thumbnailCrop.scale);
-      if (cropWidth < 800) throw new Error('선택한 썸네일 영역이 800×800px보다 작습니다. 자르기 영역을 넓히거나 더 큰 원본 이미지를 사용해 주세요.');
       const sourceX = Math.max(0, Math.min(image.naturalWidth - cropWidth, image.naturalWidth * (thumbnailCrop.x / 100) - cropWidth / 2));
       const sourceY = Math.max(0, Math.min(image.naturalHeight - cropWidth, image.naturalHeight * (thumbnailCrop.y / 100) - cropWidth / 2));
       const canvas = document.createElement('canvas'); canvas.width = 800; canvas.height = 800;
