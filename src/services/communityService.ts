@@ -63,7 +63,7 @@ export async function getPosts(params: GetPostsParams): Promise<{ posts: Post[];
 // 베스트 게시판은 별도의 글을 작성하는 곳이 아니라, 일반 게시판 글의 반응 지표를 합산해 보여 준다.
 export async function getBestPosts(params: Omit<GetPostsParams, 'board_category_id'> & { best_category_id: string }): Promise<{ posts: Post[]; total_count: number }> {
   const { best_category_id, sort_by = 'popular', page = 1, page_size = 15, search_query = '' } = params;
-  let query = supabase.from('community_posts_public').select(PUBLIC_POST_COLUMNS, { count: 'exact' }).neq('board_category_id', best_category_id).eq('is_pinned', false).eq('is_public', true);
+  let query = supabase.from('community_posts_public').select(PUBLIC_POST_COLUMNS, { count: 'exact' }).neq('board_category_id', best_category_id).eq('is_pinned', false).eq('is_public', true).gte('like_count', 1);
   if (search_query.trim()) {
     const safeQuery = search_query.trim().replace(/[%,()]/g, ' ');
     query = query.or(`title.ilike.%${safeQuery}%,content.ilike.%${safeQuery}%`);
