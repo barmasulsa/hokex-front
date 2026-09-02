@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { useAuth } from '../contexts/AuthContext';
 import { createPost, getBoardCategories, getPost, updatePost, uploadCommunityFile, uploadCommunityImage, type BoardCategory, type ThumbnailCrop } from '../services/communityService';
+import { ALL_VENUES } from '../types/core';
 import './CommunityPage.css';
 
 type CropFrame = { left: number; top: number; width: number; height: number };
@@ -13,6 +14,7 @@ const PROMOTION_PREFIXES: Record<string, { options: string[]; help?: string }> =
   '행사/이벤트/팝업': { options: ['행사', '이벤트', '팝업'], help: '분류는 가장 가까운 걸로 선택해주세요.' },
   '강의&교육': { options: ['강의', '교육'] },
   '공연': { options: ['연극', '뮤지컬', '서양음악(클래식)', '한국음악(국악)', '무용(서양/한국무용)', '대중무용', '서커스/마술', '복합'], help: '분류는 가장 가까운 걸로 선택해주세요.' },
+  '전시컨벤션센터': { options: ALL_VENUES },
 };
 const getTitleByteLength = (value: string) => [...value].reduce((total, character) => total + (character.charCodeAt(0) > 0x7f ? 2 : 1), 0);
 
@@ -53,7 +55,7 @@ export function CommunityWritePage() {
   const isPromotionGalleryBoard = Boolean(category && (categories.find(item => item.id === category)?.parent_category_id === promotionParent?.id || inferredPromotionChildren.some(item => item.id === category)));
   const shouldRenderGalleryThumbnail = isPromotionGalleryBoard;
   const thumbnailPreviewUrl = thumbnailSourceUrl || thumbnailUrl;
-  const prefixConfig = isPromotionGalleryBoard ? PROMOTION_PREFIXES[boardName] : undefined;
+  const prefixConfig = PROMOTION_PREFIXES[boardName];
 
   useEffect(() => {
     if (!user) navigate('/login');
