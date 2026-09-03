@@ -30,6 +30,7 @@ export function CommunityWritePage() {
   const [newsDate, setNewsDate] = useState('');
   const [newsSource, setNewsSource] = useState('');
   const [content, setContent] = useState('');
+  const prepareContentRef = useRef<(() => string) | null>(null);
   const [linkUrl, setLinkUrl] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [thumbnailSourceUrl, setThumbnailSourceUrl] = useState('');
@@ -169,7 +170,7 @@ export function CommunityWritePage() {
       return;
     }
     const savedTitle = isNewsBoard ? `${title.trim()} ${newsDate} <${newsSource.trim()}>` : prefixConfig && titlePrefix ? `[${titlePrefix}] ${title.trim()}` : title.trim();
-    const savedContent = isNewsBoard ? '' : content;
+    const savedContent = isNewsBoard ? '' : (prepareContentRef.current?.() ?? content);
     if (titleTooLong) {
       setError('제목을 200byte(한글 100자) 이내로 입력하세요.');
       return;
@@ -229,7 +230,7 @@ export function CommunityWritePage() {
       <p className={titleTooLong ? 'title-byte-status is-over' : 'title-byte-status'}>{titleTooLong ? '제목을 200byte(한글 100자) 이내로 입력하세요.' : `${titleByteLength}/200byte`}</p>
       {isNewsBoard && <p className="news-title-preview">{title.trim() && /^\d{2}\.\d{2}\.\d{2}$/.test(newsDate) && newsSource.trim() ? `${title.trim()} ${newsDate} <${newsSource.trim()}>` : '제목 26.00.00 <언론사 명칭> 형식으로 자동 등록됩니다.'}</p>}
       {isPromotionGalleryBoard && <section className="exhibition-thumbnail-field"><div><strong>포스터 (썸네일) <em>필수</em></strong><span className="thumbnail-description">본문 사진을 대표로 설정하거나 직접 포스터를 올려주세요. 전시 갤러리 규격은 800×800(1:1)로 고정됩니다.<br />썸네일은 외부에 보이는 게시글의 이미지이며 본문에 첨부되는 실제 파일이 아닙니다.<br />이미지 파일을 게시글에 올리고 싶을 경우 본문에 실제 이미지 파일을 넣어야 합니다.</span></div><input ref={thumbnailInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={uploadThumbnail} />{thumbnailUrl ? <div className="exhibition-thumbnail-preview"><div className="exhibition-thumbnail-crop-preview"><img src={thumbnailPreviewUrl} style={{ objectPosition: `${thumbnailCrop.x}% ${thumbnailCrop.y}%`, transform: `scale(${thumbnailCrop.scale})` }} alt="선택한 전시 포스터" /></div><div><button type="button" className="thumbnail-adjust-button" onClick={openCropEditor}>썸네일 화면 조정하기</button><button type="button" onClick={() => setRepresentativeImage(null)}>대표 사진 해제</button></div></div> : <button type="button" className="exhibition-thumbnail-upload" onClick={() => thumbnailInput.current?.click()}>포스터 직접 선택</button>}{thumbnailError && <p className="thumbnail-error">{thumbnailError}</p>}</section>}
-      {!isNewsBoard && <div className="body-field"><RichTextEditor value={content} onChange={setContent} onImageUpload={file => uploadCommunityImage(file, user!)} onFileUpload={file => uploadCommunityFile(file, user!)} representativeImageUrl={isPromotionGalleryBoard ? thumbnailPreviewUrl : undefined} onRepresentativeImageChange={isPromotionGalleryBoard ? setRepresentativeImage : undefined} /></div>}
+      {!isNewsBoard && <div className="body-field"><RichTextEditor value={content} onChange={setContent} prepareContentRef={prepareContentRef} onImageUpload={file => uploadCommunityImage(file, user!)} onFileUpload={file => uploadCommunityFile(file, user!)} representativeImageUrl={isPromotionGalleryBoard ? thumbnailPreviewUrl : undefined} onRepresentativeImageChange={isPromotionGalleryBoard ? setRepresentativeImage : undefined} /></div>}
       <label className="link-url-field"><span>{isNewsBoard ? '뉴스 원문 URL' : '링크 URL'} {!isNewsBoard && <em>(선택사항)</em>}</span><input type="url" value={linkUrl} onChange={event => setLinkUrl(event.target.value)} placeholder={isNewsBoard ? '뉴스 원문 URL을 입력해 주세요.' : '제목 클릭 시 이동할 URL을 입력해 주세요.'} required={isNewsBoard} /><small>{isNewsBoard ? '등록 후 제목이나 목록을 누르면 해당 뉴스 원문으로 바로 이동합니다.' : '입력하면 게시글 제목과 목록을 클릭했을 때 해당 링크로 이동합니다.'}</small></label>
     </section><aside className="write-options"><strong>공개 설정</strong><label><input type="checkbox" checked={isPublic} onChange={event => setIsPublic(event.target.checked)} /> 전체 공개</label><p>{isPublic ? '누구나 이 글을 볼 수 있습니다.' : '작성자와 관리자만 이 글을 볼 수 있습니다.'}</p><label><input type="checkbox" defaultChecked /> 댓글 허용</label><label><input type="checkbox" defaultChecked /> 검색 노출 허용</label><p>사진은 JPG, PNG, WEBP, GIF 형식으로 최대 5MB, 일반 파일은 최대 10MB까지 첨부할 수 있습니다.</p></aside></div>
     {error && <p className="form-error">{error}</p>}<div className="editor-actions"><button type="button" onClick={() => navigate(-1)}>취소</button><button className="write-button" disabled={saving || titleTooLong}>{saving ? '등록 중…' : editing ? '수정 완료' : '등록하기'}</button></div></form>

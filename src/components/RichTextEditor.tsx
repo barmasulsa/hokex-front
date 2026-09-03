@@ -8,9 +8,10 @@ interface Props {
   onFileUpload?: (file: File) => Promise<{ url: string; name: string }>;
   representativeImageUrl?: string;
   onRepresentativeImageChange?: (url: string | null) => void;
+  prepareContentRef?: React.MutableRefObject<(() => string) | null>;
 }
 
-const allowedTags = new Set(['P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'DIV', 'SPAN', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'A', 'IMG', 'H2', 'H3']);
+const allowedTags = new Set(['P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'DIV', 'SPAN', 'FONT', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'A', 'IMG', 'H2', 'H3']);
 const urlPattern = /(https?:\/\/[^\s<]+)/g;
 const trailingUrlPunctuation = /[),.!?;:]+$/;
 
@@ -103,19 +104,20 @@ function addYoutubeEmbeds(doc: Document) {
     block.replaceWith(embed);
   });
 }
+
 export function sanitizeCommunityHtml(value: string) {
   const doc = new DOMParser().parseFromString(value, 'text/html');
   doc.body.querySelectorAll('*').forEach(element => {
     if (!allowedTags.has(element.tagName)) { element.replaceWith(...Array.from(element.childNodes)); return; }
     Array.from(element.attributes).forEach(attribute => {
-      const allowed = (element.tagName === 'A' && ['href', 'target', 'rel'].includes(attribute.name)) || (element.tagName === 'IMG' && ['src', 'alt'].includes(attribute.name)) || (['SPAN', 'DIV', 'P', 'H2', 'H3', 'IMG'].includes(element.tagName) && attribute.name === 'style');
+      const allowed = (element.tagName === 'A' && ['href', 'target', 'rel'].includes(attribute.name)) || (element.tagName === 'IMG' && ['src', 'alt'].includes(attribute.name)) || (element.tagName === 'FONT' && ['size', 'face', 'color'].includes(attribute.name)) || (element.tagName === 'BR' && attribute.name === 'data-community-soft-break') || (['SPAN', 'DIV', 'P', 'H2', 'H3', 'IMG'].includes(element.tagName) && attribute.name === 'style');
       if (!allowed || /^on/i.test(attribute.name) || /javascript:/i.test(attribute.value)) element.removeAttribute(attribute.name);
     });
     if (element.hasAttribute('style')) {
       const style = element.getAttribute('style') || '';
       const safeStyle = style.split(';').map(rule => rule.trim()).filter(rule => {
         if (/^(font-family|font-size|text-align|color)\s*:/i.test(rule) && !/expression|url\s*\(/i.test(rule)) return true;
-        return /^(width|height)\s*:\s*\d+(?:\.\d+)?(?:px|%)$/i.test(rule);
+        return element.tagName === 'IMG' && /^(width|height)\s*:\s*\d+(?:\.\d+)?(?:px|%)$/i.test(rule);
       }).join('; ');
       if (safeStyle) element.setAttribute('style', safeStyle); else element.removeAttribute('style');
     }
@@ -137,16 +139,21 @@ export function RichTextContent({ value }: { value: string }) {
       if (linkText && next?.nodeType === 3 && next.textContent === linkText) next.remove();
     });
   }, [html]);
-  return <div ref={contentRef} className="rich-content" dangerouslySetInnerHTML={{ __html: html }} />;
+  return <div ref={contentRef} className="rich-content rich-editor-canvas" dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-export function RichTextEditor({ value, onChange, placeholder = '내용을 작성해주세요.', onImageUpload, onFileUpload, representativeImageUrl, onRepresentativeImageChange }: Props) {
+export function RichTextEditor({ value, onChange, placeholder = '내용을 작성해주세요.', onImageUpload, onFileUpload, representativeImageUrl, onRepresentativeImageChange, prepareContentRef }: Props) {
   const editor = useRef<HTMLDivElement>(null); const imageInput = useRef<HTMLInputElement>(null); const fileInput = useRef<HTMLInputElement>(null); const composing = useRef(false); const editing = useRef(false); const undoStack = useRef<string[]>([]); const redoStack = useRef<string[]>([]); const [uploading, setUploading] = useState(''); const [error, setError] = useState(''); const [selectedImage, setSelectedImage] = useState<{ image: HTMLImageElement; top: number; left: number } | null>(null);
   // contentEditable은 입력 중 DOM을 다시 쓰면 한글·일본어 IME 조합이 취소된다.
   // 초기값/외부 변경만 반영하고, 사용자가 편집 중인 DOM은 브라우저에 맡긴다.
   useEffect(() => {
-    const normalized = normalizeEditorLinks(value);
-    if (!editing.current && !composing.current && editor.current && editor.current.innerHTML !== normalized) { editor.current.innerHTML = normalized; undoStack.current = []; redoStack.current = []; }
+    const normalized = sanitizeCommunityHtml(value);
+    if (!editing.current && !composing.current && editor.current && editor.current.innerHTML !== normalized) {
+      editor.current.innerHTML = normalized;
+      undoStack.current = [];
+      redoStack.current = [];
+      if (value !== normalized) onChange(normalized);
+    }
   }, [value]);
   const saveUndoPoint = () => {
     const html = editor.current?.innerHTML || '';
@@ -157,10 +164,61 @@ export function RichTextEditor({ value, onChange, placeholder = '내용을 작�
   };
   const emit = () => {
     const html = editor.current?.innerHTML || '';
-    const normalized = normalizeEditorLinks(html);
-    if (editor.current && html !== normalized) editor.current.innerHTML = normalized;
+    onChange(sanitizeCommunityHtml(html));
+  };
+  // 외부 웹페이지의 HTML을 붙여넣으면 폭·열 같은 레이아웃 스타일이 함께 들어온다.
+  // 편집기와 게시물이 같은 안전한 HTML을 사용하도록, 붙여넣기/편집 완료 시에만 DOM도 정리한다.
+  const normalizeEditorMarkup = () => {
+    const html = editor.current?.innerHTML || '';
+    const normalized = sanitizeCommunityHtml(html);
+    if (editor.current && editor.current.innerHTML !== normalized) editor.current.innerHTML = normalized;
     onChange(normalized);
   };
+  const prepareContentForDisplay = () => {
+    const root = editor.current;
+    if (!root) return '';
+    root.querySelectorAll('br[data-community-soft-break]').forEach(element => element.remove());
+    const textNodes: Text[] = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let current: Node | null;
+    while ((current = walker.nextNode())) if (current.textContent) textNodes.push(current as Text);
+    const lineBreaks = new Map<Text, number[]>();
+    let previousBlock: Element | null = null;
+    let previousTop: number | null = null;
+    const range = document.createRange();
+    textNodes.forEach(textNode => {
+      const block = textNode.parentElement?.closest('p, div, h2, h3, li, blockquote') || null;
+      if (block !== previousBlock || textNode.previousSibling?.nodeName === 'BR') { previousBlock = block; previousTop = null; }
+      const breaks: number[] = [];
+      for (let index = 0; index < textNode.data.length; index += 1) {
+        range.setStart(textNode, index);
+        range.setEnd(textNode, index + 1);
+        const rect = range.getBoundingClientRect();
+        if (!rect.height) continue;
+        const top = Math.round(rect.top * 2) / 2;
+        if (previousTop !== null && top > previousTop + 0.5) breaks.push(index);
+        previousTop = top;
+      }
+      if (breaks.length) lineBreaks.set(textNode, breaks);
+    });
+    lineBreaks.forEach((breaks, textNode) => {
+      [...breaks].sort((left, right) => right - left).forEach(index => {
+        const suffix = textNode.splitText(index);
+        const lineBreak = document.createElement('br');
+        lineBreak.setAttribute('data-community-soft-break', 'true');
+        suffix.before(lineBreak);
+      });
+    });
+    const normalized = sanitizeCommunityHtml(root.innerHTML);
+    if (root.innerHTML !== normalized) root.innerHTML = normalized;
+    onChange(normalized);
+    return normalized;
+  };
+  useEffect(() => {
+    if (!prepareContentRef) return;
+    prepareContentRef.current = prepareContentForDisplay;
+    return () => { prepareContentRef.current = null; };
+  }, [prepareContentRef, value]);
   const selectImage = (image: HTMLImageElement) => {
     const shell = editor.current?.parentElement;
     if (!shell) return;
@@ -226,7 +284,7 @@ export function RichTextEditor({ value, onChange, placeholder = '내용을 작�
       <input ref={imageInput} className="image-file-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={uploadImage} /><input ref={fileInput} className="image-file-input" type="file" onChange={uploadFile} />
     </div>
     {uploading && <p className="upload-status">{uploading}</p>}{error && <p className="upload-error">{error}</p>}
-    <div ref={editor} className="rich-editor-canvas" contentEditable suppressContentEditableWarning data-placeholder={placeholder} onMouseDown={startImageResize} onBeforeInput={saveUndoPoint} onKeyDown={event => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); if (event.shiftKey) redo(); else undo(); return; } if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') { event.preventDefault(); redo(); return; } if (selectedImage && (event.key === 'Backspace' || event.key === 'Delete')) { event.preventDefault(); deleteSelectedImage(); } }} onFocus={() => { editing.current = true; }} onBlur={() => { editing.current = false; if (!composing.current) emit(); }} onCompositionStart={() => { composing.current = true; }} onCompositionEnd={() => { composing.current = false; emit(); }} onInput={() => { if (!composing.current) emit(); }} />
+    <div ref={editor} className="rich-editor-canvas" contentEditable suppressContentEditableWarning data-placeholder={placeholder} onMouseDown={startImageResize} onBeforeInput={saveUndoPoint} onKeyDown={event => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); if (event.shiftKey) redo(); else undo(); return; } if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') { event.preventDefault(); redo(); return; } if (selectedImage && (event.key === 'Backspace' || event.key === 'Delete')) { event.preventDefault(); deleteSelectedImage(); } }} onFocus={() => { editing.current = true; }} onBlur={() => { editing.current = false; if (!composing.current) normalizeEditorMarkup(); }} onPaste={() => { window.setTimeout(() => { if (!composing.current) normalizeEditorMarkup(); }, 0); }} onCompositionStart={() => { composing.current = true; }} onCompositionEnd={() => { composing.current = false; emit(); }} onInput={() => { if (!composing.current) emit(); }} />
     {selectedImage && <div className="rich-editor-image-actions" style={{ top: selectedImage.top, left: selectedImage.left }} onMouseDown={event => event.preventDefault()}>{onRepresentativeImageChange && <button type="button" className={representativeImageUrl === selectedImage.image.src ? 'representative active' : 'representative'} onClick={() => onRepresentativeImageChange(selectedImage.image.src)}>{representativeImageUrl === selectedImage.image.src ? '대표 사진' : '대표로 설정'}</button>}<button type="button" className="rich-editor-image-delete" aria-label="사진 삭제" title="사진 삭제" onClick={deleteSelectedImage}>×</button></div>}
   </div>;
 }
