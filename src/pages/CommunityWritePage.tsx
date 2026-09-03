@@ -13,13 +13,15 @@ const PROMOTION_PREFIXES: Record<string, { options: string[]; help?: string }> =
   '포럼': { options: ['포럼', '세미나'], help: '분류는 가장 가까운 걸로 선택해주세요.' },
   '행사/이벤트/팝업': { options: ['행사', '이벤트', '팝업'], help: '분류는 가장 가까운 걸로 선택해주세요.' },
   '강의&교육': { options: ['강의', '교육'] },
-  '공연': { options: ['연극', '뮤지컬', '서양음악(클래식)', '한국음악(국악)', '무용(서양/한국무용)', '대중무용', '서커스/마술', '복합'], help: '분류는 가장 가까운 걸로 선택해주세요.' },
+  '공연': { options: ['연극', '뮤지컬', '서양음악(클래식)', '한국음악(국악)', '대중음악', '무용(서양/한국무용)', '대중무용', '서커스/마술', '복합'], help: '분류는 가장 가까운 걸로 선택해주세요.' },
   '전시컨벤션센터': { options: ALL_VENUES },
 };
 const getTitleByteLength = (value: string) => [...value].reduce((total, character) => total + (character.charCodeAt(0) > 0x7f ? 2 : 1), 0);
+const ADMIN_WRITE_ONLY_BOARD_NAMES = new Set(['업체홍보게시판', '업체홍보 게시판', '베뉴']);
+const ADMIN_WRITE_ONLY_NOTICE = '해당 게시판은 호켁스 관리자만 작성할 수 있습니다. 문의 메일: hokexpanda@gmail.com';
 
 export function CommunityWritePage() {
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { postId } = useParams();
@@ -47,6 +49,7 @@ export function CommunityWritePage() {
   const [error, setError] = useState('');
   const thumbnailInput = useRef<HTMLInputElement>(null);
   const boardName = categories.find(item => item.id === category)?.name || '게시판';
+  const isAdminWriteOnlyBoard = ADMIN_WRITE_ONLY_BOARD_NAMES.has(boardName);
   const isNewsBoard = boardName === '뉴스게시판';
   const titleByteLength = getTitleByteLength(title);
   const titleTooLong = titleByteLength > 200;
@@ -164,6 +167,10 @@ export function CommunityWritePage() {
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (isAdminWriteOnlyBoard && !isAdmin) {
+      setError(ADMIN_WRITE_ONLY_NOTICE);
+      return;
+    }
     const normalizedLinkUrl = linkUrl.trim() ? (/^https?:\/\//i.test(linkUrl.trim()) ? linkUrl.trim() : `https://${linkUrl.trim()}`) : null;
     if (normalizedLinkUrl && !/^https:\/\//i.test(normalizedLinkUrl)) {
       setError('링크 URL은 http:// 또는 https:// 형식으로 입력해 주세요.');
@@ -222,6 +229,7 @@ export function CommunityWritePage() {
   };
 
   if (user && !userProfile?.nickname) return <main className="community-page"><div className="community-empty">게시물 작성은 닉네임을 설정해야 가능합니다.</div></main>;
+  if (isAdminWriteOnlyBoard && !isAdmin) return <main className="community-page"><section className="editor-shell cafe-write-shell"><div className="community-empty">{ADMIN_WRITE_ONLY_NOTICE}</div><div className="editor-actions"><button type="button" onClick={() => navigate(-1)}>이전으로</button></div></section></main>;
   return <main className="community-page"><section className="editor-shell cafe-write-shell">
     <div className="editor-heading"><div><p>{boardName}</p><h2>{editing ? '글 수정' : '글쓰기'}</h2></div><div className="editor-top-actions"><button type="button" onClick={() => navigate(-1)}>취소</button><button className="write-button" disabled={saving || titleTooLong}>{saving ? '등록 중…' : editing ? '수정' : '등록'}</button></div></div>
     <form onSubmit={submit}><div className="write-main-grid"><section className="write-editor-area">

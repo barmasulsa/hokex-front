@@ -54,6 +54,8 @@ const LEGACY_BOARD_DESCRIPTIONS = new Set([
   'MICE 협회 공지사항', 'MICE 업계 인사이트', '한국전시산업진흥회 관련 정보', '전통 공연 예술 관련', '채용 및 구직 정보', '정규직 및 인턴 채용', '행사 스태프 및 단기 알바', '자원봉사자 모집',
   '행사 및 제품 홍보', '전시회 홍보', '포럼 및 컨퍼런스', '교육 프로그램', '공연 및 공연예술', '각종 행사 및 이벤트', '베뉴 및 장소 홍보', '업체 및 서비스 홍보', '디자인 및 인쇄 서비스', '부스 제작 및 시공', '기타 업체 홍보',
 ]);
+const ADMIN_WRITE_ONLY_BOARD_NAMES = new Set(['업체홍보게시판', '업체홍보 게시판', '베뉴']);
+const ADMIN_WRITE_ONLY_NOTICE = '해당 게시판은 호켁스 관리자만 작성할 수 있습니다. 문의 메일: hokexpanda@gmail.com';
 
 function PostRow({ post, notice = false, sourceBoard, displayNumber, returnCategory, isNewsPost, canManageNews, liked, onLike, onEditNews, onDeleteNews }: { post: Post; notice?: boolean; sourceBoard?: string; displayNumber?: number; returnCategory: string; isNewsPost: boolean; canManageNews: boolean; liked: boolean; onLike: (post: Post) => void; onEditNews: (post: Post) => void; onDeleteNews: (post: Post) => void }) {
   const className = notice ? 'community-table-row notice-row' : 'community-table-row';
@@ -225,6 +227,15 @@ export function CommunityPage() {
     } catch { setError('좋아요를 저장하지 못했습니다.'); }
   };
   const editNewsPost = (post: Post) => navigate(`/community/${post.id}/edit`, { state: { communityCategory: post.board_category_id } });
+  const startWriting = () => {
+    if (!user) { navigate('/login'); return; }
+    if (!userProfile?.nickname) { navigate('/profile?setup=nickname&reason=write'); return; }
+    if (selectedBoard && ADMIN_WRITE_ONLY_BOARD_NAMES.has(selectedBoard.name) && !isAdmin) {
+      setError(ADMIN_WRITE_ONLY_NOTICE);
+      return;
+    }
+    navigate(`/community/write${selectedBoard ? `?board=${selectedBoard.id}` : ''}`);
+  };
   const deleteNewsPost = async (post: Post) => {
     if (!window.confirm('이 뉴스 게시글을 삭제할까요?')) return;
     try { await deletePost(post.id); setReloadKey(value => value + 1); }
@@ -248,7 +259,7 @@ export function CommunityPage() {
         <div className="community-banner-area"><Banner announcementCategory="community" /></div>
         <div className="community-board-title"><p>HOKEX COMMUNITY</p><h2>{selectedBoardName}</h2>{boardDescription && <span>{boardDescription}</span>}{isAdmin && selectedBoard && !editingDescription && <button type="button" className="community-description-edit" onClick={startDescriptionEdit}>설명 수정</button>}{isAdmin && selectedBoard && editingDescription && <div className="community-description-editor"><textarea value={descriptionDraft} onChange={event => setDescriptionDraft(event.target.value)} maxLength={1000} aria-label="게시판 설명" /><button type="button" disabled={categorySaving} onClick={() => void saveDescription()}>저장</button><button type="button" onClick={() => setEditingDescription(false)}>취소</button></div>}</div>
         <div className="community-toolbar"><form onSubmit={submitSearch}><input value={search} onChange={event => setSearch(event.target.value)} placeholder="제목 또는 내용 검색" /><button type="submit">검색</button></form>
-          <div>{(['latest', 'popular', 'views'] as const).map(item => <button key={item} className={sort === item ? 'sort-active' : ''} onClick={() => { setSort(item); setPage(1); }}>{item === 'latest' ? '최신순' : item === 'popular' ? '인기순' : '조회순'}</button>)}{!isBestBoard && <button className="write-button" onClick={() => !user ? navigate('/login') : !userProfile?.nickname ? navigate('/profile?setup=nickname&reason=write') : navigate(`/community/write${selectedBoard ? `?board=${selectedBoard.id}` : ''}`)}>✏️ 글쓰기</button>}</div>
+          <div>{(['latest', 'popular', 'views'] as const).map(item => <button key={item} className={sort === item ? 'sort-active' : ''} onClick={() => { setSort(item); setPage(1); }}>{item === 'latest' ? '최신순' : item === 'popular' ? '인기순' : '조회순'}</button>)}{!isBestBoard && <button className="write-button" onClick={startWriting}>✏️ 글쓰기</button>}</div>
         </div>
         {isPromotionGalleryBoard ? <div className="exhibition-gallery">{loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : posts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 등록해 보세요.</div> : posts.map(post => { const poster = post.thumbnail_url || firstContentImage(post.content); const crop = post.thumbnail_crop || { x: 50, y: 50, scale: 1 }; return <a key={post.id} className="exhibition-card" href={post.link_url || `/community/${post.id}?from=${encodeURIComponent(category)}`}><div className="exhibition-card-image">{poster ? <img src={poster} style={{ objectPosition: `${crop.x}% ${crop.y}%`, transform: `scale(${crop.scale})` }} alt="" /> : <span aria-hidden="true">🛖</span>}</div><strong>{post.title}{post.comment_count > 0 && <em>[{post.comment_count}]</em>}</strong><p className="exhibition-card-author">{post.author_nickname || '익명 판다'}</p><p className="exhibition-card-meta">{displayCreatedAt(post.created_at)} · 조회 {post.view_count.toLocaleString()} · 좋아요 {post.like_count.toLocaleString()}</p></a>; })}</div> : <div className={`community-table ${category === 'all' || isBestBoard ? 'community-table-with-board' : ''}`}><div className="community-table-header"><span>{category === 'all' || isBestBoard ? '게시판' : '번호'}</span><span>제목</span><span>작성자</span><span>작성일</span><span>조회</span><span>좋아요</span></div>
           {notices.map(post => <PostRow key={post.id} {...postRowProps(post, category === 'all' ? post.post_number : post.board_post_number, (category === 'all' || isBestBoard) ? categories.find(item => item.id === post.board_category_id)?.name : undefined, true)} />)}
