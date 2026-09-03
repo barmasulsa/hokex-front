@@ -12,7 +12,7 @@ interface Props {
 }
 
 const allowedTags = new Set(['P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'DIV', 'SPAN', 'FONT', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'A', 'IMG', 'H2', 'H3']);
-const urlPattern = /(https?:\/\/[^\s<]+)/g;
+const plainUrlPattern = /(https?:\/\/[^\s<]+?)(?=(?:https?:\/\/)|[\s<]|$)/g;
 const trailingUrlPunctuation = /[),.!?;:]+$/;
 
 function youtubeVideoId(value: string) {
@@ -27,35 +27,6 @@ function youtubeVideoId(value: string) {
     }
     return /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
   } catch { return null; }
-}
-
-function addAutomaticLinks(doc: Document) {
-  const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
-  const textNodes: Text[] = [];
-  let node: Node | null;
-  while ((node = walker.nextNode())) if (!node.parentElement?.closest('a, iframe')) textNodes.push(node as Text);
-  textNodes.forEach(textNode => {
-    const text = textNode.data;
-    if (!urlPattern.test(text)) return;
-    urlPattern.lastIndex = 0;
-    const fragment = doc.createDocumentFragment();
-    let cursor = 0;
-    text.replace(urlPattern, (matched, offset: number) => {
-      const cleanUrl = matched.replace(trailingUrlPunctuation, '');
-      fragment.append(text.slice(cursor, offset));
-      const link = doc.createElement('a');
-      link.href = cleanUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = cleanUrl;
-      fragment.append(link);
-      fragment.append(matched.slice(cleanUrl.length));
-      cursor = offset + matched.length;
-      return matched;
-    });
-    fragment.append(text.slice(cursor));
-    textNode.replaceWith(fragment);
-  });
 }
 
 function removeRepeatedLinkText(doc: Document) {
@@ -76,6 +47,43 @@ function normalizeEditorLinks(value: string) {
 
 function collapseRepeatedLinkMarkup(html: string) {
   return html.replace(/(<a\b[^>]*>)([^<]+)(<\/a>)\2/g, '$1$2$3');
+}
+
+function collapseDuplicatedUrl(value: string) {
+  const firstUrl = value.match(/^(https?:\/\/[^/]+\/)/i)?.[0];
+  return firstUrl && value.slice(firstUrl.length).startsWith(firstUrl) ? firstUrl : value;
+}
+
+function linkPlainUrls(value: string) {
+  const doc = new DOMParser().parseFromString(value, 'text/html');
+  const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
+  const textNodes: Text[] = [];
+  let node: Node | null;
+  while ((node = walker.nextNode())) if (!node.parentElement?.closest('a, iframe')) textNodes.push(node as Text);
+  textNodes.forEach(textNode => {
+    const text = textNode.data;
+    plainUrlPattern.lastIndex = 0;
+    if (!plainUrlPattern.test(text)) return;
+    plainUrlPattern.lastIndex = 0;
+    const fragment = doc.createDocumentFragment();
+    let cursor = 0;
+    text.replace(plainUrlPattern, (matched, _url: string, offset: number) => {
+      const cleanUrl = collapseDuplicatedUrl(matched.replace(trailingUrlPunctuation, ''));
+      fragment.append(text.slice(cursor, offset));
+      const link = doc.createElement('a');
+      link.href = cleanUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = cleanUrl;
+      fragment.append(link);
+      fragment.append(matched.slice(cleanUrl.length));
+      cursor = offset + matched.length;
+      return matched;
+    });
+    fragment.append(text.slice(cursor));
+    textNode.replaceWith(fragment);
+  });
+  return doc.body.innerHTML;
 }
 
 function addYoutubeEmbeds(doc: Document) {
@@ -123,15 +131,22 @@ export function sanitizeCommunityHtml(value: string) {
     }
     if (element.tagName === 'A') { element.setAttribute('target', '_blank'); element.setAttribute('rel', 'noopener noreferrer'); }
   });
+  Array.from(doc.body.querySelectorAll('a[href]')).forEach(link => {
+    const href = link.getAttribute('href') || '';
+    const cleanHref = collapseDuplicatedUrl(href);
+    const text = link.textContent || '';
+    const cleanText = collapseDuplicatedUrl(text);
+    if (cleanHref !== href) link.setAttribute('href', cleanHref);
+    if (cleanText !== text) link.textContent = cleanText;
+  });
   removeRepeatedLinkText(doc);
   addYoutubeEmbeds(doc);
-  addAutomaticLinks(doc);
   return collapseRepeatedLinkMarkup(doc.body.innerHTML);
 }
 
 export function RichTextContent({ value }: { value: string }) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const html = sanitizeCommunityHtml(value);
+  const html = sanitizeCommunityHtml(linkPlainUrls(value));
   useEffect(() => {
     contentRef.current?.querySelectorAll('a[href]').forEach(link => {
       const linkText = link.textContent || '';
@@ -147,7 +162,7 @@ export function RichTextEditor({ value, onChange, placeholder = '내용을 작�
   // contentEditable은 입력 중 DOM을 다시 쓰면 한글·일본어 IME 조합이 취소된다.
   // 초기값/외부 변경만 반영하고, 사용자가 편집 중인 DOM은 브라우저에 맡긴다.
   useEffect(() => {
-    const normalized = sanitizeCommunityHtml(value);
+    const normalized = sanitizeCommunityHtml(linkPlainUrls(value));
     if (!editing.current && !composing.current && editor.current && editor.current.innerHTML !== normalized) {
       editor.current.innerHTML = normalized;
       undoStack.current = [];
@@ -170,7 +185,7 @@ export function RichTextEditor({ value, onChange, placeholder = '내용을 작�
   // 편집기와 게시물이 같은 안전한 HTML을 사용하도록, 붙여넣기/편집 완료 시에만 DOM도 정리한다.
   const normalizeEditorMarkup = () => {
     const html = editor.current?.innerHTML || '';
-    const normalized = sanitizeCommunityHtml(html);
+    const normalized = sanitizeCommunityHtml(linkPlainUrls(html));
     if (editor.current && editor.current.innerHTML !== normalized) editor.current.innerHTML = normalized;
     onChange(normalized);
   };
@@ -209,7 +224,7 @@ export function RichTextEditor({ value, onChange, placeholder = '내용을 작�
         suffix.before(lineBreak);
       });
     });
-    const normalized = sanitizeCommunityHtml(root.innerHTML);
+    const normalized = sanitizeCommunityHtml(linkPlainUrls(root.innerHTML));
     if (root.innerHTML !== normalized) root.innerHTML = normalized;
     onChange(normalized);
     return normalized;
