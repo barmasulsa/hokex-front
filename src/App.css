@@ -1965,6 +1965,22 @@ body {
   color: #374151;
 }
 
+/* 닉네임 입력은 라벨이 줄바꿈되지 않도록 고정 폭 열을 사용한다. */
+.setting-row.nickname-input-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+}
+
+.setting-row.nickname-input-row > label {
+  white-space: nowrap;
+}
+
+.setting-row.nickname-input-row .setting-input {
+  min-width: 0;
+}
+
 .setting-value {
   display: flex;
   align-items: center;

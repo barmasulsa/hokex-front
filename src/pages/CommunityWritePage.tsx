@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { useAuth } from '../contexts/AuthContext';
-import { createPost, getBoardCategories, getMyCommunityWritePermissionBoardIds, getPost, updatePost, uploadCommunityFile, uploadCommunityImage, type BoardCategory, type ThumbnailCrop } from '../services/communityService';
+import { createPost, getBoardCategories, getMyCommunityWritePermissionBoardIds, getPost, isAdminOnlyCommunityWriteBoard, updatePost, uploadCommunityFile, uploadCommunityImage, type BoardCategory, type ThumbnailCrop } from '../services/communityService';
 import { ALL_VENUES } from '../types/core';
 import './CommunityPage.css';
 
@@ -17,7 +17,6 @@ const PROMOTION_PREFIXES: Record<string, { options: string[]; help?: string }> =
   '전시컨벤션센터': { options: ALL_VENUES },
 };
 const getTitleByteLength = (value: string) => [...value].reduce((total, character) => total + (character.charCodeAt(0) > 0x7f ? 2 : 1), 0);
-const ADMIN_WRITE_ONLY_BOARD_NAMES = new Set(['업체홍보게시판', '업체홍보 게시판', '베뉴']);
 const ADMIN_WRITE_ONLY_NOTICE = '해당 게시판은 호켁스 관리자 또는 글쓰기 권한을 부여받은 회원만 작성할 수 있습니다. 문의 메일: hokexpanda@gmail.com';
 
 export function CommunityWritePage() {
@@ -51,7 +50,7 @@ export function CommunityWritePage() {
   const nicknameAlertShown = useRef(false);
   const thumbnailInput = useRef<HTMLInputElement>(null);
   const boardName = categories.find(item => item.id === category)?.name || '게시판';
-  const isAdminWriteOnlyBoard = ADMIN_WRITE_ONLY_BOARD_NAMES.has(boardName);
+  const isAdminWriteOnlyBoard = isAdminOnlyCommunityWriteBoard(category, categories);
   const hasBoardWritePermission = isAdmin || !isAdminWriteOnlyBoard || grantedWriteBoardIds?.has(category) === true;
   const isNewsBoard = boardName === '뉴스게시판';
   const titleByteLength = getTitleByteLength(title);

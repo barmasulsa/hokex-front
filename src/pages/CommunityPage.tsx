@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Banner } from '../components/Banner';
 import { useAuth } from '../contexts/AuthContext';
-import { deleteCommunityBoardCategory, deletePost, getBestPosts, getBoardCategories, getMyCommunityWritePermissionBoardIds, getPinnedPosts, getPostLikeStatus, getPosts, reorderCommunityBoardCategories, saveCommunityBoardCategory, togglePostLike, type BoardCategory, type BoardCategoryDraft, type Post } from '../services/communityService';
+import { deleteCommunityBoardCategory, deletePost, getBestPosts, getBoardCategories, getMyCommunityWritePermissionBoardIds, getPinnedPosts, getPostLikeStatus, getPosts, isAdminOnlyCommunityWriteBoard, reorderCommunityBoardCategories, saveCommunityBoardCategory, togglePostLike, type BoardCategory, type BoardCategoryDraft, type Post } from '../services/communityService';
 import './CommunityPage.css';
 
 const formatDate = (value: string) => new Date(value).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '');
@@ -54,7 +54,6 @@ const LEGACY_BOARD_DESCRIPTIONS = new Set([
   'MICE 협회 공지사항', 'MICE 업계 인사이트', '한국전시산업진흥회 관련 정보', '전통 공연 예술 관련', '채용 및 구직 정보', '정규직 및 인턴 채용', '행사 스태프 및 단기 알바', '자원봉사자 모집',
   '행사 및 제품 홍보', '전시회 홍보', '포럼 및 컨퍼런스', '교육 프로그램', '공연 및 공연예술', '각종 행사 및 이벤트', '베뉴 및 장소 홍보', '업체 및 서비스 홍보', '디자인 및 인쇄 서비스', '부스 제작 및 시공', '기타 업체 홍보',
 ]);
-const ADMIN_WRITE_ONLY_BOARD_NAMES = new Set(['업체홍보게시판', '업체홍보 게시판', '베뉴']);
 const ADMIN_WRITE_ONLY_NOTICE = '해당 게시판은 호켁스 관리자 또는 글쓰기 권한을 부여받은 회원만 작성할 수 있습니다. 문의 메일: hokexpanda@gmail.com';
 
 function PostRow({ post, notice = false, sourceBoard, displayNumber, returnCategory, isNewsPost, canManageNews, liked, onLike, onEditNews, onDeleteNews }: { post: Post; notice?: boolean; sourceBoard?: string; displayNumber?: number; returnCategory: string; isNewsPost: boolean; canManageNews: boolean; liked: boolean; onLike: (post: Post) => void; onEditNews: (post: Post) => void; onDeleteNews: (post: Post) => void }) {
@@ -235,7 +234,7 @@ export function CommunityPage() {
   const startWriting = () => {
     if (!user) { navigate('/login'); return; }
     if (!userProfile?.nickname) { alert('닉네임을 설정해야 글쓰기가 가능합니다.'); navigate('/profile?setup=nickname&reason=write'); return; }
-    if (selectedBoard && ADMIN_WRITE_ONLY_BOARD_NAMES.has(selectedBoard.name) && !isAdmin && !grantedWriteBoardIds.has(selectedBoard.id)) {
+    if (selectedBoard && isAdminOnlyCommunityWriteBoard(selectedBoard.id, categories) && !isAdmin && !grantedWriteBoardIds.has(selectedBoard.id)) {
       setError(ADMIN_WRITE_ONLY_NOTICE);
       return;
     }

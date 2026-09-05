@@ -13,6 +13,30 @@ export interface CommunityMember { id: string; email: string; nickname: string |
 export interface CommunityWritePermission { user_id: string; board_category_id: string; board_name: string; }
 export interface AdminWriteBoard { id: string; name: string; }
 
+const ADMIN_WRITE_ONLY_BOARD_NAMES = new Set(['업체홍보게시판', '업체홍보 게시판', '베뉴']);
+
+// 기존 데이터 중에는 parent_category_id가 비어 있는 경우가 있어, 홍보 부모 아래의
+// 연속된 활성 게시판도 하위 게시판으로 판단한다. 서버 측 권한 규칙도 같은 기준을 쓴다.
+export function isAdminOnlyCommunityWriteBoard(boardCategoryId: string, categories: BoardCategory[]): boolean {
+  const target = categories.find(category => category.id === boardCategoryId);
+  if (!target) return false;
+  if (ADMIN_WRITE_ONLY_BOARD_NAMES.has(target.name)) return true;
+
+  const byId = new Map(categories.map(category => [category.id, category]));
+  let ancestorId = target.parent_category_id;
+  while (ancestorId) {
+    const ancestor = byId.get(ancestorId);
+    if (!ancestor) break;
+    if (ADMIN_WRITE_ONLY_BOARD_NAMES.has(ancestor.name)) return true;
+    ancestorId = ancestor.parent_category_id;
+  }
+
+  return categories.some(parent => {
+    if (!ADMIN_WRITE_ONLY_BOARD_NAMES.has(parent.name) || target.display_order <= parent.display_order || !target.is_active) return false;
+    return !categories.some(category => !category.is_active && category.display_order > parent.display_order && category.display_order <= target.display_order);
+  });
+}
+
 const PUBLIC_POST_COLUMNS = 'id,post_number,board_post_number,title,content,link_url,thumbnail_url,thumbnail_crop,board_category_id,author_id,author_nickname,created_at,updated_at,view_count,like_count,comment_count,is_pinned,is_public';
 
 export async function getBoardCategories(): Promise<BoardCategory[]> {
