@@ -10,6 +10,13 @@ interface UserProfile {
   nickname: string | null;
 }
 
+export interface SignupConsent {
+  termsVersion: string;
+  privacyVersion: string;
+  marketingAgreed: boolean;
+  ageOver14: boolean;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -21,7 +28,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithNaver: () => Promise<void>;
   linkNaverIdentity: () => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, consent: SignupConsent) => Promise<void>;
   signInWithPassword: (email: string, password: string) => Promise<void>;
   signInWithMagicLink: (email: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -138,7 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/`,
+        redirectTo: `${window.location.origin}/auth/consent`,
       },
     });
     
@@ -152,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithNaver = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'custom:naver',
-      options: { redirectTo: window.location.origin + '/' },
+      options: { redirectTo: window.location.origin + '/auth/consent' },
     });
     if (error) throw error;
   };
@@ -168,11 +175,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // 호켁스 독립 회원가입. 이메일 인증은 Supabase Auth가 처리한다.
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, consent: SignupConsent) => {
     const { error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { emailRedirectTo: `${window.location.origin}/login` },
+      options: {
+        emailRedirectTo: `${window.location.origin}/login`,
+        data: {
+          hokex_terms_version: consent.termsVersion,
+          hokex_privacy_version: consent.privacyVersion,
+          hokex_marketing_agreed: consent.marketingAgreed,
+          hokex_age_over_14: consent.ageOver14,
+        },
+      },
     });
     if (error) throw error;
   };

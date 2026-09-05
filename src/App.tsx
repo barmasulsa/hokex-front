@@ -11,6 +11,7 @@ import { DeletedEventsPage } from './pages/DeletedEventsPage';
 import { CommunityPage } from './pages/CommunityPage';
 import { CommunityWritePage } from './pages/CommunityWritePage';
 import { CommunityPostPage } from './pages/CommunityPostPage';
+import { SocialConsentPage } from './pages/SocialConsentPage';
 
 import { initGA4, recordVisit } from './utils/analytics';
 import { trackVisit as recordVisitorCounter } from './utils/visitorCounter';
@@ -95,11 +96,11 @@ function AppContent() {
 
   // 새로 로그인한 회원은 기존 My Profile의 닉네임 설정 화면으로 한 번 안내한다.
   useEffect(() => {
-    if (user && needsNickname && sessionStorage.getItem('hokex-open-nickname-setup') === 'true') {
+    if (location.pathname !== '/auth/consent' && user && needsNickname && sessionStorage.getItem('hokex-open-nickname-setup') === 'true') {
       sessionStorage.removeItem('hokex-open-nickname-setup');
       navigate('/profile?setup=nickname');
     }
-  }, [user, needsNickname, navigate]);
+  }, [user, needsNickname, navigate, location.pathname]);
 
   // URL 해시 정리 (에러 파라미터 제거)
   useEffect(() => {
@@ -190,6 +191,7 @@ function AppContent() {
         <Route path="/community/:postId" element={<CommunityPostPage />} />
         <Route path="/profile" element={<UserProfilePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/auth/consent" element={<SocialConsentPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/admin/banners" element={<BannerManagementPage />} />
         <Route path="/admin/deleted-events" element={<DeletedEventsPage />} />

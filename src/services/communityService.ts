@@ -10,6 +10,8 @@ export interface PostDraft { title: string; content: string; link_url: string | 
 export interface CommunityComment { id: string; post_id: string; parent_comment_id: string | null; author_id: string; author_nickname: string; content: string; created_at: string; updated_at: string; }
 export interface CommunityReport { id: string; target_type: 'post' | 'comment'; post_id: string; comment_id: string | null; post_number: number; post_title: string; target_content: string | null; reporter_nickname: string | null; reason: string; details: string | null; status: 'pending' | 'resolved'; created_at: string; resolved_at: string | null; }
 export interface CommunityMember { id: string; email: string; nickname: string | null; is_admin: boolean; created_at: string; }
+export interface CommunityWritePermission { user_id: string; board_category_id: string; board_name: string; }
+export interface AdminWriteBoard { id: string; name: string; }
 
 const PUBLIC_POST_COLUMNS = 'id,post_number,board_post_number,title,content,link_url,thumbnail_url,thumbnail_crop,board_category_id,author_id,author_nickname,created_at,updated_at,view_count,like_count,comment_count,is_pinned,is_public';
 
@@ -127,6 +129,11 @@ export async function reportComment(commentId: string, reason: string, details: 
 export async function getCommunityReports(): Promise<CommunityReport[]> { const { data, error } = await supabase.rpc('get_community_reports'); if (error) throw error; return (data ?? []) as CommunityReport[]; }
 export async function resolveCommunityReport(reportId: string, targetType: 'post' | 'comment'): Promise<void> { const { error } = await supabase.rpc('resolve_community_report', { p_report_id: reportId, p_target_type: targetType }); if (error) throw error; }
 export async function getCommunityMembers(): Promise<CommunityMember[]> { const { data, error } = await supabase.rpc('get_community_members'); if (error) throw error; return (data ?? []) as CommunityMember[]; }
+export async function getMyCommunityWritePermissionBoardIds(): Promise<string[]> { const { data, error } = await supabase.rpc('get_my_community_write_permission_board_ids'); if (error) throw error; return (data ?? []) as string[]; }
+export async function getCommunityWritePermissions(): Promise<CommunityWritePermission[]> { const { data, error } = await supabase.rpc('get_community_write_permissions'); if (error) throw error; return (data ?? []) as CommunityWritePermission[]; }
+export async function getAdminWriteBoards(): Promise<AdminWriteBoard[]> { const { data, error } = await supabase.rpc('get_admin_write_boards'); if (error) throw error; return (data ?? []) as AdminWriteBoard[]; }
+export async function grantCommunityWritePermission(userId: string, boardCategoryId: string): Promise<void> { const { error } = await supabase.rpc('grant_community_board_write_permission', { p_user_id: userId, p_board_category_id: boardCategoryId }); if (error) throw error; }
+export async function revokeCommunityWritePermission(userId: string, boardCategoryId: string): Promise<void> { const { error } = await supabase.rpc('revoke_community_board_write_permission', { p_user_id: userId, p_board_category_id: boardCategoryId }); if (error) throw error; }
 
 export async function uploadCommunityImage(file: File, user: User): Promise<string> {
   const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];

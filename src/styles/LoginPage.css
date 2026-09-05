@@ -69,6 +69,9 @@
 .kakao-mark svg { width:22px; height:22px; fill:#191919; }
 .google-mark svg { width:22px; height:22px; }
 .social-notice { margin:12px 0 0; color:#64748b; font-size:12px; text-align:center; }
+.social-consent { margin:14px 0 10px; padding:12px 14px; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; }
+.social-consent .checkbox-label { display:flex; align-items:flex-start; gap:8px; margin:8px 0; font-size:.78rem; line-height:1.45; color:#475569; }
+.social-consent .checkbox-label input { margin-top:3px; }.social-consent b { color:#334155; }
 .email-login-toggle { width:100%; border:0; background:transparent; color:#475569; font:inherit; font-size:13px; cursor:pointer; text-decoration:underline; }
 .auth-tabs button { padding:12px; border:0; border-bottom:2px solid transparent; background:transparent; color:#6b7280; font:inherit; font-weight:700; cursor:pointer; }
 .auth-tabs button.active { border-bottom-color:#667eea; color:#4f46e5; }

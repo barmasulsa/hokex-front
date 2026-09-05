@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { useAuth } from '../contexts/AuthContext';
-import { createPost, getBoardCategories, getPost, updatePost, uploadCommunityFile, uploadCommunityImage, type BoardCategory, type ThumbnailCrop } from '../services/communityService';
+import { createPost, getBoardCategories, getMyCommunityWritePermissionBoardIds, getPost, updatePost, uploadCommunityFile, uploadCommunityImage, type BoardCategory, type ThumbnailCrop } from '../services/communityService';
 import { ALL_VENUES } from '../types/core';
 import './CommunityPage.css';
 
@@ -18,7 +18,7 @@ const PROMOTION_PREFIXES: Record<string, { options: string[]; help?: string }> =
 };
 const getTitleByteLength = (value: string) => [...value].reduce((total, character) => total + (character.charCodeAt(0) > 0x7f ? 2 : 1), 0);
 const ADMIN_WRITE_ONLY_BOARD_NAMES = new Set(['업체홍보게시판', '업체홍보 게시판', '베뉴']);
-const ADMIN_WRITE_ONLY_NOTICE = '해당 게시판은 호켁스 관리자만 작성할 수 있습니다. 문의 메일: hokexpanda@gmail.com';
+const ADMIN_WRITE_ONLY_NOTICE = '해당 게시판은 호켁스 관리자 또는 글쓰기 권한을 부여받은 회원만 작성할 수 있습니다. 문의 메일: hokexpanda@gmail.com';
 
 export function CommunityWritePage() {
   const { user, userProfile, isAdmin } = useAuth();
@@ -47,10 +47,12 @@ export function CommunityWritePage() {
   const [isPublic, setIsPublic] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [grantedWriteBoardIds, setGrantedWriteBoardIds] = useState<Set<string> | null>(null);
   const nicknameAlertShown = useRef(false);
   const thumbnailInput = useRef<HTMLInputElement>(null);
   const boardName = categories.find(item => item.id === category)?.name || '게시판';
   const isAdminWriteOnlyBoard = ADMIN_WRITE_ONLY_BOARD_NAMES.has(boardName);
+  const hasBoardWritePermission = isAdmin || !isAdminWriteOnlyBoard || grantedWriteBoardIds?.has(category) === true;
   const isNewsBoard = boardName === '뉴스게시판';
   const titleByteLength = getTitleByteLength(title);
   const titleTooLong = titleByteLength > 200;
@@ -78,6 +80,11 @@ export function CommunityWritePage() {
       setCategory(current => current || (requestedBoard && writable.some(item => item.id === requestedBoard) ? requestedBoard : writable[0]?.id || ''));
     });
   }, [location.search]);
+
+  useEffect(() => {
+    if (!user || isAdmin) { setGrantedWriteBoardIds(new Set()); return; }
+    getMyCommunityWritePermissionBoardIds().then(ids => setGrantedWriteBoardIds(new Set(ids))).catch(() => setGrantedWriteBoardIds(new Set()));
+  }, [user?.id, isAdmin]);
 
   useEffect(() => {
     if (!postId) return;
@@ -171,7 +178,7 @@ export function CommunityWritePage() {
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (isAdminWriteOnlyBoard && !isAdmin) {
+    if (!hasBoardWritePermission) {
       setError(ADMIN_WRITE_ONLY_NOTICE);
       return;
     }
@@ -233,7 +240,8 @@ export function CommunityWritePage() {
   };
 
   if (user && !userProfile?.nickname) return <main className="community-page"><div className="community-empty">게시물 작성은 닉네임을 설정해야 가능합니다.</div></main>;
-  if (isAdminWriteOnlyBoard && !isAdmin) return <main className="community-page"><section className="editor-shell cafe-write-shell"><div className="community-empty">{ADMIN_WRITE_ONLY_NOTICE}</div><div className="editor-actions"><button type="button" onClick={() => navigate(-1)}>이전으로</button></div></section></main>;
+  if (isAdminWriteOnlyBoard && !isAdmin && grantedWriteBoardIds === null) return <main className="community-page"><div className="community-empty">글쓰기 권한을 확인하는 중입니다.</div></main>;
+  if (!hasBoardWritePermission) return <main className="community-page"><section className="editor-shell cafe-write-shell"><div className="community-empty">{ADMIN_WRITE_ONLY_NOTICE}</div><div className="editor-actions"><button type="button" onClick={() => navigate(-1)}>이전으로</button></div></section></main>;
   return <main className="community-page"><section className="editor-shell cafe-write-shell">
     <div className="editor-heading"><div><p>{boardName}</p><h2>{editing ? '글 수정' : '글쓰기'}</h2></div><div className="editor-top-actions"><button type="button" onClick={() => navigate(-1)}>취소</button><button className="write-button" disabled={saving || titleTooLong}>{saving ? '등록 중…' : editing ? '수정' : '등록'}</button></div></div>
     <form onSubmit={submit}><div className="write-main-grid"><section className="write-editor-area">

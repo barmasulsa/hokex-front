@@ -7,7 +7,7 @@ import { Region, REGION_VENUE_MAP } from '../types/core';
 import type { Banner, BannerType } from '../types/banner';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { VisitorStatisticsDashboard } from '../components/VisitorStatisticsDashboard';
-import { getCommunityMembers, getCommunityReports, resolveCommunityReport, type CommunityMember, type CommunityReport } from '../services/communityService';
+import { getAdminWriteBoards, getCommunityMembers, getCommunityReports, getCommunityWritePermissions, grantCommunityWritePermission, resolveCommunityReport, revokeCommunityWritePermission, type AdminWriteBoard, type CommunityMember, type CommunityReport, type CommunityWritePermission } from '../services/communityService';
 import './BannerManagementPage.css';
 
 type ManagementTab = 'image' | 'youtube' | 'text' | 'statistics' | 'viewcounts' | 'community';
@@ -33,6 +33,9 @@ export function BannerManagementPage() {
   const [communityManagementSubTab, setCommunityManagementSubTab] = useState<CommunityManagementSubTab>('reports');
   const [communityMembers, setCommunityMembers] = useState<CommunityMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
+  const [adminWriteBoards, setAdminWriteBoards] = useState<AdminWriteBoard[]>([]);
+  const [writePermissions, setWritePermissions] = useState<CommunityWritePermission[]>([]);
+  const [permissionBoardDrafts, setPermissionBoardDrafts] = useState<Record<string, string>>({});
   
   // 조회수 통계 필터
   const [viewCountLimit, setViewCountLimit] = useState<number>(50);
@@ -214,7 +217,10 @@ export function BannerManagementPage() {
   };
   const loadCommunityMembers = async () => {
     setLoadingMembers(true);
-    try { setCommunityMembers(await getCommunityMembers()); } finally { setLoadingMembers(false); }
+    try {
+      const [members, boards, permissions] = await Promise.all([getCommunityMembers(), getAdminWriteBoards(), getCommunityWritePermissions()]);
+      setCommunityMembers(members); setAdminWriteBoards(boards); setWritePermissions(permissions);
+    } finally { setLoadingMembers(false); }
   };
   useEffect(() => {
     if (activeTab !== 'community') return;
@@ -222,6 +228,14 @@ export function BannerManagementPage() {
     else void loadCommunityMembers();
   }, [activeTab, communityManagementSubTab]);
   const resolveReport = async (id: string, targetType: 'post' | 'comment') => { await resolveCommunityReport(id, targetType); await loadCommunityReports(); };
+  const grantWritePermission = async (userId: string) => {
+    const boardCategoryId = permissionBoardDrafts[userId];
+    if (!boardCategoryId) return;
+    await grantCommunityWritePermission(userId, boardCategoryId);
+    setPermissionBoardDrafts(current => ({ ...current, [userId]: '' }));
+    await loadCommunityMembers();
+  };
+  const revokeWritePermission = async (userId: string, boardCategoryId: string) => { await revokeCommunityWritePermission(userId, boardCategoryId); await loadCommunityMembers(); };
 
   const loadBanners = async () => {
     setLoading(true);
@@ -996,7 +1010,7 @@ export function BannerManagementPage() {
       {activeTab === 'community' && (
         <div className="view-count-stats-tab-content"><div className="view-count-stats-section community-report-admin">
           <div className="announcement-sub-tabs"><button className={`sub-tab-btn ${communityManagementSubTab === 'reports' ? 'active' : ''}`} onClick={() => setCommunityManagementSubTab('reports')}>신고 관리</button><button className={`sub-tab-btn ${communityManagementSubTab === 'members' ? 'active' : ''}`} onClick={() => setCommunityManagementSubTab('members')}>회원 관리</button></div>
-          {communityManagementSubTab === 'reports' ? <><div className="report-admin-heading"><h2>🛡️ 커뮤니티 신고 관리</h2><button className="btn-primary" onClick={() => void loadCommunityReports()}>새로고침</button></div>{loadingReports ? <p>신고 내역을 불러오는 중입니다.</p> : communityReports.length === 0 ? <p>접수된 신고가 없습니다.</p> : <div className="view-count-table-container"><table className="view-count-table"><thead><tr><th>대상</th><th>상태</th><th>게시글</th><th>신고 사유</th><th>세부 내용</th><th>신고자</th><th>접수일</th><th>처리</th></tr></thead><tbody>{communityReports.map(report => <tr key={`${report.target_type}-${report.id}`}><td>{report.target_type === 'comment' ? '댓글' : '게시글'}</td><td>{report.status === 'pending' ? '검토 대기' : '처리 완료'}</td><td><a className="event-link" href={`/community/${report.post_id}`}>#{report.post_number} {report.post_title}</a>{report.target_content && <small>{report.target_content}</small>}</td><td>{report.reason}</td><td>{report.details || '-'}</td><td>{report.reporter_nickname || '-'}</td><td>{new Date(report.created_at).toLocaleString('ko-KR')}</td><td>{report.status === 'pending' && <button className="btn-primary" onClick={() => void resolveReport(report.id, report.target_type)}>처리 완료</button>}</td></tr>)}</tbody></table></div>}</> : <><div className="report-admin-heading"><h2>👥 회원 관리</h2><button className="btn-primary" onClick={() => void loadCommunityMembers()}>새로고침</button></div><p>소셜 로그인과 이메일 가입 모두 HOKEX 회원으로 등록됩니다.</p>{loadingMembers ? <p>회원 목록을 불러오는 중입니다.</p> : <div className="view-count-table-container"><table className="view-count-table"><thead><tr><th>닉네임</th><th>이메일</th><th>권한</th><th>가입일</th></tr></thead><tbody>{communityMembers.map(member => <tr key={member.id}><td>{member.nickname || '미설정'}</td><td>{member.email}</td><td>{member.is_admin ? '관리자' : '일반 회원'}</td><td>{new Date(member.created_at).toLocaleDateString('ko-KR')}</td></tr>)}</tbody></table></div>}</>}
+          {communityManagementSubTab === 'reports' ? <><div className="report-admin-heading"><h2>🛡️ 커뮤니티 신고 관리</h2><button className="btn-primary" onClick={() => void loadCommunityReports()}>새로고침</button></div>{loadingReports ? <p>신고 내역을 불러오는 중입니다.</p> : communityReports.length === 0 ? <p>접수된 신고가 없습니다.</p> : <div className="view-count-table-container"><table className="view-count-table"><thead><tr><th>대상</th><th>상태</th><th>게시글</th><th>신고 사유</th><th>세부 내용</th><th>신고자</th><th>접수일</th><th>처리</th></tr></thead><tbody>{communityReports.map(report => <tr key={`${report.target_type}-${report.id}`}><td>{report.target_type === 'comment' ? '댓글' : '게시글'}</td><td>{report.status === 'pending' ? '검토 대기' : '처리 완료'}</td><td><a className="event-link" href={`/community/${report.post_id}`}>#{report.post_number} {report.post_title}</a>{report.target_content && <small>{report.target_content}</small>}</td><td>{report.reason}</td><td>{report.details || '-'}</td><td>{report.reporter_nickname || '-'}</td><td>{new Date(report.created_at).toLocaleString('ko-KR')}</td><td>{report.status === 'pending' && <button className="btn-primary" onClick={() => void resolveReport(report.id, report.target_type)}>처리 완료</button>}</td></tr>)}</tbody></table></div>}</> : <><div className="report-admin-heading"><h2>👥 회원 관리</h2><button className="btn-primary" onClick={() => void loadCommunityMembers()}>새로고침</button></div><p>소셜 로그인과 이메일 가입 모두 HOKEX 회원으로 등록됩니다. 관리자 전용 게시판은 아래에서 회원별로 작성 권한을 부여할 수 있습니다.</p>{loadingMembers ? <p>회원 목록을 불러오는 중입니다.</p> : <div className="view-count-table-container"><table className="view-count-table"><thead><tr><th>닉네임</th><th>이메일</th><th>권한</th><th>게시판 글쓰기 권한</th><th>가입일</th></tr></thead><tbody>{communityMembers.map(member => { const memberPermissions = writePermissions.filter(permission => permission.user_id === member.id); const availableBoards = adminWriteBoards.filter(board => !memberPermissions.some(permission => permission.board_category_id === board.id)); return <tr key={member.id}><td>{member.nickname || '미설정'}</td><td>{member.email}</td><td>{member.is_admin ? '관리자' : '일반 회원'}</td><td><div className="member-write-permissions">{member.is_admin ? '모든 게시판' : <>{memberPermissions.map(permission => <span key={permission.board_category_id}>{permission.board_name}<button type="button" onClick={() => void revokeWritePermission(member.id, permission.board_category_id)} aria-label={`${permission.board_name} 권한 회수`}>×</button></span>)}{availableBoards.length > 0 && <div><select value={permissionBoardDrafts[member.id] || ''} onChange={event => setPermissionBoardDrafts(current => ({ ...current, [member.id]: event.target.value }))}><option value="">게시판 선택</option>{availableBoards.map(board => <option key={board.id} value={board.id}>{board.name}</option>)}</select><button type="button" className="btn-primary" disabled={!permissionBoardDrafts[member.id]} onClick={() => void grantWritePermission(member.id)}>부여</button></div>}</>}</div></td><td>{new Date(member.created_at).toLocaleDateString('ko-KR')}</td></tr>; })}</tbody></table></div>}</>}
         </div></div>
       )}
 
