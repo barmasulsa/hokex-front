@@ -7,11 +7,12 @@ import { Region, REGION_VENUE_MAP } from '../types/core';
 import type { Banner, BannerType } from '../types/banner';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { VisitorStatisticsDashboard } from '../components/VisitorStatisticsDashboard';
-import { getCommunityReports, resolveCommunityReport, type CommunityReport } from '../services/communityService';
+import { getCommunityMembers, getCommunityReports, resolveCommunityReport, type CommunityMember, type CommunityReport } from '../services/communityService';
 import './BannerManagementPage.css';
 
 type ManagementTab = 'image' | 'youtube' | 'text' | 'statistics' | 'viewcounts' | 'community';
 type AnnouncementSubTab = 'homepage' | 'community';
+type CommunityManagementSubTab = 'reports' | 'members';
 
 export function BannerManagementPage() {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -29,6 +30,9 @@ export function BannerManagementPage() {
   const [loadingSavedStats, setLoadingSavedStats] = useState(false);
   const [communityReports, setCommunityReports] = useState<CommunityReport[]>([]);
   const [loadingReports, setLoadingReports] = useState(false);
+  const [communityManagementSubTab, setCommunityManagementSubTab] = useState<CommunityManagementSubTab>('reports');
+  const [communityMembers, setCommunityMembers] = useState<CommunityMember[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
   
   // 조회수 통계 필터
   const [viewCountLimit, setViewCountLimit] = useState<number>(50);
@@ -208,7 +212,15 @@ export function BannerManagementPage() {
     setLoadingReports(true);
     try { setCommunityReports(await getCommunityReports()); } finally { setLoadingReports(false); }
   };
-  useEffect(() => { if (activeTab === 'community') void loadCommunityReports(); }, [activeTab]);
+  const loadCommunityMembers = async () => {
+    setLoadingMembers(true);
+    try { setCommunityMembers(await getCommunityMembers()); } finally { setLoadingMembers(false); }
+  };
+  useEffect(() => {
+    if (activeTab !== 'community') return;
+    if (communityManagementSubTab === 'reports') void loadCommunityReports();
+    else void loadCommunityMembers();
+  }, [activeTab, communityManagementSubTab]);
   const resolveReport = async (id: string, targetType: 'post' | 'comment') => { await resolveCommunityReport(id, targetType); await loadCommunityReports(); };
 
   const loadBanners = async () => {
@@ -983,8 +995,8 @@ export function BannerManagementPage() {
 
       {activeTab === 'community' && (
         <div className="view-count-stats-tab-content"><div className="view-count-stats-section community-report-admin">
-          <div className="report-admin-heading"><h2>🛡️ 커뮤니티 신고 관리</h2><button className="btn-primary" onClick={() => void loadCommunityReports()}>새로고침</button></div>
-          {loadingReports ? <p>신고 내역을 불러오는 중입니다.</p> : communityReports.length === 0 ? <p>접수된 신고가 없습니다.</p> : <div className="view-count-table-container"><table className="view-count-table"><thead><tr><th>대상</th><th>상태</th><th>게시글</th><th>신고 사유</th><th>세부 내용</th><th>신고자</th><th>접수일</th><th>처리</th></tr></thead><tbody>{communityReports.map(report => <tr key={`${report.target_type}-${report.id}`}><td>{report.target_type === 'comment' ? '댓글' : '게시글'}</td><td>{report.status === 'pending' ? '검토 대기' : '처리 완료'}</td><td><a className="event-link" href={`/community/${report.post_id}`}>#{report.post_number} {report.post_title}</a>{report.target_content && <small>{report.target_content}</small>}</td><td>{report.reason}</td><td>{report.details || '-'}</td><td>{report.reporter_nickname || '-'}</td><td>{new Date(report.created_at).toLocaleString('ko-KR')}</td><td>{report.status === 'pending' && <button className="btn-primary" onClick={() => void resolveReport(report.id, report.target_type)}>처리 완료</button>}</td></tr>)}</tbody></table></div>}
+          <div className="announcement-sub-tabs"><button className={`sub-tab-btn ${communityManagementSubTab === 'reports' ? 'active' : ''}`} onClick={() => setCommunityManagementSubTab('reports')}>신고 관리</button><button className={`sub-tab-btn ${communityManagementSubTab === 'members' ? 'active' : ''}`} onClick={() => setCommunityManagementSubTab('members')}>회원 관리</button></div>
+          {communityManagementSubTab === 'reports' ? <><div className="report-admin-heading"><h2>🛡️ 커뮤니티 신고 관리</h2><button className="btn-primary" onClick={() => void loadCommunityReports()}>새로고침</button></div>{loadingReports ? <p>신고 내역을 불러오는 중입니다.</p> : communityReports.length === 0 ? <p>접수된 신고가 없습니다.</p> : <div className="view-count-table-container"><table className="view-count-table"><thead><tr><th>대상</th><th>상태</th><th>게시글</th><th>신고 사유</th><th>세부 내용</th><th>신고자</th><th>접수일</th><th>처리</th></tr></thead><tbody>{communityReports.map(report => <tr key={`${report.target_type}-${report.id}`}><td>{report.target_type === 'comment' ? '댓글' : '게시글'}</td><td>{report.status === 'pending' ? '검토 대기' : '처리 완료'}</td><td><a className="event-link" href={`/community/${report.post_id}`}>#{report.post_number} {report.post_title}</a>{report.target_content && <small>{report.target_content}</small>}</td><td>{report.reason}</td><td>{report.details || '-'}</td><td>{report.reporter_nickname || '-'}</td><td>{new Date(report.created_at).toLocaleString('ko-KR')}</td><td>{report.status === 'pending' && <button className="btn-primary" onClick={() => void resolveReport(report.id, report.target_type)}>처리 완료</button>}</td></tr>)}</tbody></table></div>}</> : <><div className="report-admin-heading"><h2>👥 회원 관리</h2><button className="btn-primary" onClick={() => void loadCommunityMembers()}>새로고침</button></div><p>소셜 로그인과 이메일 가입 모두 HOKEX 회원으로 등록됩니다.</p>{loadingMembers ? <p>회원 목록을 불러오는 중입니다.</p> : <div className="view-count-table-container"><table className="view-count-table"><thead><tr><th>닉네임</th><th>이메일</th><th>권한</th><th>가입일</th></tr></thead><tbody>{communityMembers.map(member => <tr key={member.id}><td>{member.nickname || '미설정'}</td><td>{member.email}</td><td>{member.is_admin ? '관리자' : '일반 회원'}</td><td>{new Date(member.created_at).toLocaleDateString('ko-KR')}</td></tr>)}</tbody></table></div>}</>}
         </div></div>
       )}
 

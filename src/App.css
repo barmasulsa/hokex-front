@@ -1822,6 +1822,10 @@ body {
   padding: 32px;
 }
 
+.nickname-setup-section { order: -1; }
+.nickname-input-row { display: grid; grid-template-columns: 1fr; gap: 8px; align-items: stretch; }
+.nickname-input-row .setting-input { width: 100%; box-sizing: border-box; }
+
 .my-post-list { border-top: 1px solid #e5e7eb; }
 .my-post-item { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 4px; border-bottom:1px solid #eef1f5; }
 .my-post-item > a { min-width:0; color:#1f2937; text-decoration:none; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

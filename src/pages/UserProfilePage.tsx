@@ -43,6 +43,11 @@ export function UserProfilePage() {
   const [interests] = useState(['Architectural Design', 'MICE Logistics', 'Smart Venues']);
   const naverLinked = user?.identities?.some(identity => identity.provider === 'custom:naver') ?? false;
 
+  useEffect(() => {
+    if (!isSettingNickname) return;
+    requestAnimationFrame(() => document.querySelector('.nickname-setup-section')?.scrollIntoView({ block: 'start' }));
+  }, [isSettingNickname]);
+
   const handleLinkNaver = async () => {
     setLinkingNaver(true);
     setNaverLinkError('');
@@ -444,7 +449,7 @@ export function UserProfilePage() {
 
           {/* 닉네임 설정 폼 */}
           {isSettingNickname && (
-            <section className="profile-section" style={{ marginBottom: '24px' }}>
+            <section className="profile-section nickname-setup-section" style={{ marginBottom: '24px' }}>
               <h2>🐼 판다 닉네임 설정</h2>
               {nicknameRequiredForWriting && <p style={{ margin: '0 0 16px', padding: '12px 14px', borderRadius: '8px', background: '#fff7ed', color: '#9a3412', fontWeight: 700 }}>게시물 작성은 닉네임을 설정해야 가능합니다.</p>}
               
@@ -494,8 +499,8 @@ export function UserProfilePage() {
                 </ul>
               </div>
 
-              <div className="account-settings">
-                <div className="setting-row">
+              <div className="account-settings nickname-account-settings">
+                <div className="setting-row nickname-input-row">
                   <label>닉네임</label>
                   <input
                     type="text"

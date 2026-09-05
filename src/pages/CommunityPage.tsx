@@ -229,7 +229,7 @@ export function CommunityPage() {
   const editNewsPost = (post: Post) => navigate(`/community/${post.id}/edit`, { state: { communityCategory: post.board_category_id } });
   const startWriting = () => {
     if (!user) { navigate('/login'); return; }
-    if (!userProfile?.nickname) { navigate('/profile?setup=nickname&reason=write'); return; }
+    if (!userProfile?.nickname) { alert('닉네임을 설정해야 글쓰기가 가능합니다.'); navigate('/profile?setup=nickname&reason=write'); return; }
     if (selectedBoard && ADMIN_WRITE_ONLY_BOARD_NAMES.has(selectedBoard.name) && !isAdmin) {
       setError(ADMIN_WRITE_ONLY_NOTICE);
       return;

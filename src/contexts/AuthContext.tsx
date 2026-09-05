@@ -19,7 +19,6 @@ interface AuthContextType {
   needsNickname: boolean;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
-  signInWithKakao: () => Promise<void>;
   signInWithNaver: () => Promise<void>;
   linkNaverIdentity: () => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
@@ -145,21 +144,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     if (error) {
       console.error('Error signing in with Google:', error);
-      throw error;
-    }
-  };
-
-  // 카카오 로그인
-  const signInWithKakao = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'kakao',
-      options: {
-        redirectTo: `${window.location.origin}/`,
-      },
-    });
-    
-    if (error) {
-      console.error('Error signing in with Kakao:', error);
       throw error;
     }
   };
@@ -396,7 +380,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     needsNickname,
     signInWithGoogle,
-    signInWithKakao,
     signInWithNaver,
     linkNaverIdentity,
     signUp,

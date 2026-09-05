@@ -47,6 +47,7 @@ export function CommunityWritePage() {
   const [isPublic, setIsPublic] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const nicknameAlertShown = useRef(false);
   const thumbnailInput = useRef<HTMLInputElement>(null);
   const boardName = categories.find(item => item.id === category)?.name || '게시판';
   const isAdminWriteOnlyBoard = ADMIN_WRITE_ONLY_BOARD_NAMES.has(boardName);
@@ -63,7 +64,10 @@ export function CommunityWritePage() {
 
   useEffect(() => {
     if (!user) navigate('/login');
-    else if (!userProfile?.nickname) navigate('/profile?setup=nickname&reason=write');
+    else if (!userProfile?.nickname) {
+      if (!nicknameAlertShown.current) { alert('닉네임을 설정해야 글쓰기가 가능합니다.'); nicknameAlertShown.current = true; }
+      navigate('/profile?setup=nickname&reason=write');
+    }
   }, [user, userProfile?.nickname, navigate]);
 
   useEffect(() => {
