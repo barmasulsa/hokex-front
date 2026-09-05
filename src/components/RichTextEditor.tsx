@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Props {
   value: string;
@@ -145,6 +146,7 @@ export function sanitizeCommunityHtml(value: string) {
 }
 
 export function RichTextContent({ value }: { value: string }) {
+  const { user } = useAuth();
   const contentRef = useRef<HTMLDivElement>(null);
   const html = sanitizeCommunityHtml(linkPlainUrls(value));
   useEffect(() => {
@@ -154,6 +156,7 @@ export function RichTextContent({ value }: { value: string }) {
       if (linkText && next?.nodeType === 3 && next.textContent === linkText) next.remove();
     });
   }, [html]);
+  if (!user) return <div className="rich-content rich-editor-canvas"><section className="community-content-login-gate"><strong>로그인 후 게시글 본문을 확인할 수 있습니다.</strong><p>HOKEX 회원가입 또는 로그인 후 커뮤니티 내용을 이용해 주세요.</p><a href="/login">로그인 · 회원가입</a></section></div>;
   return <div ref={contentRef} className="rich-content rich-editor-canvas" dangerouslySetInnerHTML={{ __html: html }} />;
 }
 

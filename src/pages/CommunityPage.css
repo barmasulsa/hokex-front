@@ -249,5 +249,8 @@
 .community-post-inline { width:100%; max-width:none; margin:0; }
 .post-detail-content { white-space:normal; }
 .post-detail-content .rich-content { width:100%; max-width:898px; min-height:250px; box-sizing:border-box; padding:22px 28px; border-left:1px solid transparent; border-right:1px solid transparent; color:#30343b; font-size:15px; line-height:1.85; }
+.community-content-login-gate { display:flex; min-height:250px; flex-direction:column; align-items:center; justify-content:center; gap:.45rem; text-align:center; color:#475569; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; }
+.community-content-login-gate strong { color:#1e293b; font-size:1.05rem; }.community-content-login-gate p { margin:0; font-size:.92rem; }.community-content-login-gate a { margin-top:.45rem; padding:.6rem .9rem; border-radius:6px; background:#4f46e5; color:#fff; font-weight:700; text-decoration:none; }
+.post-detail:has(.community-content-login-gate) .post-link-card, .post-detail:has(.community-content-login-gate) .post-reactions, .post-detail:has(.community-content-login-gate) .comments-section { display:none; }
 .rich-editor-canvas { overflow-wrap:anywhere; }
 .community-youtube-embed { position:relative; width:min(100%, 800px); aspect-ratio:16 / 9; margin:1rem 0; overflow:hidden; border-radius:8px; background:#0f172a; }.community-youtube-embed iframe { position:absolute; inset:0; width:100%; height:100%; border-radius:8px; background:#0f172a; }.community-youtube-open-link { position:absolute; right:14px; bottom:14px; z-index:1; padding:.5rem .75rem; border-radius:6px; background:rgba(15,23,42,.82); color:#fff !important; font-size:.84rem; font-weight:700; text-decoration:none !important; }
