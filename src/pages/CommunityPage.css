@@ -254,3 +254,8 @@
 .post-detail:has(.community-content-login-gate) .post-link-card, .post-detail:has(.community-content-login-gate) .post-reactions, .post-detail:has(.community-content-login-gate) .comments-section { display:none; }
 .rich-editor-canvas { overflow-wrap:anywhere; }
 .community-youtube-embed { position:relative; width:min(100%, 800px); aspect-ratio:16 / 9; margin:1rem 0; overflow:hidden; border-radius:8px; background:#0f172a; }.community-youtube-embed iframe { position:absolute; inset:0; width:100%; height:100%; border-radius:8px; background:#0f172a; }.community-youtube-open-link { position:absolute; right:14px; bottom:14px; z-index:1; padding:.5rem .75rem; border-radius:6px; background:rgba(15,23,42,.82); color:#fff !important; font-size:.84rem; font-weight:700; text-decoration:none !important; }
+.exhibition-card-image { position:relative; }
+.pinned-ad-card .exhibition-card-image { border:2px solid #f59e0b; }
+.advertisement-badge { position:absolute; z-index:1; top:8px; left:8px; padding:3px 6px; border-radius:4px; color:#fff; background:#dc2626; font-size:.68rem; line-height:1; letter-spacing:.04em; }
+.pinned-ad-label { display:inline-block; margin-left:6px; padding:.18rem .5rem; border-radius:999px; color:#fff; background:#dc2626; font-size:.7rem; font-weight:800; vertical-align:middle; }
+.admin-move-post .admin-pin-post { background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; }

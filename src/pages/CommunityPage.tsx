@@ -101,12 +101,14 @@ export function CommunityPage() {
 
   useEffect(() => {
     getBoardCategories().then(setCategories).catch(() => setError('게시판 분류를 불러오지 못했습니다.'));
-    getPinnedPosts().then(setNotices).catch(() => undefined);
     getPosts({ page_size: 100, exclude_pinned: true }).then(({ posts: recentPosts }) => {
       const since = Date.now() - 72 * 60 * 60 * 1000;
       setRecentBoardIds(new Set(recentPosts.filter(post => new Date(post.created_at).getTime() >= since).map(post => post.board_category_id)));
     }).catch(() => undefined);
   }, []);
+  useEffect(() => {
+    getPinnedPosts(category).then(setNotices).catch(() => setNotices([]));
+  }, [category, reloadKey]);
   useEffect(() => {
     if (!user || isAdmin) { setGrantedWriteBoardIds(new Set()); return; }
     getMyCommunityWritePermissionBoardIds().then(ids => setGrantedWriteBoardIds(new Set(ids))).catch(() => setGrantedWriteBoardIds(new Set()));
@@ -142,6 +144,7 @@ export function CommunityPage() {
   const promotionParentIndex = categories.findIndex(item => item.id === promotionParent?.id);
   const inferredPromotionChildren = promotionParentIndex < 0 ? [] : categories.slice(promotionParentIndex + 1, (() => { const nextIndex = categories.slice(promotionParentIndex + 1).findIndex(item => !item.is_active); return nextIndex < 0 ? undefined : promotionParentIndex + 1 + nextIndex; })()).filter(item => item.is_active);
   const isPromotionGalleryBoard = Boolean(selectedBoard && (selectedBoard.parent_category_id === promotionParent?.id || inferredPromotionChildren.some(item => item.id === selectedBoard.id)));
+  const galleryPosts = [...notices, ...posts];
   const selectedBoardName = boardLabel(selectedBoard?.name);
   const boardDescription = selectedBoard
     ? (selectedBoard.description !== null && !LEGACY_BOARD_DESCRIPTIONS.has(selectedBoard.description) ? selectedBoard.description : BOARD_DESCRIPTIONS[selectedBoard.name] ?? '')
@@ -265,7 +268,7 @@ export function CommunityPage() {
         <div className="community-toolbar"><form onSubmit={submitSearch}><input value={search} onChange={event => setSearch(event.target.value)} placeholder="제목 또는 내용 검색" /><button type="submit">검색</button></form>
           <div>{(['latest', 'popular', 'views'] as const).map(item => <button key={item} className={sort === item ? 'sort-active' : ''} onClick={() => { setSort(item); setPage(1); }}>{item === 'latest' ? '최신순' : item === 'popular' ? '인기순' : '조회순'}</button>)}{!isBestBoard && <button className="write-button" onClick={startWriting}>✏️ 글쓰기</button>}</div>
         </div>
-        {isPromotionGalleryBoard ? <div className="exhibition-gallery">{loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : posts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 등록해 보세요.</div> : posts.map(post => { const poster = post.thumbnail_url || firstContentImage(post.content); const crop = post.thumbnail_crop || { x: 50, y: 50, scale: 1 }; return <a key={post.id} className="exhibition-card" href={post.link_url || `/community/${post.id}?from=${encodeURIComponent(category)}`}><div className="exhibition-card-image">{poster ? <img src={poster} style={{ objectPosition: `${crop.x}% ${crop.y}%`, transform: `scale(${crop.scale})` }} alt="" /> : <span aria-hidden="true">🛖</span>}</div><strong>{post.title}{post.comment_count > 0 && <em>[{post.comment_count}]</em>}</strong><p className="exhibition-card-author">{post.author_nickname || '익명 판다'}</p><p className="exhibition-card-meta">{displayCreatedAt(post.created_at)} · 조회 {post.view_count.toLocaleString()} · 좋아요 {post.like_count.toLocaleString()}</p></a>; })}</div> : <div className={`community-table ${category === 'all' || isBestBoard ? 'community-table-with-board' : ''}`}><div className="community-table-header"><span>{category === 'all' || isBestBoard ? '게시판' : '번호'}</span><span>제목</span><span>작성자</span><span>작성일</span><span>조회</span><span>좋아요</span></div>
+        {isPromotionGalleryBoard ? <div className="exhibition-gallery">{loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : galleryPosts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 등록해 보세요.</div> : galleryPosts.map(post => { const poster = post.thumbnail_url || firstContentImage(post.content); const crop = post.thumbnail_crop || { x: 50, y: 50, scale: 1 }; return <a key={post.id} className={`exhibition-card${post.is_pinned ? ' pinned-ad-card' : ''}`} href={post.link_url || `/community/${post.id}?from=${encodeURIComponent(category)}`}><div className="exhibition-card-image">{post.is_pinned && <b className="advertisement-badge">AD</b>}{poster ? <img src={poster} style={{ objectPosition: `${crop.x}% ${crop.y}%`, transform: `scale(${crop.scale})` }} alt="" /> : <span aria-hidden="true">🛖</span>}</div><strong>{post.title}{post.comment_count > 0 && <em>[{post.comment_count}]</em>}</strong><p className="exhibition-card-author">{post.author_nickname || '익명 판다'}</p><p className="exhibition-card-meta">{displayCreatedAt(post.created_at)} · 조회 {post.view_count.toLocaleString()} · 좋아요 {post.like_count.toLocaleString()}</p></a>; })}</div> : <div className={`community-table ${category === 'all' || isBestBoard ? 'community-table-with-board' : ''}`}><div className="community-table-header"><span>{category === 'all' || isBestBoard ? '게시판' : '번호'}</span><span>제목</span><span>작성자</span><span>작성일</span><span>조회</span><span>좋아요</span></div>
           {notices.map(post => <PostRow key={post.id} {...postRowProps(post, category === 'all' ? post.post_number : post.board_post_number, (category === 'all' || isBestBoard) ? categories.find(item => item.id === post.board_category_id)?.name : undefined, true)} />)}
           {loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : posts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 작성해 보세요.</div> : posts.map(post => <PostRow key={post.id} {...postRowProps(post, category === 'all' ? post.post_number : post.board_post_number, (category === 'all' || isBestBoard) ? categories.find(item => item.id === post.board_category_id)?.name : undefined)} />)}
         </div>}

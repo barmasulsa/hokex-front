@@ -104,8 +104,10 @@ export async function getBestPosts(params: Omit<GetPostsParams, 'board_category_
   return { posts: (data ?? []) as Post[], total_count: count ?? 0 };
 }
 
-export async function getPinnedPosts(): Promise<Post[]> {
-  const { data, error } = await supabase.from('community_posts_public').select(PUBLIC_POST_COLUMNS).eq('is_pinned', true).order('created_at', { ascending: false });
+export async function getPinnedPosts(boardCategoryId?: string): Promise<Post[]> {
+  let query = supabase.from('community_posts_public').select(PUBLIC_POST_COLUMNS).eq('is_pinned', true).order('created_at', { ascending: false });
+  if (boardCategoryId && boardCategoryId !== 'all') query = query.eq('board_category_id', boardCategoryId);
+  const { data, error } = await query;
   if (error) throw error;
   return (data ?? []) as Post[];
 }
@@ -126,6 +128,7 @@ export async function updatePost(id: string, draft: PostDraft): Promise<void> {
   if (error) throw error;
 }
 export async function moveCommunityPost(id: string, boardCategoryId: string): Promise<void> { const { error } = await supabase.rpc('move_community_post', { p_post_id: id, p_board_category_id: boardCategoryId }); if (error) throw error; }
+export async function setCommunityPostPinned(id: string, isPinned: boolean): Promise<void> { const { error } = await supabase.rpc('set_community_post_pinned', { p_post_id: id, p_is_pinned: isPinned }); if (error) throw error; }
 
 export async function getMyPosts(userId: string): Promise<Post[]> {
   const { data, error } = await supabase.from('community_posts_public').select(PUBLIC_POST_COLUMNS).eq('author_id', userId).order('created_at', { ascending: false });
