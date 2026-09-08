@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Banner } from '../components/Banner';
 import { useAuth } from '../contexts/AuthContext';
-import { deleteCommunityBoardCategory, deletePost, getBestPosts, getBoardCategories, getMyCommunityWritePermissionBoardIds, getPinnedPosts, getPostLikeStatus, getPosts, isAdminOnlyCommunityWriteBoard, reorderCommunityBoardCategories, saveCommunityBoardCategory, togglePostLike, type BoardCategory, type BoardCategoryDraft, type Post } from '../services/communityService';
+import { deleteCommunityBoardCategory, deletePost, getBestPosts, getBoardCategories, getMyCommunityWritePermissionBoardIds, getPinnedPosts, getPostLikeStatus, getPosts, isAdminOnlyCommunityWriteBoard, reorderCommunityBoardCategories, saveCommunityBoardCategory, setCommunityPostPinned, togglePostLike, type BoardCategory, type BoardCategoryDraft, type Post } from '../services/communityService';
 import './CommunityPage.css';
 
 const formatDate = (value: string) => new Date(value).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '');
@@ -233,6 +233,22 @@ export function CommunityPage() {
       setLikedPostIds(items => { const next = new Set(items); if (result.liked) next.add(post.id); else next.delete(post.id); return next; });
     } catch { setError('좋아요를 저장하지 못했습니다.'); }
   };
+  const togglePromotionPinFromList = async (post: Post) => {
+    try {
+      await setCommunityPostPinned(post.id, !post.is_pinned);
+      const updatePinned = (item: Post) => item.id === post.id ? { ...item, is_pinned: !post.is_pinned } : item;
+      if (post.is_pinned) {
+        setNotices(items => items.filter(item => item.id !== post.id));
+        setPosts(items => [updatePinned(post), ...items]);
+      } else {
+        setPosts(items => items.filter(item => item.id !== post.id));
+        setNotices(items => [updatePinned(post), ...items]);
+      }
+    } catch (pinError) {
+      const detail = pinError instanceof Error ? pinError.message : '';
+      setError(detail || '상단 광고 고정을 저장하지 못했습니다.');
+    }
+  };
   const editNewsPost = (post: Post) => navigate(`/community/${post.id}/edit`, { state: { communityCategory: post.board_category_id } });
   const startWriting = () => {
     if (!user) { navigate('/login'); return; }
@@ -268,7 +284,7 @@ export function CommunityPage() {
         <div className="community-toolbar"><form onSubmit={submitSearch}><input value={search} onChange={event => setSearch(event.target.value)} placeholder="제목 또는 내용 검색" /><button type="submit">검색</button></form>
           <div>{(['latest', 'popular', 'views'] as const).map(item => <button key={item} className={sort === item ? 'sort-active' : ''} onClick={() => { setSort(item); setPage(1); }}>{item === 'latest' ? '최신순' : item === 'popular' ? '인기순' : '조회순'}</button>)}{!isBestBoard && <button className="write-button" onClick={startWriting}>✏️ 글쓰기</button>}</div>
         </div>
-        {isPromotionGalleryBoard ? <div className="exhibition-gallery">{loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : galleryPosts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 등록해 보세요.</div> : galleryPosts.map(post => { const poster = post.thumbnail_url || firstContentImage(post.content); const crop = post.thumbnail_crop || { x: 50, y: 50, scale: 1 }; return <a key={post.id} className={`exhibition-card${post.is_pinned ? ' pinned-ad-card' : ''}`} href={post.link_url || `/community/${post.id}?from=${encodeURIComponent(category)}`}><div className="exhibition-card-image">{post.is_pinned && <b className="advertisement-badge">AD</b>}{poster ? <img src={poster} style={{ objectPosition: `${crop.x}% ${crop.y}%`, transform: `scale(${crop.scale})` }} alt="" /> : <span aria-hidden="true">🛖</span>}</div><strong>{post.title}{post.comment_count > 0 && <em>[{post.comment_count}]</em>}</strong><p className="exhibition-card-author">{post.author_nickname || '익명 판다'}</p><p className="exhibition-card-meta">{displayCreatedAt(post.created_at)} · 조회 {post.view_count.toLocaleString()} · 좋아요 {post.like_count.toLocaleString()}</p></a>; })}</div> : <div className={`community-table ${category === 'all' || isBestBoard ? 'community-table-with-board' : ''}`}><div className="community-table-header"><span>{category === 'all' || isBestBoard ? '게시판' : '번호'}</span><span>제목</span><span>작성자</span><span>작성일</span><span>조회</span><span>좋아요</span></div>
+        {isPromotionGalleryBoard ? <div className="exhibition-gallery">{loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : galleryPosts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 등록해 보세요.</div> : galleryPosts.map(post => { const poster = post.thumbnail_url || firstContentImage(post.content); const crop = post.thumbnail_crop || { x: 50, y: 50, scale: 1 }; return <article key={post.id} className={`exhibition-card${post.is_pinned ? ' pinned-ad-card' : ''}`}><a href={post.link_url || `/community/${post.id}?from=${encodeURIComponent(category)}`}><div className="exhibition-card-image">{post.is_pinned && <b className="advertisement-badge">AD</b>}{poster ? <img src={poster} style={{ objectPosition: `${crop.x}% ${crop.y}%`, transform: `scale(${crop.scale})` }} alt="" /> : <span aria-hidden="true">🛖</span>}</div><strong>{post.title}{post.comment_count > 0 && <em>[{post.comment_count}]</em>}</strong><p className="exhibition-card-author">{post.author_nickname || '익명 판다'}</p><p className="exhibition-card-meta">{displayCreatedAt(post.created_at)} · 조회 {post.view_count.toLocaleString()} · 좋아요 {post.like_count.toLocaleString()}</p></a>{isAdmin && <button type="button" className="promotion-pin-button" onClick={() => void togglePromotionPinFromList(post)}>{post.is_pinned ? '상단 광고 고정 해제' : '상단 광고로 고정'}</button>}</article>; })}</div> : <div className={`community-table ${category === 'all' || isBestBoard ? 'community-table-with-board' : ''}`}><div className="community-table-header"><span>{category === 'all' || isBestBoard ? '게시판' : '번호'}</span><span>제목</span><span>작성자</span><span>작성일</span><span>조회</span><span>좋아요</span></div>
           {notices.map(post => <PostRow key={post.id} {...postRowProps(post, category === 'all' ? post.post_number : post.board_post_number, (category === 'all' || isBestBoard) ? categories.find(item => item.id === post.board_category_id)?.name : undefined, true)} />)}
           {loading ? <div className="community-empty">게시글을 불러오는 중입니다.</div> : error ? <div className="community-empty">{error}</div> : posts.length === 0 ? <div className="community-empty">아직 게시글이 없습니다. 첫 글을 작성해 보세요.</div> : posts.map(post => <PostRow key={post.id} {...postRowProps(post, category === 'all' ? post.post_number : post.board_post_number, (category === 'all' || isBestBoard) ? categories.find(item => item.id === post.board_category_id)?.name : undefined)} />)}
         </div>}
